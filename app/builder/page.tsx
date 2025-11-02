@@ -1,0 +1,45 @@
+"use client";
+
+import { Editor, Frame, Element } from "@craftjs/core";
+import { 
+  Text, 
+  Button, 
+  Container, 
+  Image, 
+  Heading, 
+  Video, 
+  Icon,
+  Toolbar,
+  Toolbox,
+  SettingsPanel
+} from "./components";
+
+export default function Builder() {
+  return (
+    <div className="h-screen flex flex-col bg-white">
+      <Editor resolver={{ Text, Button, Container, Image, Heading, Video, Icon }}>
+        <Toolbar />
+        <div className="flex-1 flex">
+          <Toolbox />
+          <div className="flex-1 p-4 overflow-auto">
+            <Frame>
+              <Element is={Container} canvas>
+                <Text text="Welcome to your website!" fontSize="24" />
+                <Element is={Container} layout="flex" flexDirection="row" justifyContent="center" gap={4} padding={6} background="bg-blue-50" canvas>
+                  <Button text="Get Started" />
+                  <Button text="Learn More" color="bg-green-500" />
+                </Element>
+                <Element is={Container} layout="grid" gridCols={3} gap={4} padding={4} canvas>
+                  <Text text="Feature 1" />
+                  <Text text="Feature 2" />
+                  <Text text="Feature 3" />
+                </Element>
+              </Element>
+            </Frame>
+          </div>
+          <SettingsPanel />
+        </div>
+      </Editor>
+    </div>
+  );
+}
