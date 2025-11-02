@@ -15,7 +15,10 @@ export const Container = ({
   layout = "block",
   gap = 4,
   selectedLayout = null,
-  flexBasis = null
+  flexBasis = null,
+  containerWidth = "full",
+  customWidth = 1200,
+  customWidthUnit = "px"
 }) => {
   const { connectors: { connect, drag }, selected, actions } = useNode((state) => ({
     selected: state.events.selected
@@ -42,7 +45,12 @@ export const Container = ({
     borderRadius: `${borderRadius}px`,
     minHeight: "50px",
     gap: layout === "flex" ? `${gap * 4}px` : undefined,
-    flex: flexBasis ? `0 0 ${flexBasis}%` : undefined
+    flex: flexBasis ? `0 0 ${flexBasis}%` : undefined,
+    width: containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : 
+           containerWidth === "boxed" ? "1200px" : "100%",
+    maxWidth: containerWidth === "boxed" ? "1200px" : undefined,
+    marginLeft: (containerWidth === "boxed" || containerWidth === "custom") ? "auto" : undefined,
+    marginRight: (containerWidth === "boxed" || containerWidth === "custom") ? "auto" : undefined
   };
 
   return (
