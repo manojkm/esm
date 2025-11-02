@@ -1,59 +1,102 @@
 "use client";
 
-import { useNode } from "@craftjs/core";
+import React, { useState, useEffect } from "react";
+import { useNode, Element } from "@craftjs/core";
+import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 
 export const Container = ({ 
-  children, 
-  padding = 4, 
+  children,
+  padding = 20,
   margin = 0,
-  background = "bg-gray-50", 
-  layout = "block", // block, flex, grid
-  flexDirection = "row", // row, column
-  justifyContent = "start", // start, center, end, between, around
-  alignItems = "start", // start, center, end, stretch
-  gap = 2,
-  gridCols = 2,
-  width = "full", // full, auto, custom
-  height = "auto" // auto, full, custom
+  backgroundColor = "#ffffff",
+  borderRadius = 0,
+  className = "",
+  showLayoutPicker = false,
+  layout = "block",
+  gap = 4,
+  selectedLayout = null,
+  flexBasis = null
 }) => {
-  const { connectors: { connect, drag }, selected } = useNode((state) => ({
+  const { connectors: { connect, drag }, selected, actions } = useNode((state) => ({
     selected: state.events.selected
   }));
+  
+  const [showPicker, setShowPicker] = useState(showLayoutPicker);
+  
+  const handleLayoutSelect = (selectedLayout) => {
+    // Update container to flex layout
+    actions.setProp((props) => {
+      props.layout = "flex";
+      props.gap = 4;
+      props.className = "flex gap-4";
+      props.selectedLayout = selectedLayout;
+    });
+    
+    setShowPicker(false);
+  };
 
-  const getLayoutClasses = () => {
-    let classes = [];
-    
-    // Layout type
-    if (layout === "flex") {
-      classes.push("flex");
-      classes.push(`flex-${flexDirection}`);
-      classes.push(`justify-${justifyContent}`);
-      classes.push(`items-${alignItems}`);
-      classes.push(`gap-${gap}`);
-    } else if (layout === "grid") {
-      classes.push("grid");
-      classes.push(`grid-cols-${gridCols}`);
-      classes.push(`gap-${gap}`);
-    }
-    
-    // Spacing
-    classes.push(`p-${padding}`);
-    classes.push(`m-${margin}`);
-    
-    // Dimensions
-    classes.push(`w-${width}`);
-    if (height === "full") classes.push("h-full");
-    else if (height === "auto") classes.push("min-h-[100px]");
-    
-    return classes.join(" ");
+  const containerStyle = {
+    padding: `${padding}px`,
+    margin: `${margin}px`,
+    backgroundColor,
+    borderRadius: `${borderRadius}px`,
+    minHeight: "50px",
+    gap: layout === "flex" ? `${gap * 4}px` : undefined,
+    flex: flexBasis ? `0 0 ${flexBasis}%` : undefined
   };
 
   return (
     <div 
       ref={(ref) => connect(drag(ref))} 
-      className={`${background} ${getLayoutClasses()} ${selected ? 'ring-2 ring-blue-500' : 'border border-dashed border-gray-300 hover:border-blue-500'}`}
+      className={`
+        relative
+        ${selected ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-blue-300'}
+        transition-all duration-200
+        ${layout === "flex" ? "flex" : ""}
+        ${className}
+      `}
+      style={containerStyle}
     >
+      {/* Selection Indicator */}
+      {selected && (
+        <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">
+          Container
+        </div>
+      )}
+      
+      {/* Auto-generate columns based on selected layout */}
+      {!children && selectedLayout && (
+        selectedLayout.cols.map((width, index) => (
+          <Element
+            key={index}
+            id={`column_${index}_${width}`}
+            is={Container}
+            padding={15}
+            backgroundColor="#f8fafc"
+            borderRadius={6}
+            className="border border-gray-200"
+            flexBasis={width}
+            canvas
+          />
+        ))
+      )}
+      
+      {/* Regular drop zone */}
+      {!children && !selectedLayout && (
+        <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">
+          Drop components here
+        </div>
+      )}
+      
       {children}
+      
+      {/* Layout Picker Modal */}
+      {showPicker && (
+        <ContainerLayoutPicker
+          onSelect={handleLayoutSelect}
+          onClose={() => setShowPicker(false)}
+        />
+      )}
     </div>
   );
 };

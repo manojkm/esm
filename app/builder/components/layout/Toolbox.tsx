@@ -48,7 +48,7 @@ export const Toolbox = () => {
           <span className="text-gray-700">⭐ Icon</span>
         </div>
         <div 
-          ref={(ref) => connectors.create(ref, <Container />)}
+          ref={(ref) => connectors.create(ref, <Container showLayoutPicker={true} />)}
           className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
         >
           <span className="text-gray-700">📦 Container</span>
@@ -70,6 +70,27 @@ export const Toolbox = () => {
           className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
         >
           <span className="text-gray-700">⊞ Grid</span>
+        </div>
+        
+        <div className="text-xs font-semibold text-gray-600 mt-4 mb-2">Columns</div>
+        <div 
+          ref={(ref) => connectors.create(ref, <Container 
+            layout="flex" 
+            flexDirection="column" 
+            paddingTop={15} 
+            paddingRight={15} 
+            paddingBottom={15} 
+            paddingLeft={15} 
+            backgroundColor="#f8fafc" 
+            borderWidth={1} 
+            borderColor="#e2e8f0" 
+            borderRadius={6} 
+            minHeight={150}
+            flex="1"
+          />)}
+          className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
+        >
+          <span className="text-gray-700">📋 Column</span>
         </div>
       </div>
     </div>
