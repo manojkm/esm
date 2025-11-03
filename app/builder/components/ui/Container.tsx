@@ -6,7 +6,7 @@ import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 
 // Container component for page builder
 
-export const Container = ({ children, padding = 20, margin = 0, backgroundColor = "#ffffff", borderRadius = 0, className = "", showLayoutPicker = false, layout = "block", gap = 4, selectedLayout = null, flexBasis = null, containerWidth = "full", contentWidth = "boxed", contentBoxWidth = 1400, contentBoxWidthUnit = "px", customWidth = 1200, customWidthUnit = "px" }) => {
+export const Container = ({ children, padding = 20, margin = 0, backgroundColor = "#ffffff", borderRadius = 0, className = "", showLayoutPicker = false, layout = "block", gap = 4, selectedLayout = null, flexBasis = null, containerWidth = "full", contentWidth = "boxed", contentBoxWidth = 1400, contentBoxWidthUnit = "px", customWidth = 1200, customWidthUnit = "px", minHeight = 450, minHeightUnit = "px", enableMinHeight = false, equalHeight = false, htmlTag = "div", overflow = "visible" }) => {
   const {
     connectors: { connect, drag },
     selected,
@@ -16,6 +16,9 @@ export const Container = ({ children, padding = 20, margin = 0, backgroundColor 
   }));
 
   const [showPicker, setShowPicker] = useState(showLayoutPicker);
+  
+  // Check if this is a child container (has flexBasis prop)
+  const isChildContainer = flexBasis !== null && flexBasis !== undefined;
 
   const handleLayoutSelect = (selectedLayout) => {
     // Update container to flex layout
@@ -34,24 +37,29 @@ export const Container = ({ children, padding = 20, margin = 0, backgroundColor 
     margin: `${margin}px`,
     backgroundColor,
     borderRadius: `${borderRadius}px`,
-    minHeight: "50px",
+    minHeight: isChildContainer ? "50px" : (enableMinHeight && minHeight ? `${minHeight}${minHeightUnit}` : "50px"),
     gap: layout === "flex" ? `${gap * 4}px` : undefined,
     flex: flexBasis ? `0 0 ${flexBasis}%` : undefined,
-    width: containerWidth === "boxed" ? "100%" : "100%",
-    maxWidth: containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1400px" : undefined,
-    marginLeft: containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
-    marginRight: containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
+    width: "100%",
+    maxWidth: isChildContainer ? undefined : (containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1400px" : undefined),
+    marginLeft: isChildContainer ? undefined : (containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined),
+    marginRight: isChildContainer ? undefined : (containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined),
+    alignItems: isChildContainer ? undefined : (equalHeight && layout === "flex" ? "stretch" : undefined),
+    overflow: isChildContainer ? undefined : overflow,
   };
 
   const contentWrapperStyle = {
-    maxWidth: containerWidth === "full" && contentWidth === "boxed" ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined,
-    marginLeft: containerWidth === "full" && contentWidth === "boxed" ? "auto" : undefined,
-    marginRight: containerWidth === "full" && contentWidth === "boxed" ? "auto" : undefined,
+    maxWidth: isChildContainer ? undefined : (containerWidth === "full" && contentWidth === "boxed" ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined),
+    marginLeft: isChildContainer ? undefined : (containerWidth === "full" && contentWidth === "boxed" ? "auto" : undefined),
+    marginRight: isChildContainer ? undefined : (containerWidth === "full" && contentWidth === "boxed" ? "auto" : undefined),
     width: "100%",
+    height: isChildContainer ? undefined : (equalHeight && layout === "flex" ? "100%" : undefined),
   };
 
+  const ContainerTag = isChildContainer ? "div" : htmlTag;
+
   return (
-    <div
+    <ContainerTag
       ref={(ref) => connect(drag(ref))}
       className={`
         relative
@@ -77,6 +85,6 @@ export const Container = ({ children, padding = 20, margin = 0, backgroundColor 
 
       {/* Layout Picker Modal */}
       {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
-    </div>
+    </ContainerTag>
   );
 };
