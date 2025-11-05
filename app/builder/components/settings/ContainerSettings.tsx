@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
+import { BackgroundControls, BorderControls, ColorControls, BoxShadowControls, SpacingControls } from "./shared/StyleControls";
 
 export const ContainerSettings = () => {
   const { actions, props } = useNode((node) => ({
@@ -10,7 +11,7 @@ export const ContainerSettings = () => {
 
   const [activeTab, setActiveTab] = useState("general");
   const [openAccordion, setOpenAccordion] = useState("containerType");
-  
+
   // Check if this is a child container (has flexBasis prop)
   const isChildContainer = props.flexBasis !== null && props.flexBasis !== undefined;
 
@@ -47,14 +48,7 @@ export const ContainerSettings = () => {
                   // Child Container Settings - Only Width Control
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Width (%)</label>
-                    <input 
-                      type="number" 
-                      value={props.flexBasis || 50} 
-                      onChange={(e) => actions.setProp((props) => (props.flexBasis = parseInt(e.target.value)))} 
-                      min="1" 
-                      max="100" 
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" 
-                    />
+                    <input type="number" value={props.flexBasis || 50} onChange={(e) => actions.setProp((props) => (props.flexBasis = parseInt(e.target.value)))} min="1" max="100" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
                   </div>
                 ) : (
                   // Parent Container Settings - All Controls
@@ -74,7 +68,7 @@ export const ContainerSettings = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Custom Width</label>
                         <div className="flex items-center gap-2">
-                          <input type="range" min={props.customWidthUnit === "%" ? "10" : "100"} max={props.customWidthUnit === "%" ? "100" : "1600"} value={props.customWidth || (props.customWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.customWidth = parseInt(e.target.value)))} className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                          <input type="range" min={props.customWidthUnit === "%" ? "10" : "100"} max={props.customWidthUnit === "%" ? "100" : "1600"} value={props.customWidth || (props.customWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.customWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
                           <div className="flex items-center gap-1">
                             <input type="number" value={props.customWidth || (props.customWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.customWidth = parseInt(e.target.value) || (props.customWidthUnit === "%" ? 100 : 1200)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
                             <select
@@ -95,146 +89,111 @@ export const ContainerSettings = () => {
                       </div>
                     )}
 
-                {(props.containerWidth === "full" || !props.containerWidth) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Content Width</label>
-                    <div className="grid grid-cols-2 gap-1">
-                      {["boxed", "full"].map((contentWidth) => (
-                        <button key={contentWidth} onClick={() => actions.setProp((props) => (props.contentWidth = contentWidth))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.contentWidth || "boxed") === contentWidth ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
-                          {contentWidth === "full" ? "Full Width" : "Boxed"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(props.containerWidth === "full" || !props.containerWidth) && (props.contentWidth === "boxed" || !props.contentWidth) && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Content Box Width</label>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="range" 
-                        min={props.contentBoxWidthUnit === "%" ? "10" : "100"} 
-                        max={props.contentBoxWidthUnit === "%" ? "100" : "1600"} 
-                        value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} 
-                        onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value)))} 
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
-                      />
-                      <div className="flex items-center gap-1">
-                        <input 
-                          type="number" 
-                          value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} 
-                          onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value) || (props.contentBoxWidthUnit === "%" ? 100 : 1400)))} 
-                          className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" 
-                        />
-                        <select
-                          value={props.contentBoxWidthUnit || "px"}
-                          onChange={(e) =>
-                            actions.setProp((props) => {
-                              props.contentBoxWidthUnit = e.target.value;
-                              props.contentBoxWidth = e.target.value === "%" ? 100 : 1400;
-                            })
-                          }
-                          className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white"
-                        >
-                          <option value="px">px</option>
-                          <option value="%">%</option>
-                        </select>
+                    {(props.containerWidth === "full" || !props.containerWidth) && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Content Width</label>
+                        <div className="grid grid-cols-2 gap-1">
+                          {["boxed", "full"].map((contentWidth) => (
+                            <button key={contentWidth} onClick={() => actions.setProp((props) => (props.contentWidth = contentWidth))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.contentWidth || "boxed") === contentWidth ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                              {contentWidth === "full" ? "Full Width" : "Boxed"}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">Minimum Height</label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={props.enableMinHeight || false} 
-                        onChange={(e) => actions.setProp((props) => {
-                          props.enableMinHeight = e.target.checked;
-                          if (!e.target.checked) {
-                            props.minHeight = null;
-                          } else {
-                            props.minHeight = props.minHeightUnit === "vh" ? 50 : 450;
-                          }
-                        })} 
-                        className="sr-only peer" 
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                  {props.enableMinHeight && (
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="range" 
-                        min={props.minHeightUnit === "vh" ? "10" : "50"} 
-                        max={props.minHeightUnit === "vh" ? "100" : "1000"} 
-                        value={props.minHeight || (props.minHeightUnit === "vh" ? 50 : 450)} 
-                        onChange={(e) => actions.setProp((props) => (props.minHeight = parseInt(e.target.value)))} 
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" 
-                      />
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-500">px</span>
-                        <span className="text-xs text-gray-500">vh</span>
+                    {(props.containerWidth === "full" || !props.containerWidth) && (props.contentWidth === "boxed" || !props.contentWidth) && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Content Box Width</label>
+                        <div className="flex items-center gap-2">
+                          <input type="range" min={props.contentBoxWidthUnit === "%" ? "10" : "100"} max={props.contentBoxWidthUnit === "%" ? "100" : "1600"} value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                          <div className="flex items-center gap-1">
+                            <input type="number" value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value) || (props.contentBoxWidthUnit === "%" ? 100 : 1400)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+                            <select
+                              value={props.contentBoxWidthUnit || "px"}
+                              onChange={(e) =>
+                                actions.setProp((props) => {
+                                  props.contentBoxWidthUnit = e.target.value;
+                                  props.contentBoxWidth = e.target.value === "%" ? 100 : 1400;
+                                })
+                              }
+                              className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white"
+                            >
+                              <option value="px">px</option>
+                              <option value="%">%</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                      <input 
-                        type="number" 
-                        value={props.minHeight || (props.minHeightUnit === "vh" ? 50 : 450)} 
-                        onChange={(e) => actions.setProp((props) => (props.minHeight = parseInt(e.target.value) || (props.minHeightUnit === "vh" ? 50 : 450)))} 
-                        className="w-16 px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" 
-                      />
+                    )}
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">Minimum Height</label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={props.enableMinHeight || false}
+                            onChange={(e) =>
+                              actions.setProp((props) => {
+                                props.enableMinHeight = e.target.checked;
+                                if (!e.target.checked) {
+                                  props.minHeight = null;
+                                } else {
+                                  props.minHeight = props.minHeightUnit === "vh" ? 50 : 450;
+                                }
+                              })
+                            }
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+                      {props.enableMinHeight && (
+                        <div className="flex items-center gap-2">
+                          <input type="range" min={props.minHeightUnit === "vh" ? "10" : "50"} max={props.minHeightUnit === "vh" ? "100" : "1000"} value={props.minHeight || (props.minHeightUnit === "vh" ? 50 : 450)} onChange={(e) => actions.setProp((props) => (props.minHeight = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">px</span>
+                            <span className="text-xs text-gray-500">vh</span>
+                          </div>
+                          <input type="number" value={props.minHeight || (props.minHeightUnit === "vh" ? 50 : 450)} onChange={(e) => actions.setProp((props) => (props.minHeight = parseInt(e.target.value) || (props.minHeightUnit === "vh" ? 50 : 450)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">Equal Height</label>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={props.equalHeight || false} 
-                        onChange={(e) => actions.setProp((props) => (props.equalHeight = e.target.checked))} 
-                        className="sr-only peer" 
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Enabling this will change the Align Items value to Stretch.</p>
-                </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-gray-700">Equal Height</label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={props.equalHeight || false} onChange={(e) => actions.setProp((props) => (props.equalHeight = e.target.checked))} className="sr-only peer" />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Enabling this will change the Align Items value to Stretch.</p>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">HTML Tag</label>
-                  <select 
-                    value={props.htmlTag || "div"} 
-                    onChange={(e) => actions.setProp((props) => (props.htmlTag = e.target.value))} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                  >
-                    <option value="div">div</option>
-                    <option value="section">section</option>
-                    <option value="article">article</option>
-                    <option value="header">header</option>
-                    <option value="footer">footer</option>
-                    <option value="main">main</option>
-                    <option value="aside">aside</option>
-                    <option value="nav">nav</option>
-                  </select>
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">HTML Tag</label>
+                      <select value={props.htmlTag || "div"} onChange={(e) => actions.setProp((props) => (props.htmlTag = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white">
+                        <option value="div">div</option>
+                        <option value="section">section</option>
+                        <option value="article">article</option>
+                        <option value="header">header</option>
+                        <option value="footer">footer</option>
+                        <option value="main">main</option>
+                        <option value="aside">aside</option>
+                        <option value="nav">nav</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Overflow</label>
-                  <select 
-                    value={props.overflow || "visible"} 
-                    onChange={(e) => actions.setProp((props) => (props.overflow = e.target.value))} 
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-                  >
-                    <option value="visible">Visible</option>
-                    <option value="hidden">Hidden</option>
-                    <option value="auto">Auto</option>
-                  </select>
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Overflow</label>
+                      <select value={props.overflow || "visible"} onChange={(e) => actions.setProp((props) => (props.overflow = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white">
+                        <option value="visible">Visible</option>
+                        <option value="hidden">Hidden</option>
+                        <option value="auto">Auto</option>
+                      </select>
+                    </div>
                   </>
                 )}
               </div>
@@ -248,20 +207,88 @@ export const ContainerSettings = () => {
               <span className={`transform transition-transform ${openAccordion === "layout" ? "rotate-180" : ""}`}>▼</span>
             </button>
             {openAccordion === "layout" && (
-              <div className="p-4 border-t border-gray-200 space-y-3">
+              <div className="p-4 border-t border-gray-200 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Layout Type</label>
-                  <select value={props.layout || "block"} onChange={(e) => actions.setProp((props) => (props.layout = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white">
-                    <option value="block">Block</option>
-                    <option value="flex">Flex</option>
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Layout Type</label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {["block", "flex"].map((layoutType) => (
+                      <button key={layoutType} onClick={() => actions.setProp((props) => (props.layout = layoutType))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.layout || "block") === layoutType ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                        {layoutType}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {props.layout === "flex" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Gap</label>
-                    <input type="number" value={props.gap || 4} onChange={(e) => actions.setProp((props) => (props.gap = parseInt(e.target.value)))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Direction</label>
+                      <div className="grid grid-cols-2 gap-1">
+                        {[
+                          { value: "row", label: "Row" },
+                          { value: "column", label: "Column" },
+                          { value: "row-reverse", label: "Row Reverse" },
+                          { value: "column-reverse", label: "Column Reverse" },
+                        ].map((direction) => (
+                          <button key={direction.value} onClick={() => actions.setProp((props) => (props.flexDirection = direction.value))} className={`px-2 py-2 text-xs border rounded ${(props.flexDirection || "row") === direction.value ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                            {direction.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Justify Content</label>
+                      <select value={props.justifyContent || "flex-start"} onChange={(e) => actions.setProp((props) => (props.justifyContent = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
+                        <option value="flex-start">Start</option>
+                        <option value="center">Center</option>
+                        <option value="flex-end">End</option>
+                        <option value="space-between">Space Between</option>
+                        <option value="space-around">Space Around</option>
+                        <option value="space-evenly">Space Evenly</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Align Items</label>
+                      <select value={props.alignItems || "stretch"} onChange={(e) => actions.setProp((props) => (props.alignItems = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
+                        <option value="stretch">Stretch</option>
+                        <option value="flex-start">Start</option>
+                        <option value="center">Center</option>
+                        <option value="flex-end">End</option>
+                        <option value="baseline">Baseline</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Wrap</label>
+                      <div className="grid grid-cols-3 gap-1">
+                        {[
+                          { value: "nowrap", label: "No Wrap" },
+                          { value: "wrap", label: "Wrap" },
+                          { value: "wrap-reverse", label: "Wrap Reverse" },
+                        ].map((wrap) => (
+                          <button key={wrap.value} onClick={() => actions.setProp((props) => (props.flexWrap = wrap.value))} className={`px-2 py-2 text-xs border rounded ${(props.flexWrap || "nowrap") === wrap.value ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                            {wrap.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {props.flexWrap === "wrap" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Align Content</label>
+                        <select value={props.alignContent || "stretch"} onChange={(e) => actions.setProp((props) => (props.alignContent = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
+                          <option value="stretch">Stretch</option>
+                          <option value="flex-start">Start</option>
+                          <option value="center">Center</option>
+                          <option value="flex-end">End</option>
+                          <option value="space-between">Space Between</option>
+                          <option value="space-around">Space Around</option>
+                        </select>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -271,28 +298,70 @@ export const ContainerSettings = () => {
 
       {/* Style Tab */}
       {activeTab === "style" && (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Padding</label>
-            <input type="number" value={props.padding || 20} onChange={(e) => actions.setProp((props) => (props.padding = parseInt(e.target.value)))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+        <div className="space-y-4">
+          {/* Spacing Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "spacing" ? "" : "spacing")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Spacing
+              <span className={`transform transition-transform ${openAccordion === "spacing" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "spacing" && (
+              <div className="p-4 border-t border-gray-200">
+                <SpacingControls props={props} actions={actions} />
+              </div>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
-            <input type="number" value={props.margin || 0} onChange={(e) => actions.setProp((props) => (props.margin = parseInt(e.target.value)))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+          {/* Background Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "background" ? "" : "background")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Background
+              <span className={`transform transition-transform ${openAccordion === "background" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "background" && (
+              <div className="p-4 border-t border-gray-200">
+                <BackgroundControls props={props} actions={actions} />
+              </div>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
-            <div className="flex gap-2">
-              <input type="color" value={props.backgroundColor || "#ffffff"} onChange={(e) => actions.setProp((props) => (props.backgroundColor = e.target.value))} className="w-12 h-10 border border-gray-300 rounded cursor-pointer" />
-              <input type="text" value={props.backgroundColor || "#ffffff"} onChange={(e) => actions.setProp((props) => (props.backgroundColor = e.target.value))} className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
-            </div>
+          {/* Border Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "border" ? "" : "border")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Border
+              <span className={`transform transition-transform ${openAccordion === "border" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "border" && (
+              <div className="p-4 border-t border-gray-200">
+                <BorderControls props={props} actions={actions} />
+              </div>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Border Radius</label>
-            <input type="number" value={props.borderRadius || 0} onChange={(e) => actions.setProp((props) => (props.borderRadius = parseInt(e.target.value)))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+          {/* Box Shadow Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "boxShadow" ? "" : "boxShadow")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Box Shadow
+              <span className={`transform transition-transform ${openAccordion === "boxShadow" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "boxShadow" && (
+              <div className="p-4 border-t border-gray-200">
+                <BoxShadowControls props={props} actions={actions} />
+              </div>
+            )}
+          </div>
+
+          {/* Color Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "color" ? "" : "color")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Color
+              <span className={`transform transition-transform ${openAccordion === "color" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "color" && (
+              <div className="p-4 border-t border-gray-200">
+                <ColorControls props={props} actions={actions} />
+              </div>
+            )}
           </div>
         </div>
       )}
