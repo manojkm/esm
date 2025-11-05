@@ -16,9 +16,9 @@ export const ContainerSettings = () => {
   const isChildContainer = props.flexBasis !== null && props.flexBasis !== undefined;
 
   const tabs = [
-    { id: "general", label: "General", icon: "📐" },
-    { id: "style", label: "Style", icon: "🎨" },
-    { id: "advanced", label: "Advanced", icon: "⚙️" },
+    { id: "general", label: "General", icon: "" },
+    { id: "style", label: "Style", icon: "" },
+    { id: "advanced", label: "Advanced", icon: "" },
   ];
 
   return (
@@ -27,7 +27,6 @@ export const ContainerSettings = () => {
       <div className="flex border-b border-gray-200">
         {tabs.map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600 hover:text-gray-900"}`}>
-            <span>{tab.icon}</span>
             {tab.label}
           </button>
         ))}
@@ -66,7 +65,17 @@ export const ContainerSettings = () => {
 
                     {props.containerWidth === "custom" && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Custom Width</label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">Custom Width</label>
+                          <button
+                            onClick={() => actions.setProp((props) => {
+                              props.customWidth = props.customWidthUnit === "%" ? 100 : 1200;
+                            })}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Reset
+                          </button>
+                        </div>
                         <div className="flex items-center gap-2">
                           <input type="range" min={props.customWidthUnit === "%" ? "10" : "100"} max={props.customWidthUnit === "%" ? "100" : "1600"} value={props.customWidth || (props.customWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.customWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
                           <div className="flex items-center gap-1">
@@ -104,17 +113,27 @@ export const ContainerSettings = () => {
 
                     {(props.containerWidth === "full" || !props.containerWidth) && (props.contentWidth === "boxed" || !props.contentWidth) && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Content Box Width</label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm font-medium text-gray-700">Content Box Width</label>
+                          <button
+                            onClick={() => actions.setProp((props) => {
+                              props.contentBoxWidth = props.contentBoxWidthUnit === "%" ? 100 : 1200;
+                            })}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Reset
+                          </button>
+                        </div>
                         <div className="flex items-center gap-2">
-                          <input type="range" min={props.contentBoxWidthUnit === "%" ? "10" : "100"} max={props.contentBoxWidthUnit === "%" ? "100" : "1600"} value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                          <input type="range" min={props.contentBoxWidthUnit === "%" ? "10" : "100"} max={props.contentBoxWidthUnit === "%" ? "100" : "1600"} value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
                           <div className="flex items-center gap-1">
-                            <input type="number" value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1400)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value) || (props.contentBoxWidthUnit === "%" ? 100 : 1400)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+                            <input type="number" value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value) || (props.contentBoxWidthUnit === "%" ? 100 : 1200)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
                             <select
                               value={props.contentBoxWidthUnit || "px"}
                               onChange={(e) =>
                                 actions.setProp((props) => {
                                   props.contentBoxWidthUnit = e.target.value;
-                                  props.contentBoxWidth = e.target.value === "%" ? 100 : 1400;
+                                  props.contentBoxWidth = e.target.value === "%" ? 100 : 1200;
                                 })
                               }
                               className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white"
