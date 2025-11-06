@@ -15,3 +15,12 @@ export const Button = ({ text = "Button", color = "bg-blue-500" }) => {
     </div>
   );
 };
+
+Button.craft = {
+  displayName: 'Button',
+  rules: {
+    canDrag: () => true,
+    canMoveIn: () => false,
+    canMoveOut: () => true
+  }
+};

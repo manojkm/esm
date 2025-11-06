@@ -4,9 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
-import { Copy } from "lucide-react";
+import { Trash2, ArrowUp, MoreVertical } from "lucide-react";
 
-// Container component for page builder with hover functionality
+
+/**
+ * Container Component - Main building block for page layouts
+ * Features: Responsive design, drag/drop, styling controls, rename functionality
+ */
 
 export const Container = ({
   children,
@@ -120,42 +124,58 @@ export const Container = ({
   positionLeftUnit = "px",
   zIndex = null,
 }) => {
+  // Craft.js hooks for component interaction
   const {
-    connectors: { connect, drag },
-    selected,
-    actions,
-    id
+    connectors: { connect, drag }, // Drag/drop connectors
+    selected, // Is component currently selected
+    actions, // Component prop actions
+    id // Unique component ID
   } = useNode((state) => ({
-    selected: state.events.selected,
+    selected: state.events.selected
   }));
   
+  // Editor-level actions and queries
   const { actions: editorActions, query } = useEditor();
   
-  const handleCopy = () => {
-    const { data: { type, props } } = query.node(id).get();
-    const newNode = query.createNode(React.createElement(type, props));
-    editorActions.add(newNode, query.node(id).get().data.parent);
-  };
+
   
   const { getResponsiveValue } = useResponsive();
 
-  const [showPicker, setShowPicker] = useState(showLayoutPicker);
+  // Component state management
+  const [showPicker, setShowPicker] = useState(showLayoutPicker); // Layout picker modal
+  const [showContextMenu, setShowContextMenu] = useState(false); // Context menu visibility
+  
+  // Context menu handlers
+  const handleDelete = () => {
+    editorActions.delete(id);
+    setShowContextMenu(false);
+  };
+  
+  const handleSelectParent = () => {
+    const parentId = query.node(id).get().data.parent;
+    if (parentId) {
+      editorActions.selectNode(parentId);
+    }
+    setShowContextMenu(false);
+  };
+  
 
-  // Check if this is a child container (has flexBasis prop)
-  const isChildContainer = flexBasis !== null && flexBasis !== undefined;
+
+  
+
+
+  // Layout logic
+  const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
+  const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
 
   const handleLayoutSelect = (selectedLayout) => {
-    // Set layout based on column count: block for single, flex for multi-column
+    // Set layout: block for single column, flex for multi-column
     actions.setProp((props) => {
       props.layout = selectedLayout.cols.length === 1 ? "block" : "flex";
       props.selectedLayout = selectedLayout;
     });
-
     setShowPicker(false);
   };
-
-  // Check if we need content wrapper for boxed content
-  const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed";
 
   // Calculate responsive padding values
   const getResponsivePadding = () => {
@@ -205,8 +225,8 @@ export const Container = ({
   const paddingValue = getResponsivePadding();
   const marginValue = getResponsiveMargin();
 
-  // Generate unique class name for hover styles
-  const hoverClassName = `container-hover-${Math.random().toString(36).substr(2, 9)}`;
+  // Generate unique class for dynamic hover styles (stable for SSR)
+  const hoverClassName = `container-hover-${id}`;
 
   // Calculate background styles only when backgroundType is active
   const getBackgroundStyles = () => {
@@ -502,17 +522,48 @@ export const Container = ({
         {/* Selection Indicator */}
         {selected && (
           <>
-            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
-            <button
-              onClick={handleCopy}
-              className="absolute -top-6 right-0 bg-green-500 hover:bg-green-600 text-white p-1 rounded-t-md transition-colors z-10"
-              title="Copy Container"
-            >
-              <Copy size={12} />
-            </button>
+            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">
+              Container
+            </div>
+            <div className="absolute -top-6 right-0 z-10">
+              <button
+                onClick={() => setShowContextMenu(!showContextMenu)}
+                className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors"
+                title="Component Actions"
+              >
+                <MoreVertical size={12} />
+              </button>
+              
+              {/* Context Menu */}
+              {showContextMenu && (
+                <div className="absolute top-full right-0 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
+
+
+                  {/* Select Parent */}
+                  {!isChildContainer && (
+                    <button
+                      onClick={handleSelectParent}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <ArrowUp size={14} />
+                      Select Parent
+                    </button>
+                  )}
+                  
+                  {/* Delete */}
+                  <button
+                    onClick={handleDelete}
+                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
+                </div>
+              )}
+
+            </div>
           </>
         )}
-
         {/* Conditionally render content wrapper only when needed for boxed content */}
         {(() => {
           const content = (
@@ -535,4 +586,22 @@ export const Container = ({
       </ContainerTag>
     </>
   );
+};
+
+// Craft.js component configuration
+Container.craft = {
+  displayName: 'Container', // Default name in toolbox
+  isCanvas: true, // Can accept child components (droppable + expandable in layers)
+  rules: {
+    canMoveIn: (incomingNodes, currentNode, helpers) => {
+      const depth = helpers(currentNode.id).ancestors().length;
+      return depth < 10; // Prevent excessive nesting
+    },
+    canMoveOut: (outgoingNodes, currentNode, helpers) => {
+      return !helpers(currentNode.id).isRoot(); // Can't move root
+    },
+    canDrag: (node, helpers) => {
+      return !helpers(node.id).isRoot(); // Can't drag root
+    }
+  }
 };
