@@ -61,6 +61,13 @@ export const Container = ({
   linkColor = null,
   linkColorHover = null,
   className = "",
+  cssId = "",
+  dataAttributes = "",
+  ariaLabel = "",
+  hideOnDesktop = false,
+  hideOnTablet = false,
+  hideOnLandscapeMobile = false,
+  hideOnMobile = false,
   showLayoutPicker = false,
   layout = "block",
   selectedLayout = null,
@@ -82,6 +89,16 @@ export const Container = ({
   alignItems = "stretch",
   flexWrap = "nowrap",
   alignContent = "stretch",
+  position = "default",
+  positionTop = null,
+  positionRight = null,
+  positionBottom = null,
+  positionLeft = null,
+  positionTopUnit = "px",
+  positionRightUnit = "px",
+  positionBottomUnit = "px",
+  positionLeftUnit = "px",
+  zIndex = null,
 }) => {
   const {
     connectors: { connect, drag },
@@ -100,7 +117,6 @@ export const Container = ({
     // Set layout based on column count: block for single, flex for multi-column
     actions.setProp((props) => {
       props.layout = selectedLayout.cols.length === 1 ? "block" : "flex";
-      props.className = selectedLayout.cols.length === 1 ? "" : "flex";
       props.selectedLayout = selectedLayout;
     });
 
@@ -195,6 +211,31 @@ export const Container = ({
     return styles;
   };
   
+  // Generate responsive styles (only for live pages, not in editor)
+  const getResponsiveStyles = () => {
+    // Skip responsive styles in editor mode
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) {
+      return "";
+    }
+    
+    let responsiveCSS = "";
+    
+    if (hideOnDesktop) {
+      responsiveCSS += `@media (min-width: 1024px) { .${hoverClassName} { display: none !important; } } `;
+    }
+    if (hideOnTablet) {
+      responsiveCSS += `@media (min-width: 768px) and (max-width: 1023px) { .${hoverClassName} { display: none !important; } } `;
+    }
+    if (hideOnLandscapeMobile) {
+      responsiveCSS += `@media (min-width: 480px) and (max-width: 767px) { .${hoverClassName} { display: none !important; } } `;
+    }
+    if (hideOnMobile) {
+      responsiveCSS += `@media (max-width: 479px) { .${hoverClassName} { display: none !important; } } `;
+    }
+    
+    return responsiveCSS;
+  };
+
   // Generate hover styles
   const getHoverStyles = () => {
     let hoverCSS = "";
@@ -232,8 +273,21 @@ export const Container = ({
       linkCSS += `.${hoverClassName} a:hover { color: ${linkColorHover} !important; } `;
     }
     
-    const combinedCSS = (hoverCSS ? `.${hoverClassName}:hover { ${hoverCSS} }` : "") + linkCSS;
+    const combinedCSS = (hoverCSS ? `.${hoverClassName}:hover { ${hoverCSS} }` : "") + linkCSS + getResponsiveStyles();
     return combinedCSS;
+  };
+
+  // Parse data attributes
+  const parseDataAttributes = () => {
+    if (!dataAttributes) return {};
+    const attrs = {};
+    dataAttributes.split('\n').forEach(line => {
+      const match = line.trim().match(/^([^=]+)=["']([^"']*)["']$/);
+      if (match) {
+        attrs[match[1]] = match[2];
+      }
+    });
+    return attrs;
   };
 
   const containerStyle = {
@@ -257,6 +311,12 @@ export const Container = ({
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: isChildContainer ? undefined : overflow,
+    position: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (position && position !== "default" ? position : undefined),
+    top: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined),
+    right: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined),
+    bottom: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined),
+    left: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined),
+    zIndex: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (zIndex ? parseInt(zIndex) : undefined),
   };
 
   const contentWrapperStyle = {
@@ -281,18 +341,21 @@ export const Container = ({
 
   return (
     <>
-      {/* Inject hover styles */}
-      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover) && (
+      {/* Inject hover and responsive styles */}
+      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && (
         <style>{getHoverStyles()}</style>
       )}
       
       <ContainerTag
         ref={(ref) => connect(drag(ref))}
+        id={cssId || undefined}
+        aria-label={ariaLabel || undefined}
+        {...parseDataAttributes()}
         className={`
           relative
           ${selected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-blue-300"}
           transition-all duration-200
-          ${((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover) ? hoverClassName : ""}
+          ${((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) ? hoverClassName : ""}
           ${className}
         `}
         style={containerStyle}

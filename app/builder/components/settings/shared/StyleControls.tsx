@@ -404,3 +404,172 @@ export const ColorControls = ({ props, actions }) => (
     </div>
   </div>
 );
+
+// Reusable CSS Controls Component
+export const CSSControls = ({ props, actions }) => (
+  <>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">CSS Classes</label>
+      <input type="text" value={props.className || ""} onChange={(e) => actions.setProp((props) => (props.className = e.target.value))} placeholder="custom-class another-class" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+      <p className="text-xs text-gray-500 mt-1">Add custom CSS classes separated by spaces</p>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">CSS ID</label>
+      <input type="text" value={props.cssId || ""} onChange={(e) => actions.setProp((props) => (props.cssId = e.target.value))} placeholder="unique-id" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+      <p className="text-xs text-gray-500 mt-1">Unique identifier for this element</p>
+    </div>
+  </>
+);
+
+// Reusable Attributes Controls Component
+export const AttributesControls = ({ props, actions }) => (
+  <>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Data Attributes</label>
+      <textarea
+        value={props.dataAttributes || ""}
+        onChange={(e) => actions.setProp((props) => (props.dataAttributes = e.target.value))}
+        placeholder='data-scroll="true"&#10;data-animation="fade"'
+        rows={3}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm"
+      />
+      <p className="text-xs text-gray-500 mt-1">One attribute per line (e.g., data-scroll="true")</p>
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">ARIA Label</label>
+      <input type="text" value={props.ariaLabel || ""} onChange={(e) => actions.setProp((props) => (props.ariaLabel = e.target.value))} placeholder="Descriptive label for screen readers" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+      <p className="text-xs text-gray-500 mt-1">Accessibility label for screen readers</p>
+    </div>
+  </>
+);
+
+// Reusable Info Notice Component
+export const InfoNotice = ({ children }) => (
+  <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-3">
+    <p className="text-xs text-blue-700">{children}</p>
+  </div>
+);
+
+// Reusable Position Controls Component
+export const PositionControls = ({ props, actions }) => (
+  <>
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+      <select value={props.position || "default"} onChange={(e) => actions.setProp((props) => (props.position = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
+        <option value="default">Default</option>
+        <option value="static">Static</option>
+        <option value="relative">Relative</option>
+        <option value="absolute">Absolute</option>
+        <option value="fixed">Fixed</option>
+        <option value="sticky">Sticky</option>
+      </select>
+    </div>
+
+    {props.position && props.position !== "default" && props.position !== "static" && (
+      <>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Top</label>
+            <div className="flex items-center gap-1">
+              <input type="number" value={props.positionTop || ""} onChange={(e) => actions.setProp((props) => (props.positionTop = e.target.value))} placeholder="0" className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+              <select value={props.positionTopUnit || "px"} onChange={(e) => actions.setProp((props) => (props.positionTopUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+                <option value="px">px</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Right</label>
+            <div className="flex items-center gap-1">
+              <input type="number" value={props.positionRight || ""} onChange={(e) => actions.setProp((props) => (props.positionRight = e.target.value))} placeholder="0" className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+              <select value={props.positionRightUnit || "px"} onChange={(e) => actions.setProp((props) => (props.positionRightUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+                <option value="px">px</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bottom</label>
+            <div className="flex items-center gap-1">
+              <input type="number" value={props.positionBottom || ""} onChange={(e) => actions.setProp((props) => (props.positionBottom = e.target.value))} placeholder="0" className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+              <select value={props.positionBottomUnit || "px"} onChange={(e) => actions.setProp((props) => (props.positionBottomUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+                <option value="px">px</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Left</label>
+            <div className="flex items-center gap-1">
+              <input type="number" value={props.positionLeft || ""} onChange={(e) => actions.setProp((props) => (props.positionLeft = e.target.value))} placeholder="0" className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+              <select value={props.positionLeftUnit || "px"} onChange={(e) => actions.setProp((props) => (props.positionLeftUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+                <option value="px">px</option>
+                <option value="%">%</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </>
+    )}
+
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Z-Index</label>
+      <input type="number" value={props.zIndex || ""} onChange={(e) => actions.setProp((props) => (props.zIndex = e.target.value))} placeholder="auto" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+    </div>
+
+    <InfoNotice>Above setting will take effect only on preview or live page, and not while you're editing.</InfoNotice>
+  </>
+);
+
+// Reusable Responsive Controls Component
+export const ResponsiveControls = ({ props, actions }) => (
+  <>
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Hide on Desktop</label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" checked={props.hideOnDesktop || false} onChange={(e) => actions.setProp((props) => (props.hideOnDesktop = e.target.checked))} className="sr-only peer" />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">Hide on screens 1024px and above</p>
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Hide on Tablet</label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" checked={props.hideOnTablet || false} onChange={(e) => actions.setProp((props) => (props.hideOnTablet = e.target.checked))} className="sr-only peer" />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">Hide on screens 768px to 1023px</p>
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Hide on Landscape Mobile</label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" checked={props.hideOnLandscapeMobile || false} onChange={(e) => actions.setProp((props) => (props.hideOnLandscapeMobile = e.target.checked))} className="sr-only peer" />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">Hide on screens 480px to 767px</p>
+    </div>
+
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Hide on Mobile</label>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" checked={props.hideOnMobile || false} onChange={(e) => actions.setProp((props) => (props.hideOnMobile = e.target.checked))} className="sr-only peer" />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">Hide on screens below 480px</p>
+    </div>
+
+    <InfoNotice>Above setting will take effect only on preview or live page, and not while you're editing.</InfoNotice>
+  </>
+);

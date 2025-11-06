@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
-import { BackgroundControls, BorderControls, ColorControls, BoxShadowControls, SpacingControls } from "./shared/StyleControls";
+import { BackgroundControls, BorderControls, ColorControls, BoxShadowControls, SpacingControls, PositionControls, ResponsiveControls, CSSControls, AttributesControls } from "./shared/StyleControls";
 
 export const ContainerSettings = () => {
   const { actions, props } = useNode((node) => ({
@@ -68,9 +68,11 @@ export const ContainerSettings = () => {
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-sm font-medium text-gray-700">Custom Width</label>
                           <button
-                            onClick={() => actions.setProp((props) => {
-                              props.customWidth = props.customWidthUnit === "%" ? 100 : 1200;
-                            })}
+                            onClick={() =>
+                              actions.setProp((props) => {
+                                props.customWidth = props.customWidthUnit === "%" ? 100 : 1200;
+                              })
+                            }
                             className="text-xs text-blue-600 hover:text-blue-800"
                           >
                             Reset
@@ -116,9 +118,11 @@ export const ContainerSettings = () => {
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-sm font-medium text-gray-700">Content Box Width</label>
                           <button
-                            onClick={() => actions.setProp((props) => {
-                              props.contentBoxWidth = props.contentBoxWidthUnit === "%" ? 100 : 1200;
-                            })}
+                            onClick={() =>
+                              actions.setProp((props) => {
+                                props.contentBoxWidth = props.contentBoxWidthUnit === "%" ? 100 : 1200;
+                              })
+                            }
                             className="text-xs text-blue-600 hover:text-blue-800"
                           >
                             Reset
@@ -387,10 +391,57 @@ export const ContainerSettings = () => {
 
       {/* Advanced Tab */}
       {activeTab === "advanced" && (
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">CSS Classes</label>
-            <input type="text" value={props.className || ""} onChange={(e) => actions.setProp((props) => (props.className = e.target.value))} placeholder="custom-class" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+        <div className="space-y-4">
+          {/* CSS Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "css" ? "" : "css")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              CSS
+              <span className={`transform transition-transform ${openAccordion === "css" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "css" && (
+              <div className="p-4 border-t border-gray-200 space-y-3">
+                <CSSControls props={props} actions={actions} />
+              </div>
+            )}
+          </div>
+
+          {/* Attributes Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "attributes" ? "" : "attributes")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Attributes
+              <span className={`transform transition-transform ${openAccordion === "attributes" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "attributes" && (
+              <div className="p-4 border-t border-gray-200 space-y-3">
+                <AttributesControls props={props} actions={actions} />
+              </div>
+            )}
+          </div>
+
+          {/* Responsive Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "responsive" ? "" : "responsive")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Responsive
+              <span className={`transform transition-transform ${openAccordion === "responsive" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "responsive" && (
+              <div className="p-4 border-t border-gray-200 space-y-3">
+                <ResponsiveControls props={props} actions={actions} />
+              </div>
+            )}
+          </div>
+
+          {/* Position Accordion */}
+          <div className="border border-gray-200 rounded-md">
+            <button onClick={() => setOpenAccordion(openAccordion === "position" ? "" : "position")} className="w-full flex items-center justify-between p-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50">
+              Position
+              <span className={`transform transition-transform ${openAccordion === "position" ? "rotate-180" : ""}`}>▼</span>
+            </button>
+            {openAccordion === "position" && (
+              <div className="p-4 border-t border-gray-200 space-y-3">
+                <PositionControls props={props} actions={actions} />
+              </div>
+            )}
           </div>
         </div>
       )}
