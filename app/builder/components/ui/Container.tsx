@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useNode, Element } from "@craftjs/core";
+import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import { Copy } from "lucide-react";
 
 // Container component for page builder with hover functionality
 
@@ -123,9 +124,18 @@ export const Container = ({
     connectors: { connect, drag },
     selected,
     actions,
+    id
   } = useNode((state) => ({
     selected: state.events.selected,
   }));
+  
+  const { actions: editorActions, query } = useEditor();
+  
+  const handleCopy = () => {
+    const { data: { type, props } } = query.node(id).get();
+    const newNode = query.createNode(React.createElement(type, props));
+    editorActions.add(newNode, query.node(id).get().data.parent);
+  };
   
   const { getResponsiveValue } = useResponsive();
 
@@ -490,7 +500,18 @@ export const Container = ({
         style={containerStyle}
       >
         {/* Selection Indicator */}
-        {selected && <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>}
+        {selected && (
+          <>
+            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
+            <button
+              onClick={handleCopy}
+              className="absolute -top-6 right-0 bg-green-500 hover:bg-green-600 text-white p-1 rounded-t-md transition-colors z-10"
+              title="Copy Container"
+            >
+              <Copy size={12} />
+            </button>
+          </>
+        )}
 
         {/* Conditionally render content wrapper only when needed for boxed content */}
         {(() => {

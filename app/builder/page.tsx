@@ -20,7 +20,20 @@ export default function Builder() {
   return (
     <ResponsiveProvider>
       <div className="h-screen flex flex-col bg-white">
-        <Editor resolver={{ Text, Button, Container, Image, Heading, Video, Icon }}>
+        <Editor 
+          resolver={{ Text, Button, Container, Image, Heading, Video, Icon }}
+          indicator={{
+            success: '#10b981', // green-500
+            error: '#ef4444',   // red-500
+            style: {
+              borderRadius: '4px',
+              borderWidth: '2px',
+              borderStyle: 'dashed',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease-in-out'
+            }
+          }}
+        >
           <Toolbar />
           <div className="flex-1 flex">
             <Toolbox />

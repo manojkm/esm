@@ -351,6 +351,12 @@ export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1
     const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
     onChange(updatedValues);
   };
+  
+  const handleThrottledChange = (newValue) => {
+    // Use throttled history for rapid changes like slider movements
+    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+    onChange(updatedValues, true); // Pass throttle flag
+  };
 
   const handleUnitChange = (newUnit) => {
     const updatedUnits = setResponsiveValue(value?.unit || {}, currentBreakpoint, newUnit);
@@ -388,7 +394,7 @@ export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1
         )}
       </div>
       <div className="flex items-center gap-2">
-        <input type="range" min={min} max={max} value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+        <input type="range" min={min} max={max} value={responsiveValue} onChange={(e) => handleThrottledChange(parseInt(e.target.value))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
         <input type="number" value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className={`w-16 px-2 py-1 text-xs border border-gray-300 text-gray-900 bg-white ${showUnitSelector ? 'rounded-l' : 'rounded'}`} />
         {showUnitSelector && (
           <select value={responsiveUnit} onChange={(e) => handleUnitChange(e.target.value)} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
