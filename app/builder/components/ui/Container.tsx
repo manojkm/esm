@@ -5,7 +5,7 @@ import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import { Trash2, ArrowUp, MoreVertical } from "lucide-react";
-
+import { Copy } from "lucide-react";
 
 /**
  * Container Component - Main building block for page layouts
@@ -129,28 +129,34 @@ export const Container = ({
     connectors: { connect, drag }, // Drag/drop connectors
     selected, // Is component currently selected
     actions, // Component prop actions
-    id // Unique component ID
+    id, // Unique component ID
   } = useNode((state) => ({
-    selected: state.events.selected
+    selected: state.events.selected,
   }));
-  
+
   // Editor-level actions and queries
   const { actions: editorActions, query } = useEditor();
-  
 
-  
+  const handleCopy = () => {
+    const {
+      data: { type, props },
+    } = query.node(id).get();
+    const newNode = query.createNode(React.createElement(type, props));
+    editorActions.add(newNode, query.node(id).get().data.parent);
+  };
+
   const { getResponsiveValue } = useResponsive();
 
   // Component state management
   const [showPicker, setShowPicker] = useState(showLayoutPicker); // Layout picker modal
   const [showContextMenu, setShowContextMenu] = useState(false); // Context menu visibility
-  
+
   // Context menu handlers
   const handleDelete = () => {
     editorActions.delete(id);
     setShowContextMenu(false);
   };
-  
+
   const handleSelectParent = () => {
     const parentId = query.node(id).get().data.parent;
     if (parentId) {
@@ -158,11 +164,6 @@ export const Container = ({
     }
     setShowContextMenu(false);
   };
-  
-
-
-  
-
 
   // Layout logic
   const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
@@ -202,7 +203,7 @@ export const Container = ({
     }
     return marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
   };
-  
+
   // Calculate responsive gap values
   const getResponsiveRowGap = () => {
     if (rowGapResponsive) {
@@ -212,7 +213,7 @@ export const Container = ({
     }
     return `${rowGap}${rowGapUnit}`;
   };
-  
+
   const getResponsiveColumnGap = () => {
     if (columnGapResponsive) {
       const value = getResponsiveValue(columnGapResponsive, columnGap);
@@ -221,7 +222,7 @@ export const Container = ({
     }
     return `${columnGap}${columnGapUnit}`;
   };
-  
+
   const paddingValue = getResponsivePadding();
   const marginValue = getResponsiveMargin();
 
@@ -266,7 +267,7 @@ export const Container = ({
     }
     return borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
   };
-  
+
   // Calculate responsive border width
   const getResponsiveBorderWidth = () => {
     if (borderWidthResponsive) {
@@ -303,7 +304,7 @@ export const Container = ({
     let vertical = boxShadowVertical;
     let blur = boxShadowBlur;
     let spread = boxShadowSpread;
-    
+
     if (boxShadowHorizontalResponsive) {
       horizontal = getResponsiveValue(boxShadowHorizontalResponsive, boxShadowHorizontal);
     }
@@ -316,16 +317,16 @@ export const Container = ({
     if (boxShadowSpreadResponsive) {
       spread = getResponsiveValue(boxShadowSpreadResponsive, boxShadowSpread);
     }
-    
+
     return { horizontal, vertical, blur, spread };
   };
-  
+
   const getResponsiveBoxShadowHover = () => {
     let horizontal = boxShadowHorizontalHover;
     let vertical = boxShadowVerticalHover;
     let blur = boxShadowBlurHover;
     let spread = boxShadowSpreadHover;
-    
+
     if (boxShadowHorizontalHoverResponsive) {
       horizontal = getResponsiveValue(boxShadowHorizontalHoverResponsive, boxShadowHorizontalHover);
     }
@@ -338,14 +339,14 @@ export const Container = ({
     if (boxShadowSpreadHoverResponsive) {
       spread = getResponsiveValue(boxShadowSpreadHoverResponsive, boxShadowSpreadHover);
     }
-    
+
     return { horizontal, vertical, blur, spread };
   };
 
   // Calculate box shadow styles
   const getBoxShadowStyles = () => {
     const shadowValues = getResponsiveBoxShadow();
-    
+
     if (!boxShadowPreset && shadowValues.horizontal === 0 && shadowValues.vertical === 0 && shadowValues.blur === 0) return {};
 
     const inset = boxShadowPosition === "inset" ? "inset " : "";
@@ -522,45 +523,34 @@ export const Container = ({
         {/* Selection Indicator */}
         {selected && (
           <>
-            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">
-              Container
-            </div>
+            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
             <div className="absolute -top-6 right-0 z-10">
-              <button
-                onClick={() => setShowContextMenu(!showContextMenu)}
-                className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors"
-                title="Component Actions"
-              >
+              <button onClick={() => setShowContextMenu(!showContextMenu)} className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors" title="Component Actions">
                 <MoreVertical size={12} />
               </button>
-              
+
               {/* Context Menu */}
               {showContextMenu && (
                 <div className="absolute top-full right-0 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
-
+                  <button onClick={handleCopy} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                    <Copy size={12} /> Copy
+                  </button>
 
                   {/* Select Parent */}
                   {!isChildContainer && (
-                    <button
-                      onClick={handleSelectParent}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                    >
+                    <button onClick={handleSelectParent} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
                       <ArrowUp size={14} />
                       Select Parent
                     </button>
                   )}
-                  
+
                   {/* Delete */}
-                  <button
-                    onClick={handleDelete}
-                    className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
+                  <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                     <Trash2 size={14} />
                     Delete
                   </button>
                 </div>
               )}
-
             </div>
           </>
         )}
@@ -590,7 +580,7 @@ export const Container = ({
 
 // Craft.js component configuration
 Container.craft = {
-  displayName: 'Container', // Default name in toolbox
+  displayName: "Container", // Default name in toolbox
   isCanvas: true, // Can accept child components (droppable + expandable in layers)
   rules: {
     canMoveIn: (incomingNodes, currentNode, helpers) => {
@@ -602,6 +592,6 @@ Container.craft = {
     },
     canDrag: (node, helpers) => {
       return !helpers(node.id).isRoot(); // Can't drag root
-    }
-  }
+    },
+  },
 };
