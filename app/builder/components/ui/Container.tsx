@@ -127,21 +127,17 @@ export const Container = ({
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed";
 
   // Calculate padding and margin
-  const paddingValue = paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null 
-    ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` 
-    : `${padding}px`;
+  const paddingValue = paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` : `${padding}px`;
 
-  const marginValue = marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null 
-    ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` 
-    : `${margin}px`;
+  const marginValue = marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
 
   // Generate unique class name for hover styles
   const hoverClassName = `container-hover-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Calculate background styles only when backgroundType is active
   const getBackgroundStyles = () => {
     if (!backgroundType) return {};
-    
+
     switch (backgroundType) {
       case "color":
         return {
@@ -152,74 +148,72 @@ export const Container = ({
           background: backgroundGradient,
         };
       case "image":
-        return backgroundImage ? {
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        } : {};
+        return backgroundImage
+          ? {
+              backgroundImage: `url(${backgroundImage})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }
+          : {};
       default:
         return {};
     }
   };
-  
+
   // Calculate border styles
   const getBorderStyles = () => {
     const styles = {};
-    
+
     // Always apply border radius
-    const borderRadiusValue = borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null
-      ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}`
-      : `${borderRadius}${borderRadiusUnit}`;
-    
+    const borderRadiusValue = borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
+
     styles.borderRadius = borderRadiusValue;
-    
+
     // Only apply border properties if style is not none
     if (borderStyle && borderStyle !== "none") {
-      const borderWidthValue = borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null
-        ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px`
-        : `${borderWidth}px`;
-      
+      const borderWidthValue = borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px` : `${borderWidth}px`;
+
       styles.borderStyle = borderStyle;
       styles.borderWidth = borderWidthValue;
       styles.borderColor = borderColor;
     }
-    
+
     return styles;
   };
-  
+
   // Calculate box shadow styles
   const getBoxShadowStyles = () => {
-    if (!boxShadowPreset && (boxShadowHorizontal === 0 && boxShadowVertical === 0 && boxShadowBlur === 0)) return {};
-    
+    if (!boxShadowPreset && boxShadowHorizontal === 0 && boxShadowVertical === 0 && boxShadowBlur === 0) return {};
+
     const inset = boxShadowPosition === "inset" ? "inset " : "";
     const boxShadowValue = `${inset}${boxShadowHorizontal}px ${boxShadowVertical}px ${boxShadowBlur}px ${boxShadowSpread}px ${boxShadowColor}`;
-    
+
     return {
       boxShadow: boxShadowValue,
     };
   };
-  
+
   // Calculate color styles
   const getColorStyles = () => {
     const styles = {};
-    
+
     if (textColor) {
       styles.color = textColor;
     }
-    
+
     return styles;
   };
-  
+
   // Generate responsive styles (only for live pages, not in editor)
   const getResponsiveStyles = () => {
     // Skip responsive styles in editor mode
-    if (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) {
+    if (typeof window !== "undefined" && window.location.pathname.includes("/builder")) {
       return "";
     }
-    
+
     let responsiveCSS = "";
-    
+
     if (hideOnDesktop) {
       responsiveCSS += `@media (min-width: 1024px) { .${hoverClassName} { display: none !important; } } `;
     }
@@ -232,14 +226,14 @@ export const Container = ({
     if (hideOnMobile) {
       responsiveCSS += `@media (max-width: 479px) { .${hoverClassName} { display: none !important; } } `;
     }
-    
+
     return responsiveCSS;
   };
 
   // Generate hover styles
   const getHoverStyles = () => {
     let hoverCSS = "";
-    
+
     // Background hover styles
     if (backgroundType) {
       switch (backgroundType) {
@@ -251,19 +245,19 @@ export const Container = ({
           break;
       }
     }
-    
+
     // Border hover styles
     if (borderStyle && borderStyle !== "none") {
       hoverCSS += `border-color: ${borderColorHover} !important; `;
     }
-    
+
     // Box shadow hover styles
-    if (boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0)) {
+    if (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) {
       const insetHover = boxShadowPositionHover === "inset" ? "inset " : "";
       const boxShadowHoverValue = `${insetHover}${boxShadowHorizontalHover}px ${boxShadowVerticalHover}px ${boxShadowBlurHover}px ${boxShadowSpreadHover}px ${boxShadowColorHover}`;
       hoverCSS += `box-shadow: ${boxShadowHoverValue} !important; `;
     }
-    
+
     // Link color styles
     let linkCSS = "";
     if (linkColor) {
@@ -272,7 +266,7 @@ export const Container = ({
     if (linkColorHover) {
       linkCSS += `.${hoverClassName} a:hover { color: ${linkColorHover} !important; } `;
     }
-    
+
     const combinedCSS = (hoverCSS ? `.${hoverClassName}:hover { ${hoverCSS} }` : "") + linkCSS + getResponsiveStyles();
     return combinedCSS;
   };
@@ -281,7 +275,7 @@ export const Container = ({
   const parseDataAttributes = () => {
     if (!dataAttributes) return {};
     const attrs = {};
-    dataAttributes.split('\n').forEach(line => {
+    dataAttributes.split("\n").forEach((line) => {
       const match = line.trim().match(/^([^=]+)=["']([^"']*)["']$/);
       if (match) {
         attrs[match[1]] = match[2];
@@ -311,12 +305,12 @@ export const Container = ({
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: isChildContainer ? undefined : overflow,
-    position: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (position && position !== "default" ? position : undefined),
-    top: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined),
-    right: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined),
-    bottom: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined),
-    left: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined),
-    zIndex: (typeof window !== 'undefined' && window.location.pathname.includes('/builder')) ? undefined : (zIndex ? parseInt(zIndex) : undefined),
+    position: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : position && position !== "default" ? position : undefined,
+    top: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined,
+    right: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined,
+    bottom: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined,
+    left: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined,
+    zIndex: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : zIndex ? parseInt(zIndex) : undefined,
   };
 
   const contentWrapperStyle = {
@@ -342,10 +336,8 @@ export const Container = ({
   return (
     <>
       {/* Inject hover and responsive styles */}
-      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && (
-        <style>{getHoverStyles()}</style>
-      )}
-      
+      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && <style>{getHoverStyles()}</style>}
+
       <ContainerTag
         ref={(ref) => connect(drag(ref))}
         id={cssId || undefined}
@@ -355,40 +347,34 @@ export const Container = ({
           relative
           ${selected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-blue-300"}
           transition-all duration-200
-          ${((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || (boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) ? hoverClassName : ""}
+          ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
           ${className}
         `}
         style={containerStyle}
       >
-      {/* Selection Indicator */}
-      {selected && <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>}
+        {/* Selection Indicator */}
+        {selected && <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>}
 
-      {/* Conditionally render content wrapper only when needed for boxed content */}
-      {needsContentWrapper ? (
-        <div style={contentWrapperStyle}>
-          {/* Auto-generate columns based on selected layout - skip single column */}
-          {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((width, index) => <Element key={index} id={`column_${index}_${width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={width} canvas />)}
+        {/* Conditionally render content wrapper only when needed for boxed content */}
+        {(() => {
+          const content = (
+            <>
+              {/* Auto-generate columns based on selected layout - skip single column */}
+              {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((width, index) => <Element key={index} id={`column_${index}_${width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={width} canvas />)}
 
-          {/* Regular drop zone */}
-          {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+              {/* Regular drop zone */}
+              {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
 
-          {children}
-        </div>
-      ) : (
-        <>
-          {/* Auto-generate columns based on selected layout - skip single column */}
-          {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((width, index) => <Element key={index} id={`column_${index}_${width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={width} canvas />)}
+              {children}
+            </>
+          );
 
-          {/* Regular drop zone */}
-          {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+          return needsContentWrapper ? <div style={contentWrapperStyle}>{content}</div> : content;
+        })()}
 
-          {children}
-        </>
-      )}
-
-      {/* Layout Picker Modal */}
-      {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
-    </ContainerTag>
+        {/* Layout Picker Modal */}
+        {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
+      </ContainerTag>
     </>
   );
 };
