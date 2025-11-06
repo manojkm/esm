@@ -31,6 +31,8 @@ export const Container = ({
   columnGapResponsive,
   backgroundColor = "#ffffff",
   backgroundColorHover = "#f0f0f0",
+  backgroundColorResponsive,
+  backgroundColorHoverResponsive,
   backgroundType = null,
   backgroundGradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   backgroundGradientHover = "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
@@ -41,6 +43,8 @@ export const Container = ({
   borderBottomRightRadius = null,
   borderBottomLeftRadius = null,
   borderRadiusUnit = "px",
+  borderRadiusResponsive,
+  borderWidthResponsive,
   borderStyle = "none",
   borderWidth = 1,
   borderTopWidth = null,
@@ -49,6 +53,8 @@ export const Container = ({
   borderLeftWidth = null,
   borderColor = "#000000",
   borderColorHover = "#333333",
+  borderColorResponsive,
+  borderColorHoverResponsive,
   boxShadowColor = "rgba(0, 0, 0, 0.1)",
   boxShadowColorHover = "rgba(0, 0, 0, 0.15)",
   boxShadowHorizontal = 0,
@@ -62,6 +68,14 @@ export const Container = ({
   boxShadowSpreadHover = 0,
   boxShadowPositionHover = "outset",
   boxShadowPreset = null,
+  boxShadowHorizontalResponsive,
+  boxShadowVerticalResponsive,
+  boxShadowBlurResponsive,
+  boxShadowSpreadResponsive,
+  boxShadowHorizontalHoverResponsive,
+  boxShadowVerticalHoverResponsive,
+  boxShadowBlurHoverResponsive,
+  boxShadowSpreadHoverResponsive,
   textColor = null,
   linkColor = null,
   linkColorHover = null,
@@ -190,9 +204,8 @@ export const Container = ({
 
     switch (backgroundType) {
       case "color":
-        return {
-          backgroundColor: backgroundColor,
-        };
+        const bgColor = getResponsiveValue(backgroundColorResponsive || {}, backgroundColor);
+        return bgColor ? { backgroundColor: bgColor } : {};
       case "gradient":
         return {
           background: backgroundGradient,
@@ -211,33 +224,102 @@ export const Container = ({
     }
   };
 
+  // Calculate responsive border radius
+  const getResponsiveBorderRadius = () => {
+    if (borderRadiusResponsive) {
+      const topLeft = getResponsiveValue(borderRadiusResponsive.top || {}, borderTopLeftRadius ?? borderRadius);
+      const topRight = getResponsiveValue(borderRadiusResponsive.right || {}, borderTopRightRadius ?? borderRadius);
+      const bottomRight = getResponsiveValue(borderRadiusResponsive.bottom || {}, borderBottomRightRadius ?? borderRadius);
+      const bottomLeft = getResponsiveValue(borderRadiusResponsive.left || {}, borderBottomLeftRadius ?? borderRadius);
+      const unit = getResponsiveValue(borderRadiusResponsive.unit || {}, borderRadiusUnit);
+      return `${topLeft}${unit} ${topRight}${unit} ${bottomRight}${unit} ${bottomLeft}${unit}`;
+    }
+    return borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
+  };
+  
+  // Calculate responsive border width
+  const getResponsiveBorderWidth = () => {
+    if (borderWidthResponsive) {
+      const top = getResponsiveValue(borderWidthResponsive.top || {}, borderTopWidth ?? borderWidth);
+      const right = getResponsiveValue(borderWidthResponsive.right || {}, borderRightWidth ?? borderWidth);
+      const bottom = getResponsiveValue(borderWidthResponsive.bottom || {}, borderBottomWidth ?? borderWidth);
+      const left = getResponsiveValue(borderWidthResponsive.left || {}, borderLeftWidth ?? borderWidth);
+      return `${top}px ${right}px ${bottom}px ${left}px`;
+    }
+    return borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px` : `${borderWidth}px`;
+  };
+
   // Calculate border styles
   const getBorderStyles = () => {
     const styles = {};
 
     // Always apply border radius
-    const borderRadiusValue = borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
-
-    styles.borderRadius = borderRadiusValue;
+    styles.borderRadius = getResponsiveBorderRadius();
 
     // Only apply border properties if style is not none
     if (borderStyle && borderStyle !== "none") {
-      const borderWidthValue = borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px` : `${borderWidth}px`;
-
       styles.borderStyle = borderStyle;
-      styles.borderWidth = borderWidthValue;
-      styles.borderColor = borderColor;
+      styles.borderWidth = getResponsiveBorderWidth();
+      const responsiveBorderColor = getResponsiveValue(borderColorResponsive || {}, borderColor);
+      styles.borderColor = responsiveBorderColor;
     }
 
     return styles;
   };
 
+  // Calculate responsive box shadow values
+  const getResponsiveBoxShadow = () => {
+    let horizontal = boxShadowHorizontal;
+    let vertical = boxShadowVertical;
+    let blur = boxShadowBlur;
+    let spread = boxShadowSpread;
+    
+    if (boxShadowHorizontalResponsive) {
+      horizontal = getResponsiveValue(boxShadowHorizontalResponsive, boxShadowHorizontal);
+    }
+    if (boxShadowVerticalResponsive) {
+      vertical = getResponsiveValue(boxShadowVerticalResponsive, boxShadowVertical);
+    }
+    if (boxShadowBlurResponsive) {
+      blur = getResponsiveValue(boxShadowBlurResponsive, boxShadowBlur);
+    }
+    if (boxShadowSpreadResponsive) {
+      spread = getResponsiveValue(boxShadowSpreadResponsive, boxShadowSpread);
+    }
+    
+    return { horizontal, vertical, blur, spread };
+  };
+  
+  const getResponsiveBoxShadowHover = () => {
+    let horizontal = boxShadowHorizontalHover;
+    let vertical = boxShadowVerticalHover;
+    let blur = boxShadowBlurHover;
+    let spread = boxShadowSpreadHover;
+    
+    if (boxShadowHorizontalHoverResponsive) {
+      horizontal = getResponsiveValue(boxShadowHorizontalHoverResponsive, boxShadowHorizontalHover);
+    }
+    if (boxShadowVerticalHoverResponsive) {
+      vertical = getResponsiveValue(boxShadowVerticalHoverResponsive, boxShadowVerticalHover);
+    }
+    if (boxShadowBlurHoverResponsive) {
+      blur = getResponsiveValue(boxShadowBlurHoverResponsive, boxShadowBlurHover);
+    }
+    if (boxShadowSpreadHoverResponsive) {
+      spread = getResponsiveValue(boxShadowSpreadHoverResponsive, boxShadowSpreadHover);
+    }
+    
+    return { horizontal, vertical, blur, spread };
+  };
+
   // Calculate box shadow styles
   const getBoxShadowStyles = () => {
-    if (!boxShadowPreset && boxShadowHorizontal === 0 && boxShadowVertical === 0 && boxShadowBlur === 0) return {};
+    const shadowValues = getResponsiveBoxShadow();
+    
+    if (!boxShadowPreset && shadowValues.horizontal === 0 && shadowValues.vertical === 0 && shadowValues.blur === 0) return {};
 
     const inset = boxShadowPosition === "inset" ? "inset " : "";
-    const boxShadowValue = `${inset}${boxShadowHorizontal}px ${boxShadowVertical}px ${boxShadowBlur}px ${boxShadowSpread}px ${boxShadowColor}`;
+    const boxShadowValue = `${inset}${shadowValues.horizontal}px ${shadowValues.vertical}px ${shadowValues.blur}px ${shadowValues.spread}px ${boxShadowColor}`;
 
     return {
       boxShadow: boxShadowValue,
@@ -288,7 +370,10 @@ export const Container = ({
     if (backgroundType) {
       switch (backgroundType) {
         case "color":
-          hoverCSS += `background-color: ${backgroundColorHover} !important; `;
+          const bgColorHover = getResponsiveValue(backgroundColorHoverResponsive || {}, backgroundColorHover);
+          if (bgColorHover) {
+            hoverCSS += `background-color: ${bgColorHover} !important; `;
+          }
           break;
         case "gradient":
           hoverCSS += `background: ${backgroundGradientHover} !important; `;
@@ -298,13 +383,15 @@ export const Container = ({
 
     // Border hover styles
     if (borderStyle && borderStyle !== "none") {
-      hoverCSS += `border-color: ${borderColorHover} !important; `;
+      const responsiveBorderColorHover = getResponsiveValue(borderColorHoverResponsive || {}, borderColorHover);
+      hoverCSS += `border-color: ${responsiveBorderColorHover} !important; `;
     }
 
     // Box shadow hover styles
-    if (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0) {
+    const hoverShadowValues = getResponsiveBoxShadowHover();
+    if (boxShadowPreset || hoverShadowValues.horizontal !== 0 || hoverShadowValues.vertical !== 0 || hoverShadowValues.blur !== 0) {
       const insetHover = boxShadowPositionHover === "inset" ? "inset " : "";
-      const boxShadowHoverValue = `${insetHover}${boxShadowHorizontalHover}px ${boxShadowVerticalHover}px ${boxShadowBlurHover}px ${boxShadowSpreadHover}px ${boxShadowColorHover}`;
+      const boxShadowHoverValue = `${insetHover}${hoverShadowValues.horizontal}px ${hoverShadowValues.vertical}px ${hoverShadowValues.blur}px ${hoverShadowValues.spread}px ${boxShadowColorHover}`;
       hoverCSS += `box-shadow: ${boxShadowHoverValue} !important; `;
     }
 

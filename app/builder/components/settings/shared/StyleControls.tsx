@@ -5,26 +5,44 @@ import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 
 // Reusable Color Input Component
-export const ColorInput = ({ label, value, onChange, placeholder = "#000000", responsive = false, responsiveKey = null }) => {
+export const ColorInput = ({ label, value, onChange, placeholder = "#000000", responsive = false }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
 
-  if (responsive && responsiveKey) {
-    const responsiveValue = getResponsiveValue(value || {}, placeholder);
+  if (responsive) {
+    const responsiveValue = getResponsiveValue(value || {}, null);
+    const hasCustomValue = responsiveValue !== null;
+    
     const handleResponsiveChange = (newValue) => {
       const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+      onChange(updatedValues);
+    };
+    
+    const handleReset = () => {
+      const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, null);
       onChange(updatedValues);
     };
 
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-          <span className="ml-1 text-blue-600">
-            {currentBreakpoint === 'desktop' && <Monitor size={12} />}
-            {currentBreakpoint === 'tablet' && <Tablet size={12} />}
-            {currentBreakpoint === 'mobile' && <Smartphone size={12} />}
-          </span>
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="flex items-center text-sm font-medium text-gray-700">
+            {label}
+            <span className="ml-2 text-blue-600">
+              {currentBreakpoint === 'desktop' && <Monitor size={12} />}
+              {currentBreakpoint === 'tablet' && <Tablet size={12} />}
+              {currentBreakpoint === 'mobile' && <Smartphone size={12} />}
+            </span>
+          </label>
+          {hasCustomValue && (
+            <button
+              onClick={handleReset}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Reset to default"
+            >
+              <RotateCcw size={14} />
+            </button>
+          )}
+        </div>
         <div className="flex gap-2">
           <input type="color" value={responsiveValue || placeholder} onChange={(e) => handleResponsiveChange(e.target.value)} className="w-10 h-10 flex-shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
           <input type="text" value={responsiveValue || ""} onChange={(e) => handleResponsiveChange(e.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
@@ -71,8 +89,8 @@ export const BackgroundControls = ({ props, actions }) => (
 
     {props.backgroundType === "color" && (
       <div className="space-y-3">
-        <ColorInput label="Background Color" value={props.backgroundColor} onChange={(value) => actions.setProp((props) => (props.backgroundColor = value))} placeholder="#ffffff" />
-        <ColorInput label="Hover Color" value={props.backgroundColorHover} onChange={(value) => actions.setProp((props) => (props.backgroundColorHover = value))} placeholder="#f0f0f0" />
+        <ColorInput label="Background Color" value={props.backgroundColorResponsive} onChange={(value) => actions.setProp((props) => (props.backgroundColorResponsive = value))} placeholder="#ffffff" responsive={true} />
+        <ColorInput label="Hover Color" value={props.backgroundColorHoverResponsive} onChange={(value) => actions.setProp((props) => (props.backgroundColorHoverResponsive = value))} placeholder="#f0f0f0" responsive={true} />
       </div>
     )}
 
@@ -118,208 +136,209 @@ export const BorderControls = ({ props, actions }) => (
 
     {props.borderStyle && props.borderStyle !== "none" && (
       <>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Border Width</label>
-          <div className="grid grid-cols-4 gap-1">
-            {["Top", "Right", "Bottom", "Left"].map((side, index) => {
-              const prop = `border${side}Width`;
-              return (
-                <div key={side}>
-                  <label className="block text-xs text-gray-500 mb-1">{side}</label>
-                  <input type="number" value={props[prop] ?? props.borderWidth ?? 1} onChange={(e) => actions.setProp((props) => (props[prop] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <ResponsiveSpacingControl 
+          label="Border Width" 
+          value={props.borderWidthResponsive} 
+          onChange={(value) => actions.setProp((props) => (props.borderWidthResponsive = value))} 
+          unitOptions={["px"]} 
+          defaultValue={1} 
+        />
 
         <div className="space-y-3">
-          <ColorInput label="Border Color" value={props.borderColor} onChange={(value) => actions.setProp((props) => (props.borderColor = value))} placeholder="#000000" />
-          <ColorInput label="Hover Border Color" value={props.borderColorHover} onChange={(value) => actions.setProp((props) => (props.borderColorHover = value))} placeholder="#333333" />
+          <ColorInput label="Border Color" value={props.borderColorResponsive} onChange={(value) => actions.setProp((props) => (props.borderColorResponsive = value))} placeholder="#000000" responsive={true} />
+          <ColorInput label="Hover Border Color" value={props.borderColorHoverResponsive} onChange={(value) => actions.setProp((props) => (props.borderColorHoverResponsive = value))} placeholder="#333333" responsive={true} />
         </div>
       </>
     )}
 
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium text-gray-700">Border Radius</label>
-        <select value={props.borderRadiusUnit || "px"} onChange={(e) => actions.setProp((props) => (props.borderRadiusUnit = e.target.value))} className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white">
-          <option value="px">px</option>
-          <option value="%">%</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-4 gap-1">
-        {["TopLeft", "TopRight", "BottomRight", "BottomLeft"].map((corner, index) => {
-          const prop = `border${corner}Radius`;
-          const labels = ["Top", "Right", "Bottom", "Left"];
-          return (
-            <div key={corner}>
-              <label className="block text-xs text-gray-500 mb-1">{labels[index]}</label>
-              <input type="number" value={props[prop] ?? props.borderRadius ?? 0} onChange={(e) => actions.setProp((props) => (props[prop] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ResponsiveSpacingControl 
+      label="Border Radius" 
+      value={props.borderRadiusResponsive} 
+      onChange={(value) => actions.setProp((props) => (props.borderRadiusResponsive = value))} 
+      unitOptions={["px", "%"]} 
+      defaultValue={0} 
+    />
   </div>
 );
 
 // Box Shadow Controls Component
-export const BoxShadowControls = ({ props, actions }) => (
-  <div className="space-y-4">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">Select Preset</label>
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { name: "None", value: null, shadow: "none" },
-          { name: "Subtle", value: "subtle", shadow: "0 1px 3px rgba(0,0,0,0.1)" },
-          { name: "Small", value: "small", shadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" },
-          { name: "Medium", value: "medium", shadow: "0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)" },
-          { name: "Large", value: "large", shadow: "0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)" },
-          { name: "Extra Large", value: "xl", shadow: "0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04)" },
-        ].map((preset) => (
-          <button
-            key={preset.value}
-            onClick={() => {
-              actions.setProp((props) => {
-                props.boxShadowPreset = preset.value;
-                if (preset.value === null) {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 0;
-                  props.boxShadowBlur = 0;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 0;
-                  props.boxShadowBlurHover = 0;
-                  props.boxShadowSpreadHover = 0;
-                } else if (preset.value === "subtle") {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 1;
-                  props.boxShadowBlur = 3;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 2;
-                  props.boxShadowBlurHover = 6;
-                  props.boxShadowSpreadHover = 0;
-                  props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
-                } else if (preset.value === "small") {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 1;
-                  props.boxShadowBlur = 3;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 4;
-                  props.boxShadowBlurHover = 8;
-                  props.boxShadowSpreadHover = 0;
-                  props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
-                } else if (preset.value === "medium") {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 4;
-                  props.boxShadowBlur = 6;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 8;
-                  props.boxShadowBlurHover = 15;
-                  props.boxShadowSpreadHover = 0;
-                  props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
-                } else if (preset.value === "large") {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 10;
-                  props.boxShadowBlur = 15;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 15;
-                  props.boxShadowBlurHover = 25;
-                  props.boxShadowSpreadHover = 0;
-                  props.boxShadowColorHover = "rgba(0, 0, 0, 0.2)";
-                } else if (preset.value === "xl") {
-                  props.boxShadowHorizontal = 0;
-                  props.boxShadowVertical = 20;
-                  props.boxShadowBlur = 25;
-                  props.boxShadowSpread = 0;
-                  props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-                  props.boxShadowHorizontalHover = 0;
-                  props.boxShadowVerticalHover = 25;
-                  props.boxShadowBlurHover = 50;
-                  props.boxShadowSpreadHover = 0;
-                  props.boxShadowColorHover = "rgba(0, 0, 0, 0.25)";
-                }
-              });
-            }}
-            className={`p-3 text-xs border rounded text-center transition-colors ${(props.boxShadowPreset || null) === preset.value ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
-            style={{ boxShadow: preset.shadow }}
-          >
-            {preset.name}
-          </button>
-        ))}
-      </div>
-    </div>
-
-    <div className="space-y-3">
-      <h4 className="text-sm font-medium text-gray-700">Normal Shadow</h4>
+export const BoxShadowControls = ({ props, actions }) => {
+  const [activeTab, setActiveTab] = React.useState("normal");
+  
+  return (
+    <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
-        <input type="text" value={props.boxShadowColor || "rgba(0, 0, 0, 0.1)"} onChange={(e) => actions.setProp((props) => (props.boxShadowColor = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.1)" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {["Horizontal", "Vertical", "Blur", "Spread"].map((prop, index) => {
-          const propName = `boxShadow${prop}`;
-          const defaultValues = [0, 0, 0, 0];
-          return (
-            <div key={prop}>
-              <label className="block text-xs text-gray-500 mb-1">{prop}</label>
-              <input type="number" value={props[propName] ?? defaultValues[index]} onChange={(e) => actions.setProp((props) => (props[propName] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
-            </div>
-          );
-        })}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-        <div className="grid grid-cols-2 gap-1">
-          {["outset", "inset"].map((position) => (
-            <button key={position} onClick={() => actions.setProp((props) => (props.boxShadowPosition = position))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPosition || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
-              {position}
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Preset</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { name: "None", value: null, shadow: "none" },
+            { name: "Subtle", value: "subtle", shadow: "0 1px 3px rgba(0,0,0,0.1)" },
+            { name: "Small", value: "small", shadow: "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" },
+            { name: "Medium", value: "medium", shadow: "0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)" },
+            { name: "Large", value: "large", shadow: "0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05)" },
+            { name: "Extra Large", value: "xl", shadow: "0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04)" },
+          ].map((preset) => (
+            <button
+              key={preset.value}
+              onClick={() => {
+                actions.setProp((props) => {
+                  props.boxShadowPreset = preset.value;
+                  // Update responsive values for current breakpoint
+                  const currentBreakpoint = 'desktop'; // Default to desktop for presets
+                  
+                  if (preset.value === null) {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                  } else if (preset.value === "subtle") {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 1 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 3 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 2 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 6 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
+                  } else if (preset.value === "small") {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 1 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 3 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 4 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 8 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
+                  } else if (preset.value === "medium") {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 4 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 6 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 8 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 15 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
+                  } else if (preset.value === "large") {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 10 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 15 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 15 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 25 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColorHover = "rgba(0, 0, 0, 0.2)";
+                  } else if (preset.value === "xl") {
+                    props.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalResponsive = { [currentBreakpoint]: 20 };
+                    props.boxShadowBlurResponsive = { [currentBreakpoint]: 25 };
+                    props.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+                    props.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 25 };
+                    props.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 50 };
+                    props.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
+                    props.boxShadowColorHover = "rgba(0, 0, 0, 0.25)";
+                  }
+                });
+              }}
+              className={`p-3 text-xs border rounded text-center transition-colors ${(props.boxShadowPreset || null) === preset.value ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+              style={{ boxShadow: preset.shadow }}
+            >
+              {preset.name}
             </button>
           ))}
         </div>
       </div>
-    </div>
 
-    <div className="space-y-3">
-      <h4 className="text-sm font-medium text-gray-700">Hover Shadow</h4>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Hover Color</label>
-        <input type="text" value={props.boxShadowColorHover || "rgba(0, 0, 0, 0.15)"} onChange={(e) => actions.setProp((props) => (props.boxShadowColorHover = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.15)" />
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab("normal")}
+          className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "normal"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Normal
+        </button>
+        <button
+          onClick={() => setActiveTab("hover")}
+          className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "hover"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Hover
+        </button>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {["Horizontal", "Vertical", "Blur", "Spread"].map((prop, index) => {
-          const propName = `boxShadow${prop}Hover`;
-          const defaultValues = [0, 0, 0, 0];
-          return (
-            <div key={prop}>
-              <label className="block text-xs text-gray-500 mb-1">{prop}</label>
-              <input type="number" value={props[propName] ?? defaultValues[index]} onChange={(e) => actions.setProp((props) => (props[propName] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+
+      {/* Tab Content */}
+      {activeTab === "normal" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
+            <input type="text" value={props.boxShadowColor || "rgba(0, 0, 0, 0.1)"} onChange={(e) => actions.setProp((props) => (props.boxShadowColor = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.1)" />
+          </div>
+          <div className="space-y-3">
+            <ResponsiveNumberInput label="Horizontal" value={props.boxShadowHorizontalResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowHorizontalResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Vertical" value={props.boxShadowVerticalResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowVerticalResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Blur" value={props.boxShadowBlurResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowBlurResponsive = value))} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Spread" value={props.boxShadowSpreadResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowSpreadResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+            <div className="grid grid-cols-2 gap-1">
+              {["outset", "inset"].map((position) => (
+                <button key={position} onClick={() => actions.setProp((props) => (props.boxShadowPosition = position))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPosition || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                  {position}
+                </button>
+              ))}
             </div>
-          );
-        })}
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Hover Position</label>
-        <div className="grid grid-cols-2 gap-1">
-          {["outset", "inset"].map((position) => (
-            <button key={position} onClick={() => actions.setProp((props) => (props.boxShadowPositionHover = position))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPositionHover || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
-              {position}
-            </button>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "hover" && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Hover Color</label>
+            <input type="text" value={props.boxShadowColorHover || "rgba(0, 0, 0, 0.15)"} onChange={(e) => actions.setProp((props) => (props.boxShadowColorHover = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.15)" />
+          </div>
+          <div className="space-y-3">
+            <ResponsiveNumberInput label="Horizontal" value={props.boxShadowHorizontalHoverResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowHorizontalHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Vertical" value={props.boxShadowVerticalHoverResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowVerticalHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Blur" value={props.boxShadowBlurHoverResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowBlurHoverResponsive = value))} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+            <ResponsiveNumberInput label="Spread" value={props.boxShadowSpreadHoverResponsive} onChange={(value) => actions.setProp((props) => (props.boxShadowSpreadHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Hover Position</label>
+            <div className="grid grid-cols-2 gap-1">
+              {["outset", "inset"].map((position) => (
+                <button key={position} onClick={() => actions.setProp((props) => (props.boxShadowPositionHover = position))} className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPositionHover || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+                  {position}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // Responsive Number Input Component
 export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1000, unit = "px", unitOptions = ["px", "%"], defaultValue = 0 }) => {
@@ -345,6 +364,8 @@ export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1
     onChange(updatedValues);
   };
   
+  const showUnitSelector = unitOptions.length > 1;
+  
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -368,14 +389,19 @@ export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1
       </div>
       <div className="flex items-center gap-2">
         <input type="range" min={min} max={max} value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-        <input type="number" value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
-        <select value={responsiveUnit} onChange={(e) => handleUnitChange(e.target.value)} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
-          {unitOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+        <input type="number" value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className={`w-16 px-2 py-1 text-xs border border-gray-300 text-gray-900 bg-white ${showUnitSelector ? 'rounded-l' : 'rounded'}`} />
+        {showUnitSelector && (
+          <select value={responsiveUnit} onChange={(e) => handleUnitChange(e.target.value)} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+            {unitOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        )}
+        {!showUnitSelector && (
+          <span className="px-2 py-1 text-xs text-gray-500">{unit}</span>
+        )}
       </div>
     </div>
   );
@@ -483,11 +509,11 @@ export const SpacingControls = ({ props, actions }) => (
 // Color Controls Component
 export const ColorControls = ({ props, actions }) => (
   <div className="space-y-4">
-    <ColorInput label="Text Color" value={props.textColor} onChange={(value) => actions.setProp((props) => (props.textColor = value))} placeholder="#000000 or inherit" />
+    <ColorInput label="Text Color" value={props.textColorResponsive} onChange={(value) => actions.setProp((props) => (props.textColorResponsive = value))} placeholder="#000000 or inherit" responsive={true} />
 
     <div className="space-y-3">
-      <ColorInput label="Link Color" value={props.linkColor} onChange={(value) => actions.setProp((props) => (props.linkColor = value))} placeholder="#0066cc or inherit" />
-      <ColorInput label="Link Hover Color" value={props.linkColorHover} onChange={(value) => actions.setProp((props) => (props.linkColorHover = value))} placeholder="#004499 or inherit" />
+      <ColorInput label="Link Color" value={props.linkColorResponsive} onChange={(value) => actions.setProp((props) => (props.linkColorResponsive = value))} placeholder="#0066cc or inherit" responsive={true} />
+      <ColorInput label="Link Hover Color" value={props.linkColorHoverResponsive} onChange={(value) => actions.setProp((props) => (props.linkColorHoverResponsive = value))} placeholder="#004499 or inherit" responsive={true} />
     </div>
   </div>
 );

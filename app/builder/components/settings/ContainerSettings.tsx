@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
+import { RotateCcw } from "lucide-react";
 import { BackgroundControls, BorderControls, ColorControls, BoxShadowControls, SpacingControls, PositionControls, ResponsiveControls, CSSControls, AttributesControls } from "./shared/StyleControls";
 
 export const ContainerSettings = () => {
@@ -67,16 +68,19 @@ export const ContainerSettings = () => {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-sm font-medium text-gray-700">Custom Width</label>
-                          <button
-                            onClick={() =>
-                              actions.setProp((props) => {
-                                props.customWidth = props.customWidthUnit === "%" ? 100 : 1200;
-                              })
-                            }
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Reset
-                          </button>
+                          {(props.customWidth && props.customWidth !== (props.customWidthUnit === "%" ? 100 : 1200)) && (
+                            <button
+                              onClick={() =>
+                                actions.setProp((props) => {
+                                  props.customWidth = props.customWidthUnit === "%" ? 100 : 1200;
+                                })
+                              }
+                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              title="Reset to default"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <input type="range" min={props.customWidthUnit === "%" ? "10" : "100"} max={props.customWidthUnit === "%" ? "100" : "1600"} value={props.customWidth || (props.customWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.customWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
@@ -117,16 +121,19 @@ export const ContainerSettings = () => {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-sm font-medium text-gray-700">Content Box Width</label>
-                          <button
-                            onClick={() =>
-                              actions.setProp((props) => {
-                                props.contentBoxWidth = props.contentBoxWidthUnit === "%" ? 100 : 1200;
-                              })
-                            }
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Reset
-                          </button>
+                          {(props.contentBoxWidth && props.contentBoxWidth !== (props.contentBoxWidthUnit === "%" ? 100 : 1200)) && (
+                            <button
+                              onClick={() =>
+                                actions.setProp((props) => {
+                                  props.contentBoxWidth = props.contentBoxWidthUnit === "%" ? 100 : 1200;
+                                })
+                              }
+                              className="text-gray-400 hover:text-gray-600 transition-colors"
+                              title="Reset to default"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <input type="range" min={props.contentBoxWidthUnit === "%" ? "10" : "100"} max={props.contentBoxWidthUnit === "%" ? "100" : "1600"} value={props.contentBoxWidth || (props.contentBoxWidthUnit === "%" ? 100 : 1200)} onChange={(e) => actions.setProp((props) => (props.contentBoxWidth = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
