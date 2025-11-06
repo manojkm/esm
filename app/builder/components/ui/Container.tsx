@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNode, Element } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 
 // Container component for page builder with hover functionality
 
@@ -24,6 +25,10 @@ export const Container = ({
   columnGap = 20,
   rowGapUnit = "px",
   columnGapUnit = "px",
+  paddingResponsive,
+  marginResponsive,
+  rowGapResponsive,
+  columnGapResponsive,
   backgroundColor = "#ffffff",
   backgroundColorHover = "#f0f0f0",
   backgroundType = null,
@@ -107,6 +112,8 @@ export const Container = ({
   } = useNode((state) => ({
     selected: state.events.selected,
   }));
+  
+  const { getResponsiveValue } = useResponsive();
 
   const [showPicker, setShowPicker] = useState(showLayoutPicker);
 
@@ -126,10 +133,53 @@ export const Container = ({
   // Check if we need content wrapper for boxed content
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed";
 
-  // Calculate padding and margin
-  const paddingValue = paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` : `${padding}px`;
+  // Calculate responsive padding values
+  const getResponsivePadding = () => {
+    if (paddingResponsive) {
+      const top = getResponsiveValue(paddingResponsive.top || {}, paddingTop ?? padding);
+      const right = getResponsiveValue(paddingResponsive.right || {}, paddingRight ?? padding);
+      const bottom = getResponsiveValue(paddingResponsive.bottom || {}, paddingBottom ?? padding);
+      const left = getResponsiveValue(paddingResponsive.left || {}, paddingLeft ?? padding);
+      const unit = getResponsiveValue(paddingResponsive.unit || {}, paddingUnit);
+      return `${top}${unit} ${right}${unit} ${bottom}${unit} ${left}${unit}`;
+    }
+    return paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` : `${padding}px`;
+  };
 
-  const marginValue = marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
+  // Calculate responsive margin values
+  const getResponsiveMargin = () => {
+    if (marginResponsive) {
+      const top = getResponsiveValue(marginResponsive.top || {}, marginTop ?? margin);
+      const right = getResponsiveValue(marginResponsive.right || {}, marginRight ?? margin);
+      const bottom = getResponsiveValue(marginResponsive.bottom || {}, marginBottom ?? margin);
+      const left = getResponsiveValue(marginResponsive.left || {}, marginLeft ?? margin);
+      const unit = getResponsiveValue(marginResponsive.unit || {}, marginUnit);
+      return `${top}${unit} ${right}${unit} ${bottom}${unit} ${left}${unit}`;
+    }
+    return marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
+  };
+  
+  // Calculate responsive gap values
+  const getResponsiveRowGap = () => {
+    if (rowGapResponsive) {
+      const value = getResponsiveValue(rowGapResponsive, rowGap);
+      const unit = getResponsiveValue(rowGapResponsive.unit || {}, rowGapUnit);
+      return `${value}${unit}`;
+    }
+    return `${rowGap}${rowGapUnit}`;
+  };
+  
+  const getResponsiveColumnGap = () => {
+    if (columnGapResponsive) {
+      const value = getResponsiveValue(columnGapResponsive, columnGap);
+      const unit = getResponsiveValue(columnGapResponsive.unit || {}, columnGapUnit);
+      return `${value}${unit}`;
+    }
+    return `${columnGap}${columnGapUnit}`;
+  };
+  
+  const paddingValue = getResponsivePadding();
+  const marginValue = getResponsiveMargin();
 
   // Generate unique class name for hover styles
   const hoverClassName = `container-hover-${Math.random().toString(36).substr(2, 9)}`;
@@ -298,8 +348,8 @@ export const Container = ({
     alignItems: layout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : alignItems) : undefined,
     flexWrap: layout === "flex" && !needsContentWrapper ? flexWrap : undefined,
     alignContent: layout === "flex" && !needsContentWrapper && flexWrap === "wrap" ? alignContent : undefined,
-    rowGap: layout === "flex" && !needsContentWrapper ? `${rowGap}${rowGapUnit}` : undefined,
-    columnGap: layout === "flex" && !needsContentWrapper ? `${columnGap}${columnGapUnit}` : undefined,
+    rowGap: layout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
+    columnGap: layout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
     width: "100%",
     maxWidth: isChildContainer ? (flexBasis ? `${flexBasis}%` : undefined) : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
@@ -327,8 +377,8 @@ export const Container = ({
     alignItems: layout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : alignItems) : undefined,
     flexWrap: layout === "flex" && needsContentWrapper ? flexWrap : undefined,
     alignContent: layout === "flex" && needsContentWrapper && flexWrap === "wrap" ? alignContent : undefined,
-    rowGap: layout === "flex" && needsContentWrapper ? `${rowGap}${rowGapUnit}` : undefined,
-    columnGap: layout === "flex" && needsContentWrapper ? `${columnGap}${columnGapUnit}` : undefined,
+    rowGap: layout === "flex" && needsContentWrapper ? getResponsiveRowGap() : undefined,
+    columnGap: layout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
   };
 
   const ContainerTag = isChildContainer ? "div" : htmlTag;

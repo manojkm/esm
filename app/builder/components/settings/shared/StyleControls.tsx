@@ -1,17 +1,48 @@
 "use client";
 
 import React from "react";
+import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 
 // Reusable Color Input Component
-export const ColorInput = ({ label, value, onChange, placeholder = "#000000" }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-    <div className="flex gap-2">
-      <input type="color" value={value || placeholder} onChange={(e) => onChange(e.target.value)} className="w-10 h-10 flex-shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
-      <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
+export const ColorInput = ({ label, value, onChange, placeholder = "#000000", responsive = false, responsiveKey = null }) => {
+  const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
+
+  if (responsive && responsiveKey) {
+    const responsiveValue = getResponsiveValue(value || {}, placeholder);
+    const handleResponsiveChange = (newValue) => {
+      const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+      onChange(updatedValues);
+    };
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+          <span className="ml-1 text-blue-600">
+            {currentBreakpoint === 'desktop' && <Monitor size={12} />}
+            {currentBreakpoint === 'tablet' && <Tablet size={12} />}
+            {currentBreakpoint === 'mobile' && <Smartphone size={12} />}
+          </span>
+        </label>
+        <div className="flex gap-2">
+          <input type="color" value={responsiveValue || placeholder} onChange={(e) => handleResponsiveChange(e.target.value)} className="w-10 h-10 flex-shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
+          <input type="text" value={responsiveValue || ""} onChange={(e) => handleResponsiveChange(e.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="flex gap-2">
+        <input type="color" value={value || placeholder} onChange={(e) => onChange(e.target.value)} className="w-10 h-10 flex-shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
+        <input type="text" value={value || ""} onChange={(e) => onChange(e.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Background Controls Component
 export const BackgroundControls = ({ props, actions }) => (
@@ -290,106 +321,162 @@ export const BoxShadowControls = ({ props, actions }) => (
   </div>
 );
 
+// Responsive Number Input Component
+export const ResponsiveNumberInput = ({ label, value, onChange, min = 0, max = 1000, unit = "px", unitOptions = ["px", "%"], defaultValue = 0 }) => {
+  const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
+
+  const responsiveValue = getResponsiveValue(value || {}, defaultValue);
+  const responsiveUnit = getResponsiveValue(value?.unit || {}, unit);
+
+  const handleValueChange = (newValue) => {
+    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+    onChange(updatedValues);
+  };
+
+  const handleUnitChange = (newUnit) => {
+    const updatedUnits = setResponsiveValue(value?.unit || {}, currentBreakpoint, newUnit);
+    onChange({ ...value, unit: updatedUnits });
+  };
+
+  const hasCustomValue = responsiveValue !== defaultValue;
+  
+  const handleReset = () => {
+    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, defaultValue);
+    onChange(updatedValues);
+  };
+  
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="flex items-center text-sm font-medium text-gray-700">
+          {label}
+          <span className="ml-2 text-blue-600">
+            {currentBreakpoint === 'desktop' && <Monitor size={12} />}
+            {currentBreakpoint === 'tablet' && <Tablet size={12} />}
+            {currentBreakpoint === 'mobile' && <Smartphone size={12} />}
+          </span>
+        </label>
+        {hasCustomValue && (
+          <button
+            onClick={handleReset}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Reset to default"
+          >
+            <RotateCcw size={14} />
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <input type="range" min={min} max={max} value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+        <input type="number" value={responsiveValue} onChange={(e) => handleValueChange(parseInt(e.target.value))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
+        <select value={responsiveUnit} onChange={(e) => handleUnitChange(e.target.value)} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
+          {unitOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+};
+
+// Responsive Spacing Control Component
+export const ResponsiveSpacingControl = ({ label, value, onChange, unitOptions = ["px", "%"], defaultValue = 0 }) => {
+  const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
+
+  const getValue = (side) => {
+    const sideValues = value?.[side] || {};
+    return getResponsiveValue(sideValues, defaultValue);
+  };
+
+  const getUnit = () => {
+    const unitValues = value?.unit || {};
+    return getResponsiveValue(unitValues, "px");
+  };
+
+  const setValue = (side, newValue) => {
+    const currentSideValues = value?.[side] || {};
+    const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, newValue);
+    onChange({ ...value, [side]: updatedSideValues });
+  };
+
+  const setUnit = (newUnit) => {
+    const currentUnitValues = value?.unit || {};
+    const updatedUnitValues = setResponsiveValue(currentUnitValues, currentBreakpoint, newUnit);
+    onChange({ ...value, unit: updatedUnitValues });
+  };
+
+  const hasCustomValues = ['top', 'right', 'bottom', 'left'].some(side => getValue(side) !== defaultValue);
+  
+  const handleReset = () => {
+    const resetValues = {};
+    ['top', 'right', 'bottom', 'left'].forEach(side => {
+      const currentSideValues = value?.[side] || {};
+      resetValues[side] = setResponsiveValue(currentSideValues, currentBreakpoint, defaultValue);
+    });
+    onChange({ ...value, ...resetValues });
+  };
+  
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="flex items-center text-sm font-medium text-gray-700">
+          {label}
+          <span className="ml-2 text-blue-600">
+            {currentBreakpoint === 'desktop' && <Monitor size={12} />}
+            {currentBreakpoint === 'tablet' && <Tablet size={12} />}
+            {currentBreakpoint === 'mobile' && <Smartphone size={12} />}
+          </span>
+        </label>
+        <div className="flex items-center gap-2">
+          {hasCustomValues && (
+            <button
+              onClick={handleReset}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Reset to default"
+            >
+              <RotateCcw size={14} />
+            </button>
+          )}
+          <select value={getUnit()} onChange={(e) => setUnit(e.target.value)} className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white">
+            {unitOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-1">
+        {["top", "right", "bottom", "left"].map((side) => (
+          <div key={side}>
+            <label className="block text-xs text-gray-500 mb-1 capitalize">{side}</label>
+            <input type="number" value={getValue(side)} onChange={(e) => setValue(side, parseInt(e.target.value))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Spacing Controls Component
 export const SpacingControls = ({ props, actions }) => (
   <div className="space-y-4">
     {/* Gap Controls - Only for Flex Layout */}
     {props.layout === "flex" && (
       <>
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Row Gap</label>
-            <button
-              onClick={() =>
-                actions.setProp((props) => {
-                  props.rowGap = 20;
-                })
-              }
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              Reset
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="range" min="0" max="100" value={props.rowGap !== undefined ? props.rowGap : 20} onChange={(e) => actions.setProp((props) => (props.rowGap = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-            <input type="number" value={props.rowGap !== undefined ? props.rowGap : 20} onChange={(e) => actions.setProp((props) => (props.rowGap = parseInt(e.target.value)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
-            <select value={props.rowGapUnit || "px"} onChange={(e) => actions.setProp((props) => (props.rowGapUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
-              <option value="px">px</option>
-              <option value="%">%</option>
-            </select>
-          </div>
-        </div>
+        <ResponsiveNumberInput label="Row Gap" value={props.rowGapResponsive} onChange={(value) => actions.setProp((props) => (props.rowGapResponsive = value))} max={100} unitOptions={["px", "%"]} defaultValue={20} />
 
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">Column Gap</label>
-            <button
-              onClick={() =>
-                actions.setProp((props) => {
-                  props.columnGap = 20;
-                })
-              }
-              className="text-xs text-blue-600 hover:text-blue-800"
-            >
-              Reset
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <input type="range" min="0" max="100" value={props.columnGap !== undefined ? props.columnGap : 20} onChange={(e) => actions.setProp((props) => (props.columnGap = parseInt(e.target.value)))} className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-            <input type="number" value={props.columnGap !== undefined ? props.columnGap : 20} onChange={(e) => actions.setProp((props) => (props.columnGap = parseInt(e.target.value)))} className="w-16 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white" />
-            <select value={props.columnGapUnit || "px"} onChange={(e) => actions.setProp((props) => (props.columnGapUnit = e.target.value))} className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white">
-              <option value="px">px</option>
-              <option value="%">%</option>
-            </select>
-          </div>
-        </div>
+        <ResponsiveNumberInput label="Column Gap" value={props.columnGapResponsive} onChange={(value) => actions.setProp((props) => (props.columnGapResponsive = value))} max={100} unitOptions={["px", "%"]} defaultValue={20} />
       </>
     )}
 
     {/* Padding Controls */}
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium text-gray-700">Padding</label>
-        <select value={props.paddingUnit || "px"} onChange={(e) => actions.setProp((props) => (props.paddingUnit = e.target.value))} className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white">
-          <option value="px">px</option>
-          <option value="%">%</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-4 gap-1">
-        {["Top", "Right", "Bottom", "Left"].map((side) => {
-          const prop = `padding${side}`;
-          return (
-            <div key={side}>
-              <label className="block text-xs text-gray-500 mb-1">{side}</label>
-              <input type="number" value={props[prop] ?? props.padding ?? 0} onChange={(e) => actions.setProp((props) => (props[prop] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ResponsiveSpacingControl label="Padding" value={props.paddingResponsive} onChange={(value) => actions.setProp((props) => (props.paddingResponsive = value))} defaultValue={10} />
 
     {/* Margin Controls */}
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium text-gray-700">Margin</label>
-        <select value={props.marginUnit || "px"} onChange={(e) => actions.setProp((props) => (props.marginUnit = e.target.value))} className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white">
-          <option value="px">px</option>
-          <option value="%">%</option>
-          <option value="auto">auto</option>
-        </select>
-      </div>
-      <div className="grid grid-cols-4 gap-1">
-        {["Top", "Right", "Bottom", "Left"].map((side) => {
-          const prop = `margin${side}`;
-          return (
-            <div key={side}>
-              <label className="block text-xs text-gray-500 mb-1">{side}</label>
-              <input type="number" value={props[prop] ?? props.margin ?? 0} onChange={(e) => actions.setProp((props) => (props[prop] = parseInt(e.target.value)))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ResponsiveSpacingControl label="Margin" value={props.marginResponsive} onChange={(value) => actions.setProp((props) => (props.marginResponsive = value))} unitOptions={["px", "%", "auto"]} />
   </div>
 );
 
