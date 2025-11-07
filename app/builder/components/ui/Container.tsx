@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
@@ -12,7 +12,139 @@ import { Copy } from "lucide-react";
  * Features: Responsive design, drag/drop, styling controls, rename functionality
  */
 
-export const Container = ({
+interface ResponsiveValue {
+  desktop?: number | string;
+  tablet?: number | string;
+  mobile?: number | string;
+  unit?: Record<string, string>;
+  top?: Record<string, number>;
+  right?: Record<string, number>;
+  bottom?: Record<string, number>;
+  left?: Record<string, number>;
+}
+
+interface LayoutColumn {
+  width: number;
+}
+
+interface SelectedLayout {
+  cols: LayoutColumn[];
+}
+
+interface ContainerProps {
+  children?: React.ReactNode;
+  padding?: number;
+  margin?: number;
+  paddingTop?: number | null;
+  paddingRight?: number | null;
+  paddingBottom?: number | null;
+  paddingLeft?: number | null;
+  paddingUnit?: string;
+  marginTop?: number | null;
+  marginRight?: number | null;
+  marginBottom?: number | null;
+  marginLeft?: number | null;
+  marginUnit?: string;
+  rowGap?: number;
+  columnGap?: number;
+  rowGapUnit?: string;
+  columnGapUnit?: string;
+  paddingResponsive?: ResponsiveValue;
+  marginResponsive?: ResponsiveValue;
+  rowGapResponsive?: ResponsiveValue;
+  columnGapResponsive?: ResponsiveValue;
+  backgroundColor?: string;
+  backgroundColorHover?: string;
+  backgroundColorResponsive?: ResponsiveValue;
+  backgroundColorHoverResponsive?: ResponsiveValue;
+  backgroundType?: string | null;
+  backgroundGradient?: string;
+  backgroundGradientHover?: string;
+  backgroundImage?: string;
+  borderRadius?: number;
+  borderTopLeftRadius?: number | null;
+  borderTopRightRadius?: number | null;
+  borderBottomRightRadius?: number | null;
+  borderBottomLeftRadius?: number | null;
+  borderRadiusUnit?: string;
+  borderRadiusResponsive?: ResponsiveValue;
+  borderWidthResponsive?: ResponsiveValue;
+  borderStyle?: string;
+  borderWidth?: number;
+  borderTopWidth?: number | null;
+  borderRightWidth?: number | null;
+  borderBottomWidth?: number | null;
+  borderLeftWidth?: number | null;
+  borderColor?: string;
+  borderColorHover?: string;
+  borderColorResponsive?: ResponsiveValue;
+  borderColorHoverResponsive?: ResponsiveValue;
+  boxShadowColor?: string;
+  boxShadowColorHover?: string;
+  boxShadowHorizontal?: number;
+  boxShadowVertical?: number;
+  boxShadowBlur?: number;
+  boxShadowSpread?: number;
+  boxShadowPosition?: string;
+  boxShadowHorizontalHover?: number;
+  boxShadowVerticalHover?: number;
+  boxShadowBlurHover?: number;
+  boxShadowSpreadHover?: number;
+  boxShadowPositionHover?: string;
+  boxShadowPreset?: string | null;
+  boxShadowHorizontalResponsive?: ResponsiveValue;
+  boxShadowVerticalResponsive?: ResponsiveValue;
+  boxShadowBlurResponsive?: ResponsiveValue;
+  boxShadowSpreadResponsive?: ResponsiveValue;
+  boxShadowHorizontalHoverResponsive?: ResponsiveValue;
+  boxShadowVerticalHoverResponsive?: ResponsiveValue;
+  boxShadowBlurHoverResponsive?: ResponsiveValue;
+  boxShadowSpreadHoverResponsive?: ResponsiveValue;
+  textColor?: string | null;
+  linkColor?: string | null;
+  linkColorHover?: string | null;
+  className?: string;
+  cssId?: string;
+  dataAttributes?: string;
+  ariaLabel?: string;
+  hideOnDesktop?: boolean;
+  hideOnTablet?: boolean;
+  hideOnLandscapeMobile?: boolean;
+  hideOnMobile?: boolean;
+  showLayoutPicker?: boolean;
+  layout?: string;
+  selectedLayout?: SelectedLayout | null;
+  flexBasis?: number | null;
+  containerWidth?: string;
+  contentWidth?: string;
+  contentBoxWidth?: number;
+  contentBoxWidthUnit?: string;
+  customWidth?: number;
+  customWidthUnit?: string;
+  minHeight?: number;
+  minHeightUnit?: string;
+  enableMinHeight?: boolean;
+  equalHeight?: boolean;
+  htmlTag?: string;
+  overflow?: string;
+  flexDirection?: string;
+  justifyContent?: string;
+  alignItems?: string;
+  flexWrap?: string;
+  alignContent?: string;
+  position?: string;
+  positionTop?: number | null;
+  positionRight?: number | null;
+  positionBottom?: number | null;
+  positionLeft?: number | null;
+  positionTopUnit?: string;
+  positionRightUnit?: string;
+  positionBottomUnit?: string;
+  positionLeftUnit?: string;
+  zIndex?: number | null;
+}
+
+export const Container: React.FC<ContainerProps> = ({
   children,
   padding = 10,
   margin = 0,
@@ -136,19 +268,40 @@ export const Container = ({
 
   // Editor-level actions and queries
   const { actions: editorActions, query } = useEditor();
-
   const handleCopy = () => {
-    const {
-      data: { type, props },
-    } = query.node(id).get();
-    const newNode = query.createNode(React.createElement(type, props));
-    editorActions.add(newNode, query.node(id).get().data.parent);
+    const node = query.node(id).get();
+    const parent = node.data.parent;
+
+    if (parent !== null) {
+      // Helper function to recursively build React element tree with children
+      const buildElementTree = (nodeId: string): React.ReactElement => {
+        const currentNode = query.node(nodeId).get();
+        const nodeChildren = currentNode.data.nodes || [];
+
+        // Recursively build children elements
+        const childElements = nodeChildren.map((childId: string) => buildElementTree(childId));
+
+        // Create React element with type, props, and children
+        return React.createElement(currentNode.data.type, currentNode.data.props, ...childElements);
+      };
+
+      // Build the complete element tree
+      const elementTree = buildElementTree(id);
+
+      // Parse the element tree to create a new node tree with fresh IDs
+      const newNodeTree = query.parseReactElement(elementTree).toNodeTree();
+
+      // Add the cloned tree to the parent
+      editorActions.addNodeTree(newNodeTree, parent);
+    }
   };
 
   const { getResponsiveValue } = useResponsive();
 
   // Component state management
-  const [showPicker, setShowPicker] = useState(showLayoutPicker); // Layout picker modal
+  // Only show picker for new containers (no children, no selectedLayout, and showLayoutPicker prop is true)
+  const shouldShowPicker = showLayoutPicker && !children && !selectedLayout;
+  const [showPicker, setShowPicker] = useState(shouldShowPicker); // Layout picker modal
   const [showContextMenu, setShowContextMenu] = useState(false); // Context menu visibility
 
   // Context menu handlers
@@ -169,11 +322,16 @@ export const Container = ({
   const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
 
-  const handleLayoutSelect = (selectedLayout) => {
+  const handleLayoutSelect = (layout: { cols: number[] }) => {
+    // Transform the layout data from picker (array of numbers) to SelectedLayout format (array of objects with width)
+    const transformedLayout: SelectedLayout = {
+      cols: layout.cols.map((width) => ({ width })),
+    };
+
     // Set layout: block for single column, flex for multi-column
-    actions.setProp((props) => {
-      props.layout = selectedLayout.cols.length === 1 ? "block" : "flex";
-      props.selectedLayout = selectedLayout;
+    actions.setProp((props: ContainerProps) => {
+      props.layout = transformedLayout.cols.length === 1 ? "block" : "flex";
+      props.selectedLayout = transformedLayout;
     });
     setShowPicker(false);
   };
@@ -281,15 +439,15 @@ export const Container = ({
   };
 
   // Calculate border styles
-  const getBorderStyles = () => {
-    const styles = {};
+  const getBorderStyles = (): React.CSSProperties => {
+    const styles: React.CSSProperties = {};
 
     // Always apply border radius
     styles.borderRadius = getResponsiveBorderRadius();
 
     // Only apply border properties if style is not none
     if (borderStyle && borderStyle !== "none") {
-      styles.borderStyle = borderStyle;
+      styles.borderStyle = borderStyle as React.CSSProperties["borderStyle"];
       styles.borderWidth = getResponsiveBorderWidth();
       const responsiveBorderColor = getResponsiveValue(borderColorResponsive || {}, borderColor);
       styles.borderColor = responsiveBorderColor;
@@ -358,8 +516,8 @@ export const Container = ({
   };
 
   // Calculate color styles
-  const getColorStyles = () => {
-    const styles = {};
+  const getColorStyles = (): React.CSSProperties => {
+    const styles: React.CSSProperties = {};
 
     if (textColor) {
       styles.color = textColor;
@@ -440,9 +598,9 @@ export const Container = ({
   };
 
   // Parse data attributes
-  const parseDataAttributes = () => {
+  const parseDataAttributes = (): Record<string, string> => {
     if (!dataAttributes) return {};
-    const attrs = {};
+    const attrs: Record<string, string> = {};
     dataAttributes.split("\n").forEach((line) => {
       const match = line.trim().match(/^([^=]+)=["']([^"']*)["']$/);
       if (match) {
@@ -452,7 +610,7 @@ export const Container = ({
     return attrs;
   };
 
-  const containerStyle = {
+  const containerStyle: React.CSSProperties = {
     padding: paddingValue,
     margin: marginValue,
     ...getBackgroundStyles(),
@@ -461,27 +619,27 @@ export const Container = ({
     ...getColorStyles(),
     minHeight: isChildContainer ? "50px" : enableMinHeight && minHeight ? `${minHeight}${minHeightUnit}` : "50px",
     display: layout === "flex" && !needsContentWrapper ? "flex" : "block",
-    flexDirection: layout === "flex" && !needsContentWrapper ? flexDirection : undefined,
-    justifyContent: layout === "flex" && !needsContentWrapper ? justifyContent : undefined,
-    alignItems: layout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : alignItems) : undefined,
-    flexWrap: layout === "flex" && !needsContentWrapper ? flexWrap : undefined,
-    alignContent: layout === "flex" && !needsContentWrapper && flexWrap === "wrap" ? alignContent : undefined,
+    flexDirection: layout === "flex" && !needsContentWrapper ? (flexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: layout === "flex" && !needsContentWrapper ? (justifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: layout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (alignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: layout === "flex" && !needsContentWrapper ? (flexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: layout === "flex" && !needsContentWrapper && flexWrap === "wrap" ? (alignContent as React.CSSProperties["alignContent"]) : undefined,
     rowGap: layout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
     columnGap: layout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
     width: "100%",
     maxWidth: isChildContainer ? (flexBasis ? `${flexBasis}%` : undefined) : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
-    overflow: isChildContainer ? undefined : overflow,
-    position: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : position && position !== "default" ? position : undefined,
+    overflow: isChildContainer ? undefined : (overflow as React.CSSProperties["overflow"]),
+    position: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : position && position !== "default" ? (position as React.CSSProperties["position"]) : undefined,
     top: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined,
     right: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined,
     bottom: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined,
     left: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined,
-    zIndex: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : zIndex ? parseInt(zIndex) : undefined,
+    zIndex: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : zIndex ? zIndex : undefined,
   };
 
-  const contentWrapperStyle = {
+  const contentWrapperStyle: React.CSSProperties = {
     // Width settings for boxed content
     maxWidth: needsContentWrapper ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined,
     marginLeft: needsContentWrapper ? "auto" : undefined,
@@ -490,107 +648,119 @@ export const Container = ({
     height: isChildContainer ? undefined : equalHeight && layout === "flex" ? "100%" : undefined,
     // Apply flex properties to content wrapper when needed
     display: layout === "flex" && needsContentWrapper ? "flex" : undefined,
-    flexDirection: layout === "flex" && needsContentWrapper ? flexDirection : undefined,
-    justifyContent: layout === "flex" && needsContentWrapper ? justifyContent : undefined,
-    alignItems: layout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : alignItems) : undefined,
-    flexWrap: layout === "flex" && needsContentWrapper ? flexWrap : undefined,
-    alignContent: layout === "flex" && needsContentWrapper && flexWrap === "wrap" ? alignContent : undefined,
+    flexDirection: layout === "flex" && needsContentWrapper ? (flexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: layout === "flex" && needsContentWrapper ? (justifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: layout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (alignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: layout === "flex" && needsContentWrapper ? (flexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: layout === "flex" && needsContentWrapper && flexWrap === "wrap" ? (alignContent as React.CSSProperties["alignContent"]) : undefined,
     rowGap: layout === "flex" && needsContentWrapper ? getResponsiveRowGap() : undefined,
     columnGap: layout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
   };
 
   const ContainerTag = isChildContainer ? "div" : htmlTag;
 
+  const containerProps = {
+    ref: (ref: HTMLElement | null) => {
+      if (ref) connect(drag(ref));
+    },
+    id: cssId || undefined,
+    "aria-label": ariaLabel || undefined,
+    ...parseDataAttributes(),
+    className: `
+      relative
+      ${selected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-blue-300"}
+      transition-all duration-200
+      ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
+      ${className}
+    `,
+    style: containerStyle,
+  };
+
   return (
     <>
       {/* Inject hover and responsive styles */}
       {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && <style>{getHoverStyles()}</style>}
 
-      <ContainerTag
-        ref={(ref) => connect(drag(ref))}
-        id={cssId || undefined}
-        aria-label={ariaLabel || undefined}
-        {...parseDataAttributes()}
-        className={`
-          relative
-          ${selected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-blue-300"}
-          transition-all duration-200
-          ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
-          ${className}
-        `}
-        style={containerStyle}
-      >
-        {/* Selection Indicator */}
-        {selected && (
-          <>
-            <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
-            <div className="absolute -top-6 right-0 z-10">
-              <button onClick={() => setShowContextMenu(!showContextMenu)} className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors" title="Component Actions">
-                <MoreVertical size={12} />
-              </button>
-
-              {/* Context Menu */}
-              {showContextMenu && (
-                <div className="absolute top-full right-0 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
-                  <button onClick={handleCopy} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                    <Copy size={12} /> Copy
-                  </button>
-
-                  {/* Select Parent */}
-                  {!isChildContainer && (
-                    <button onClick={handleSelectParent} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                      <ArrowUp size={14} />
-                      Select Parent
-                    </button>
-                  )}
-
-                  {/* Delete */}
-                  <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-        {/* Conditionally render content wrapper only when needed for boxed content */}
-        {(() => {
-          const content = (
+      {React.createElement(
+        ContainerTag,
+        containerProps,
+        <>
+          {/* Selection Indicator */}
+          {selected && (
             <>
-              {/* Auto-generate columns based on selected layout - skip single column */}
-              {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((width, index) => <Element key={index} id={`column_${index}_${width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={width} canvas />)}
+              <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
+              <div className="absolute -top-6 right-0 z-10">
+                <button onClick={() => setShowContextMenu(!showContextMenu)} className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors" title="Component Actions">
+                  <MoreVertical size={12} />
+                </button>
 
-              {/* Regular drop zone */}
-              {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+                {/* Context Menu */}
+                {showContextMenu && (
+                  <div className="absolute top-full right-0 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
+                    <button onClick={handleCopy} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                      <Copy size={12} /> Copy
+                    </button>
 
-              {children}
+                    {/* Select Parent */}
+                    {!isChildContainer && (
+                      <button onClick={handleSelectParent} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                        <ArrowUp size={14} />
+                        Select Parent
+                      </button>
+                    )}
+
+                    {/* Delete */}
+                    <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
-          );
+          )}
+          {/* Conditionally render content wrapper only when needed for boxed content */}
+          {(() => {
+            const content = (
+              <>
+                {/* Auto-generate columns based on selected layout - skip single column */}
+                {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((col, index) => <Element key={index} id={`column_${index}_${col.width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={col.width} canvas />)}
 
-          return needsContentWrapper ? <div style={contentWrapperStyle}>{content}</div> : content;
-        })()}
+                {/* Regular drop zone */}
+                {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
 
-        {/* Layout Picker Modal */}
-        {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
-      </ContainerTag>
+                {children}
+              </>
+            );
+
+            return needsContentWrapper ? <div style={contentWrapperStyle}>{content}</div> : content;
+          })()}
+
+          {/* Layout Picker Modal */}
+          {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
+        </>,
+      )}
     </>
   );
 };
 
 // Craft.js component configuration
-Container.craft = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(Container as any).craft = {
   displayName: "Container", // Default name in toolbox
   isCanvas: true, // Can accept child components (droppable + expandable in layers)
   rules: {
-    canMoveIn: (incomingNodes, currentNode, helpers) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    canMoveIn: (incomingNodes: any, currentNode: any, helpers: any) => {
       const depth = helpers(currentNode.id).ancestors().length;
       return depth < 10; // Prevent excessive nesting
     },
-    canMoveOut: (outgoingNodes, currentNode, helpers) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    canMoveOut: (outgoingNodes: any, currentNode: any, helpers: any) => {
       return !helpers(currentNode.id).isRoot(); // Can't move root
     },
-    canDrag: (node, helpers) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    canDrag: (node: any, helpers: any) => {
       return !helpers(node.id).isRoot(); // Can't drag root
     },
   },

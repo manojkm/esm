@@ -5,12 +5,24 @@ import { useEditor } from "@craftjs/core";
 import { Layers } from "@craftjs/layers";
 import { Settings, Layers as LayersIcon } from "lucide-react";
 
+interface SelectedComponent {
+  id: string;
+  name: string;
+  settings?: React.ComponentType;
+}
+
+interface Tab {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+}
+
 export const SettingsPanel = () => {
   const [activeTab, setActiveTab] = useState("settings");
 
   const { selected } = useEditor((state) => {
     const [currentNodeId] = state.events.selected;
-    let selected;
+    let selected: SelectedComponent | undefined;
 
     if (currentNodeId) {
       selected = {
@@ -23,7 +35,7 @@ export const SettingsPanel = () => {
     return { selected };
   });
 
-  const tabs = [
+  const tabs: Tab[] = [
     { id: "settings", label: "Settings", icon: Settings },
     { id: "layers", label: "Layers", icon: LayersIcon },
   ];
