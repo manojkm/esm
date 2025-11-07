@@ -323,16 +323,24 @@ export const Container: React.FC<ContainerProps> = ({
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
 
   const handleLayoutSelect = (layout: { cols: number[] }) => {
-    // Transform the layout data from picker (array of numbers) to SelectedLayout format (array of objects with width)
     const transformedLayout: SelectedLayout = {
       cols: layout.cols.map((width) => ({ width })),
     };
 
-    // Set layout: block for single column, flex for multi-column
     actions.setProp((props: ContainerProps) => {
       props.layout = transformedLayout.cols.length === 1 ? "block" : "flex";
       props.selectedLayout = transformedLayout;
     });
+
+    if (transformedLayout.cols.length > 1) {
+      transformedLayout.cols.forEach(col => {
+        const newNodeTree = query.parseReactElement(
+          <Element is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={col.width} canvas />
+        ).toNodeTree();
+        editorActions.addNodeTree(newNodeTree, id);
+      });
+    }
+
     setShowPicker(false);
   };
 
@@ -626,8 +634,9 @@ export const Container: React.FC<ContainerProps> = ({
     alignContent: layout === "flex" && !needsContentWrapper && flexWrap === "wrap" ? (alignContent as React.CSSProperties["alignContent"]) : undefined,
     rowGap: layout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
     columnGap: layout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
-    width: "100%",
-    maxWidth: isChildContainer ? (flexBasis ? `${flexBasis}%` : undefined) : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
+    flexBasis: isChildContainer && flexBasis ? `${flexBasis}%` : "auto",
+    width: isChildContainer && flexBasis ? `${flexBasis}%` : "100%",
+    maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: isChildContainer ? undefined : (overflow as React.CSSProperties["overflow"]),
@@ -723,11 +732,8 @@ export const Container: React.FC<ContainerProps> = ({
           {(() => {
             const content = (
               <>
-                {/* Auto-generate columns based on selected layout - skip single column */}
-                {!children && selectedLayout && selectedLayout.cols.length > 1 && selectedLayout.cols.map((col, index) => <Element key={index} id={`column_${index}_${col.width}`} is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={col.width} canvas />)}
-
-                {/* Regular drop zone */}
-                {!children && (!selectedLayout || selectedLayout.cols.length === 1) && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+                {/* Regular drop zone for empty container */}
+                {!children && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
 
                 {children}
               </>

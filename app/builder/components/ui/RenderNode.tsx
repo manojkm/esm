@@ -5,20 +5,18 @@ import { useNode, useEditor } from "@craftjs/core";
 import { MoreVertical, Copy, ArrowUp, Trash2 } from "lucide-react";
 
 interface RenderNodeProps {
-  element: React.ReactElement;
+  render: React.ReactElement;
 }
 
-export const RenderNode: React.FC<RenderNodeProps> = ({ element }) => {
+export const RenderNode: React.FC<RenderNodeProps> = ({ render }) => {
   const {
     id,
     connectors: { connect, drag },
     selected,
     name,
-    isCanvas,
   } = useNode((node) => ({
     selected: node.events.selected,
     name: node.data.displayName || node.data.name,
-    isCanvas: node.data.isCanvas,
   }));
 
   const { actions, query, enabled } = useEditor((state) => ({
@@ -51,17 +49,14 @@ export const RenderNode: React.FC<RenderNodeProps> = ({ element }) => {
 
   // Don't show handles if editor is disabled or if it's the root node
   if (!enabled || isRoot) {
-    return element;
+    return render;
   }
 
   return (
     <div
       ref={(ref) => {
-        if (isCanvas) {
-          connect(ref);
-        } else {
-          connect(drag(ref));
-        }
+        if (!ref) return;
+        connect(drag(ref));
       }}
       className={`
         relative
@@ -106,7 +101,7 @@ export const RenderNode: React.FC<RenderNodeProps> = ({ element }) => {
         </>
       )}
 
-      {element}
+      {render}
     </div>
   );
 };
