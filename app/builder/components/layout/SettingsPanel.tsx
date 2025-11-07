@@ -8,7 +8,7 @@ import { Settings, Layers as LayersIcon } from "lucide-react";
 interface SelectedComponent {
   id: string;
   name: string;
-  settings?: React.ComponentType;
+  settings?: React.ElementType;
 }
 
 interface Tab {
@@ -25,10 +25,13 @@ export const SettingsPanel = () => {
     let selected: SelectedComponent | undefined;
 
     if (currentNodeId) {
+      const node = state.nodes[currentNodeId];
+      const relatedSettings = node.related?.settings;
+
       selected = {
         id: currentNodeId,
-        name: state.nodes[currentNodeId].data.name,
-        settings: state.nodes[currentNodeId].related && state.nodes[currentNodeId].related.settings,
+        name: node.data.name,
+        settings: typeof relatedSettings === "function" ? relatedSettings : undefined,
       };
     }
 
