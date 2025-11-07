@@ -6,7 +6,7 @@ import { Editor, Frame, Element } from "@craftjs/core";
 import { Text, Button, Container, Image, Heading, Video, Icon, Toolbar, Toolbox, SettingsPanel } from "./components";
 import { ResponsiveToolbar } from "./components/layout/ResponsiveToolbar";
 import { ResponsiveProvider } from "@/app/builder/contexts/ResponsiveContext";
-import { Layers } from "@craftjs/layers";
+import { RenderNode } from "./components/ui/RenderNode";
 
 /**
  * Main Page Builder Interface
@@ -25,6 +25,7 @@ export default function Builder() {
             success: "#10b981", // Drop success color
             error: "#ef4444", // Drop error color
           }}
+          onRender={RenderNode}
         >
           {/* Top toolbar with save/load/undo/redo */}
           <Toolbar />
@@ -50,13 +51,13 @@ export default function Builder() {
                     <Text text="Welcome to your website!" fontSize="24" />
 
                     {/* Flex container with buttons */}
-                    <Element is={Container} layout="flex" flexDirection="row" justifyContent="center" gap={4} padding={6} background="bg-blue-50" canvas>
+                    <Element is={Container} layout="flex" flexDirection="row" justifyContent="center" padding={6} className="bg-blue-50 gap-4" canvas>
                       <Button text="Get Started" />
                       <Button text="Learn More" color="bg-green-500" />
                     </Element>
 
                     {/* Grid container with text elements */}
-                    <Element is={Container} layout="grid" gridCols={3} gap={4} padding={4} canvas>
+                    <Element is={Container} layout="grid" padding={4} className="gap-4" canvas>
                       <Text text="Feature 1" />
                       <Text text="Feature 2" />
                       <Text text="Feature 3" />

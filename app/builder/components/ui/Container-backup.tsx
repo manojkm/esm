@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import { Trash2, ArrowUp, MoreVertical } from "lucide-react";
+import { Copy } from "lucide-react";
 
 /**
  * Container Component - Main building block for page layouts
@@ -256,7 +258,7 @@ export const Container: React.FC<ContainerProps> = ({
 }) => {
   // Craft.js hooks for component interaction
   const {
-    connectors: { connect, drag }, // Drag/drop connectors (needed for drag functionality)
+    connectors: { connect, drag }, // Drag/drop connectors
     selected, // Is component currently selected
     actions, // Component prop actions
     id, // Unique component ID
@@ -266,6 +268,33 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Editor-level actions and queries
   const { actions: editorActions, query } = useEditor();
+  const handleCopy = () => {
+    const node = query.node(id).get();
+    const parent = node.data.parent;
+
+    if (parent !== null) {
+      // Helper function to recursively build React element tree with children
+      const buildElementTree = (nodeId: string): React.ReactElement => {
+        const currentNode = query.node(nodeId).get();
+        const nodeChildren = currentNode.data.nodes || [];
+
+        // Recursively build children elements
+        const childElements = nodeChildren.map((childId: string) => buildElementTree(childId));
+
+        // Create React element with type, props, and children
+        return React.createElement(currentNode.data.type, currentNode.data.props, ...childElements);
+      };
+
+      // Build the complete element tree
+      const elementTree = buildElementTree(id);
+
+      // Parse the element tree to create a new node tree with fresh IDs
+      const newNodeTree = query.parseReactElement(elementTree).toNodeTree();
+
+      // Add the cloned tree to the parent
+      editorActions.addNodeTree(newNodeTree, parent);
+    }
+  };
 
   const { getResponsiveValue } = useResponsive();
 
@@ -273,6 +302,21 @@ export const Container: React.FC<ContainerProps> = ({
   // Only show picker for new containers (no children, no selectedLayout, and showLayoutPicker prop is true)
   const shouldShowPicker = showLayoutPicker && !children && !selectedLayout;
   const [showPicker, setShowPicker] = useState(shouldShowPicker); // Layout picker modal
+  const [showContextMenu, setShowContextMenu] = useState(false); // Context menu visibility
+
+  // Context menu handlers
+  const handleDelete = () => {
+    editorActions.delete(id);
+    setShowContextMenu(false);
+  };
+
+  const handleSelectParent = () => {
+    const parentId = query.node(id).get().data.parent;
+    if (parentId) {
+      editorActions.selectNode(parentId);
+    }
+    setShowContextMenu(false);
+  };
 
   // Layout logic
   const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
@@ -631,7 +675,7 @@ export const Container: React.FC<ContainerProps> = ({
     ...parseDataAttributes(),
     className: `
       relative
-      ${selected ? "ring-2 ring-blue-500 ring-offset-0" : "hover:ring-1 hover:ring-blue-300"}
+      ${selected ? "ring-2 ring-blue-500" : "hover:ring-1 hover:ring-blue-300"}
       transition-all duration-200
       ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
       ${className}
@@ -648,6 +692,40 @@ export const Container: React.FC<ContainerProps> = ({
         ContainerTag,
         containerProps,
         <>
+          {/* Selection Indicator */}
+          {selected && (
+            <>
+              <div className="absolute -top-6 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-t-md font-medium z-10">Container</div>
+              <div className="absolute -top-6 right-0 z-10">
+                <button onClick={() => setShowContextMenu(!showContextMenu)} className="bg-blue-500 hover:bg-blue-600 text-white p-1 rounded-t-md transition-colors" title="Component Actions">
+                  <MoreVertical size={12} />
+                </button>
+
+                {/* Context Menu */}
+                {showContextMenu && (
+                  <div className="absolute top-full right-0 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-[120px]">
+                    <button onClick={handleCopy} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                      <Copy size={12} /> Copy
+                    </button>
+
+                    {/* Select Parent */}
+                    {!isChildContainer && (
+                      <button onClick={handleSelectParent} className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                        <ArrowUp size={14} />
+                        Select Parent
+                      </button>
+                    )}
+
+                    {/* Delete */}
+                    <button onClick={handleDelete} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           {/* Conditionally render content wrapper only when needed for boxed content */}
           {(() => {
             const content = (
