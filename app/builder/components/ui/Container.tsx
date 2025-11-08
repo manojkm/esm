@@ -272,6 +272,7 @@ export const Container: React.FC<ContainerProps> = ({
   } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
+  const isEditMode = enabled;
 
   const { getResponsiveValue } = useResponsive();
 
@@ -497,7 +498,7 @@ export const Container: React.FC<ContainerProps> = ({
   // Generate responsive styles (only for live pages, not in editor)
   const getResponsiveStyles = () => {
     // Skip responsive styles in editor mode
-    if (typeof window !== "undefined" && window.location.pathname.includes("/builder")) {
+    if (isEditMode) {
       return "";
     }
 
@@ -600,12 +601,12 @@ export const Container: React.FC<ContainerProps> = ({
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: isChildContainer ? undefined : (overflow as React.CSSProperties["overflow"]),
-    position: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : position && position !== "default" ? (position as React.CSSProperties["position"]) : undefined,
-    top: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined,
-    right: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined,
-    bottom: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined,
-    left: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined,
-    zIndex: typeof window !== "undefined" && window.location.pathname.includes("/builder") ? undefined : zIndex ? zIndex : undefined,
+    position: isEditMode ? undefined : position && position !== "default" ? (position as React.CSSProperties["position"]) : undefined,
+    top: isEditMode ? undefined : positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined,
+    right: isEditMode ? undefined : positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined,
+    bottom: isEditMode ? undefined : positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined,
+    left: isEditMode ? undefined : positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined,
+    zIndex: isEditMode ? undefined : zIndex ? zIndex : undefined,
   };
 
   const contentWrapperStyle: React.CSSProperties = {
@@ -630,7 +631,12 @@ export const Container: React.FC<ContainerProps> = ({
 
   const containerProps = {
     ref: (ref: HTMLElement | null) => {
-      if (ref) connect(drag(ref));
+      if (!ref) return;
+      if (isEditMode) {
+        connect(drag(ref));
+      } else {
+        connect(ref);
+      }
     },
     id: cssId || undefined,
     "aria-label": ariaLabel || undefined,
@@ -659,7 +665,7 @@ export const Container: React.FC<ContainerProps> = ({
             const content = (
               <>
                 {/* Regular drop zone for empty container */}
-                {!children && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+                {isEditMode && !children && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
 
                 {children}
               </>
