@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { LayoutControls } from "../shared/LayoutControls";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "../shared/types";
 
 interface ContainerGeneralSettingsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
   isChildContainer: boolean;
 }
 

@@ -1,10 +1,10 @@
 import React from "react";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "./types";
 
 interface LayoutControlsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
   controlId: string;
   isChildContainer: boolean;
 }
@@ -210,7 +210,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
         controlId={baseId}
         value={layoutValue}
         onChange={(value) =>
-          actions.setProp((draft: typeof props) => {
+          actions.setProp((draft) => {
             draft.layout = value;
           })
         }
@@ -222,7 +222,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
             controlId={baseId}
             value={directionValue}
             onChange={(value) =>
-              actions.setProp((draft: typeof props) => {
+              actions.setProp((draft) => {
                 draft.flexDirection = value;
               })
             }
@@ -232,7 +232,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
             controlId={baseId}
             value={justifyValue}
             onChange={(value) =>
-              actions.setProp((draft: typeof props) => {
+              actions.setProp((draft) => {
                 draft.justifyContent = value;
               })
             }
@@ -242,7 +242,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
             controlId={baseId}
             value={alignItemsValue}
             onChange={(value) =>
-              actions.setProp((draft: typeof props) => {
+              actions.setProp((draft) => {
                 draft.alignItems = value;
               })
             }
@@ -252,7 +252,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
             controlId={baseId}
             value={wrapValue}
             onChange={(value) =>
-              actions.setProp((draft: typeof props) => {
+              actions.setProp((draft) => {
                 draft.flexWrap = value;
               })
             }
@@ -263,7 +263,7 @@ export const LayoutControls: React.FC<LayoutControlsProps> = ({ props, actions, 
               controlId={baseId}
               value={alignContentValue}
               onChange={(value) =>
-                actions.setProp((draft: typeof props) => {
+                actions.setProp((draft) => {
                   draft.alignContent = value;
                 })
               }

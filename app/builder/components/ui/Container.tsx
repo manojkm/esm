@@ -33,7 +33,7 @@ interface SelectedLayout {
 }
 
 // Defines the props for the Container component.
-interface ContainerProps {
+export interface ContainerProps {
   children?: React.ReactNode;
   padding?: number;
   margin?: number;
@@ -94,6 +94,8 @@ interface ContainerProps {
   boxShadowSpreadHover?: number;
   boxShadowPositionHover?: string;
   boxShadowPreset?: string | null;
+  enableBoxShadow?: boolean;
+  enableBoxShadowHover?: boolean;
   boxShadowHorizontalResponsive?: ResponsiveValue;
   boxShadowVerticalResponsive?: ResponsiveValue;
   boxShadowBlurResponsive?: ResponsiveValue;
@@ -209,6 +211,8 @@ export const Container: React.FC<ContainerProps> = ({
   boxShadowSpreadHover = 0,
   boxShadowPositionHover = "outset",
   boxShadowPreset = null,
+  enableBoxShadow = false,
+  enableBoxShadowHover = false,
   boxShadowHorizontalResponsive,
   boxShadowVerticalResponsive,
   boxShadowBlurResponsive,
@@ -495,6 +499,10 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Calculate box shadow styles.
   const getBoxShadowStyles = () => {
+    if (!enableBoxShadow) {
+      return {};
+    }
+
     const shadowValues = getResponsiveBoxShadow();
 
     if (!boxShadowPreset && shadowValues.horizontal === 0 && shadowValues.vertical === 0 && shadowValues.blur === 0) return {};
@@ -570,7 +578,7 @@ export const Container: React.FC<ContainerProps> = ({
 
     // Box shadow hover styles.
     const hoverShadowValues = getResponsiveBoxShadowHover();
-    if (boxShadowPreset || hoverShadowValues.horizontal !== 0 || hoverShadowValues.vertical !== 0 || hoverShadowValues.blur !== 0) {
+    if (enableBoxShadowHover && (boxShadowPreset || hoverShadowValues.horizontal !== 0 || hoverShadowValues.vertical !== 0 || hoverShadowValues.blur !== 0)) {
       const insetHover = boxShadowPositionHover === "inset" ? "inset " : "";
       const boxShadowHoverValue = `${insetHover}${hoverShadowValues.horizontal}px ${hoverShadowValues.vertical}px ${hoverShadowValues.blur}px ${hoverShadowValues.spread}px ${boxShadowColorHover}`;
       hoverCSS += `box-shadow: ${boxShadowHoverValue} !important; `;
@@ -686,7 +694,7 @@ export const Container: React.FC<ContainerProps> = ({
       relative
       ${isEditMode && selected ? "ring-2 ring-blue-500 ring-offset-0" : isEditMode ? "hover:ring-1 hover:ring-blue-300" : ""}
       transition-all duration-200
-      ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
+      ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || (enableBoxShadowHover && (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0)) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
       ${className}
     `,
     style: containerStyle,
@@ -695,7 +703,7 @@ export const Container: React.FC<ContainerProps> = ({
   return (
     <>
       {/* Inject hover and responsive styles */}
-      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && <style>{getHoverStyles()}</style>}
+      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || (enableBoxShadowHover && (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0)) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && <style>{getHoverStyles()}</style>}
 
       {React.createElement(
         ContainerTag,

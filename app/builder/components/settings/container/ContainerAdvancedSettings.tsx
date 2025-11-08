@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { AttributesControls, CSSControls, PositionControls, ResponsiveControls } from "../shared/AdvancedControls";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "../shared/types";
 
 interface ContainerAdvancedSettingsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
 }
 
 export const ContainerAdvancedSettings: React.FC<ContainerAdvancedSettingsProps> = ({ props, actions }) => {

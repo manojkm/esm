@@ -1,10 +1,10 @@
 import React from "react";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "./types";
 
 interface AdvancedControlProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
   controlId?: string;
 }
 
@@ -27,7 +27,11 @@ export const CSSControls: React.FC<AdvancedControlProps> = ({ props, actions, co
           id={`${baseId}-classes`}
           type="text"
           value={props.className || ""}
-          onChange={(event) => actions.setProp((draft: typeof props) => (draft.className = event.target.value))}
+          onChange={(event) =>
+            actions.setProp((draft) => {
+              draft.className = event.target.value;
+            })
+          }
           placeholder="custom-class another-class"
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
         />
@@ -42,7 +46,11 @@ export const CSSControls: React.FC<AdvancedControlProps> = ({ props, actions, co
           id={`${baseId}-id`}
           type="text"
           value={props.cssId || ""}
-          onChange={(event) => actions.setProp((draft: typeof props) => (draft.cssId = event.target.value))}
+          onChange={(event) =>
+            actions.setProp((draft) => {
+              draft.cssId = event.target.value;
+            })
+          }
           placeholder="unique-id"
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
         />
@@ -64,7 +72,11 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
         <textarea
           id={`${baseId}-data`}
           value={props.dataAttributes || ""}
-          onChange={(event) => actions.setProp((draft: typeof props) => (draft.dataAttributes = event.target.value))}
+          onChange={(event) =>
+            actions.setProp((draft) => {
+              draft.dataAttributes = event.target.value;
+            })
+          }
           placeholder={"data-scroll=&quot;true&quot;\n" + "data-animation=&quot;fade&quot;"}
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm"
@@ -80,7 +92,11 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
           id={`${baseId}-aria`}
           type="text"
           value={props.ariaLabel || ""}
-          onChange={(event) => actions.setProp((draft: typeof props) => (draft.ariaLabel = event.target.value))}
+          onChange={(event) =>
+            actions.setProp((draft) => {
+              draft.ariaLabel = event.target.value;
+            })
+          }
           placeholder="Descriptive label for screen readers"
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
         />
@@ -93,6 +109,55 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
 export const PositionControls: React.FC<AdvancedControlProps> = ({ props, actions, controlId = "position" }) => {
   const baseId = `position-controls-${controlId}`;
 
+  const handleOffsetChange = (side: "Top" | "Right" | "Bottom" | "Left", value: string) => {
+    const parsed = value === "" ? null : Number(value);
+
+    actions.setProp((draft) => {
+      const normalizedValue = parsed === null || Number.isNaN(parsed) ? null : parsed;
+
+      switch (side) {
+        case "Top":
+          draft.positionTop = normalizedValue;
+          break;
+        case "Right":
+          draft.positionRight = normalizedValue;
+          break;
+        case "Bottom":
+          draft.positionBottom = normalizedValue;
+          break;
+        case "Left":
+          draft.positionLeft = normalizedValue;
+          break;
+      }
+    });
+  };
+
+  const handleUnitChange = (side: "Top" | "Right" | "Bottom" | "Left", unit: string) => {
+    actions.setProp((draft) => {
+      switch (side) {
+        case "Top":
+          draft.positionTopUnit = unit;
+          break;
+        case "Right":
+          draft.positionRightUnit = unit;
+          break;
+        case "Bottom":
+          draft.positionBottomUnit = unit;
+          break;
+        case "Left":
+          draft.positionLeftUnit = unit;
+          break;
+      }
+    });
+  };
+
+  const handleZIndexChange = (value: string) => {
+    actions.setProp((draft) => {
+      const parsed = value === "" ? undefined : Number(value);
+      draft.zIndex = parsed === undefined || Number.isNaN(parsed) ? undefined : parsed;
+    });
+  };
+
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
       <div>
@@ -102,7 +167,11 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
         <select
           id={`${baseId}-select`}
           value={props.position || "default"}
-          onChange={(event) => actions.setProp((draft: typeof props) => (draft.position = event.target.value))}
+          onChange={(event) =>
+            actions.setProp((draft) => {
+              draft.position = event.target.value;
+            })
+          }
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm"
         >
           <option value="default">Default</option>
@@ -128,15 +197,29 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
                     <input
                       id={`${baseId}-${lower}-value`}
                       type="number"
-                      value={props[`position${side}`] || ""}
-                      onChange={(event) => actions.setProp((draft: typeof props) => (draft[`position${side}`] = event.target.value))}
+                      value={
+                        {
+                          Top: props.positionTop,
+                          Right: props.positionRight,
+                          Bottom: props.positionBottom,
+                          Left: props.positionLeft,
+                        }[side] ?? ""
+                      }
+                      onChange={(event) => handleOffsetChange(side, event.target.value)}
                       placeholder="0"
                       className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white"
                     />
                     <select
                       id={`${baseId}-${lower}-unit`}
-                      value={props[`position${side}Unit`] || "px"}
-                      onChange={(event) => actions.setProp((draft: typeof props) => (draft[`position${side}Unit`] = event.target.value))}
+                      value={
+                        {
+                          Top: props.positionTopUnit,
+                          Right: props.positionRightUnit,
+                          Bottom: props.positionBottomUnit,
+                          Left: props.positionLeftUnit,
+                        }[side] || "px"
+                      }
+                      onChange={(event) => handleUnitChange(side, event.target.value)}
                       className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white"
                     >
                       <option value="px">px</option>
@@ -152,14 +235,7 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
             <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={`${baseId}-zindex`}>
               Z-Index
             </label>
-            <input
-              id={`${baseId}-zindex`}
-              type="number"
-              value={props.zIndex || ""}
-              onChange={(event) => actions.setProp((draft: typeof props) => (draft.zIndex = event.target.value))}
-              placeholder="auto"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-            />
+            <input id={`${baseId}-zindex`} type="number" value={props.zIndex ?? ""} onChange={(event) => handleZIndexChange(event.target.value)} placeholder="auto" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
           </div>
 
           <InfoNotice>Above setting will take effect only on preview or live page, and not while you&rsquo;re editing.</InfoNotice>
@@ -214,7 +290,11 @@ export const ResponsiveControls: React.FC<AdvancedControlProps> = ({ props, acti
                 id={`${baseId}-${id}-toggle`}
                 type="checkbox"
                 checked={Boolean(props[accessor])}
-                onChange={(event) => actions.setProp((draft: typeof props) => (draft[accessor] = event.target.checked))}
+                onChange={(event) =>
+                  actions.setProp((draft) => {
+                    draft[accessor] = event.target.checked;
+                  })
+                }
                 className="sr-only peer"
               />
               <div className='w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[""] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600'></div>
@@ -228,5 +308,3 @@ export const ResponsiveControls: React.FC<AdvancedControlProps> = ({ props, acti
     </div>
   );
 };
-
-

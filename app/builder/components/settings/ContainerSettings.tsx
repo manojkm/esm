@@ -5,6 +5,8 @@ import { useNode } from "@craftjs/core";
 import { ContainerGeneralSettings } from "./container/ContainerGeneralSettings";
 import { ContainerStyleSettings } from "./container/ContainerStyleSettings";
 import { ContainerAdvancedSettings } from "./container/ContainerAdvancedSettings";
+import type { ContainerProps } from "../ui/Container";
+import type { ContainerControlActions } from "./shared/types";
 
 const TABS = [
   { id: "general", label: "General" },
@@ -14,12 +16,15 @@ const TABS = [
 
 export const ContainerSettings = () => {
   const { actions, props } = useNode((node) => ({
-    props: node.data.props,
+    props: node.data.props as ContainerProps,
   }));
+
+  const containerProps = props as ContainerProps;
+  const containerActions = actions as ContainerControlActions;
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]["id"]>("general");
 
-  const isChildContainer = props.flexBasis !== null && props.flexBasis !== undefined;
+  const isChildContainer = containerProps.flexBasis !== null && containerProps.flexBasis !== undefined;
 
   return (
     <div className="space-y-4">
@@ -37,11 +42,11 @@ export const ContainerSettings = () => {
         ))}
       </div>
 
-      {activeTab === "general" && <ContainerGeneralSettings props={props} actions={actions} isChildContainer={isChildContainer} />}
+      {activeTab === "general" && <ContainerGeneralSettings props={containerProps} actions={containerActions} isChildContainer={isChildContainer} />}
 
-      {activeTab === "style" && <ContainerStyleSettings props={props} actions={actions} />}
+      {activeTab === "style" && <ContainerStyleSettings props={containerProps} actions={containerActions} />}
 
-      {activeTab === "advanced" && <ContainerAdvancedSettings props={props} actions={actions} />}
+      {activeTab === "advanced" && <ContainerAdvancedSettings props={containerProps} actions={containerActions} />}
     </div>
   );
 };

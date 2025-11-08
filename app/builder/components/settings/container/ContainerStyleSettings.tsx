@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls } from "../shared/StyleControls";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "../shared/types";
 
 interface ContainerStyleSettingsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
 }
 
 export const ContainerStyleSettings: React.FC<ContainerStyleSettingsProps> = ({ props, actions }) => {

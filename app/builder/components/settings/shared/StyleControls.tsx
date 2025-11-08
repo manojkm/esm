@@ -3,12 +3,12 @@
 import React from "react";
 import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import type { ContainerProps } from "../../ui/Container";
+import type { ContainerControlActions } from "./types";
 
 interface StyleControlProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  props: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  actions: any;
+  props: ContainerProps;
+  actions: ContainerControlActions;
   controlId?: string;
 }
 
@@ -42,6 +42,25 @@ interface ResponsiveSpacingControlProps {
   unitOptions?: string[];
   defaultValue?: number;
 }
+
+interface NumberFieldProps {
+  id: string;
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const NumberField: React.FC<NumberFieldProps> = ({ id, label, value, min, max, step = 1, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={id}>
+      {label}
+    </label>
+    <input id={id} type="number" value={value} min={min} max={max} step={step} onChange={onChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white" />
+  </div>
+);
 
 // Reusable Color Input Component
 export const ColorInput: React.FC<ColorInputProps> = ({ label, value, onChange, placeholder = "#000000", responsive = false }) => {
@@ -281,66 +300,67 @@ export const BoxShadowPresetControl: React.FC<BoxShadowPresetControlProps> = ({ 
   ];
 
   const applyPreset = (presetValue: string | null) => {
-    actions.setProp((draft: typeof props) => {
+    actions.setProp((draft) => {
       draft.boxShadowPreset = presetValue;
-      const currentBreakpoint = "desktop";
-
-      const resetValues = () => {
-        draft.boxShadowHorizontalResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowBlurResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowSpreadResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowHorizontalHoverResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 0 };
-        draft.boxShadowSpreadHoverResponsive = { [currentBreakpoint]: 0 };
-      };
-
-      resetValues();
+      if (presetValue !== null) {
+        draft.enableBoxShadow = true;
+        draft.enableBoxShadowHover = true;
+      }
+      draft.boxShadowHorizontal = 0;
+      draft.boxShadowVertical = 0;
+      draft.boxShadowBlur = 0;
+      draft.boxShadowSpread = 0;
+      draft.boxShadowHorizontalHover = 0;
+      draft.boxShadowVerticalHover = 0;
+      draft.boxShadowBlurHover = 0;
+      draft.boxShadowSpreadHover = 0;
+      draft.boxShadowHorizontalResponsive = undefined;
+      draft.boxShadowVerticalResponsive = undefined;
+      draft.boxShadowBlurResponsive = undefined;
+      draft.boxShadowSpreadResponsive = undefined;
+      draft.boxShadowHorizontalHoverResponsive = undefined;
+      draft.boxShadowVerticalHoverResponsive = undefined;
+      draft.boxShadowBlurHoverResponsive = undefined;
+      draft.boxShadowSpreadHoverResponsive = undefined;
+      draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
+      draft.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
 
       switch (presetValue) {
         case null:
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
           break;
         case "subtle":
-          draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 1 };
-          draft.boxShadowBlurResponsive = { [currentBreakpoint]: 3 };
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 2 };
-          draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 6 };
+          draft.boxShadowVertical = 1;
+          draft.boxShadowBlur = 3;
+          draft.boxShadowVerticalHover = 2;
+          draft.boxShadowBlurHover = 6;
           draft.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
           break;
         case "small":
-          draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 1 };
-          draft.boxShadowBlurResponsive = { [currentBreakpoint]: 3 };
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 4 };
-          draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 8 };
+          draft.boxShadowVertical = 1;
+          draft.boxShadowBlur = 3;
+          draft.boxShadowVerticalHover = 4;
+          draft.boxShadowBlurHover = 8;
           draft.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
           break;
         case "medium":
-          draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 4 };
-          draft.boxShadowBlurResponsive = { [currentBreakpoint]: 6 };
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 8 };
-          draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 15 };
+          draft.boxShadowVertical = 4;
+          draft.boxShadowBlur = 6;
+          draft.boxShadowVerticalHover = 8;
+          draft.boxShadowBlurHover = 15;
           draft.boxShadowColorHover = "rgba(0, 0, 0, 0.15)";
           break;
         case "large":
-          draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 10 };
-          draft.boxShadowBlurResponsive = { [currentBreakpoint]: 15 };
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 15 };
-          draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 25 };
+          draft.boxShadowVertical = 10;
+          draft.boxShadowBlur = 15;
+          draft.boxShadowVerticalHover = 15;
+          draft.boxShadowBlurHover = 25;
           draft.boxShadowColorHover = "rgba(0, 0, 0, 0.2)";
           break;
         case "xl":
-          draft.boxShadowVerticalResponsive = { [currentBreakpoint]: 20 };
-          draft.boxShadowBlurResponsive = { [currentBreakpoint]: 25 };
-          draft.boxShadowColor = "rgba(0, 0, 0, 0.1)";
-          draft.boxShadowVerticalHoverResponsive = { [currentBreakpoint]: 25 };
-          draft.boxShadowBlurHoverResponsive = { [currentBreakpoint]: 50 };
+          draft.boxShadowVertical = 20;
+          draft.boxShadowBlur = 25;
+          draft.boxShadowVerticalHover = 25;
+          draft.boxShadowBlurHover = 50;
           draft.boxShadowColorHover = "rgba(0, 0, 0, 0.25)";
           break;
       }
@@ -385,88 +405,200 @@ export const BoxShadowTabControl: React.FC<BoxShadowTabControlProps> = ({ contro
 
 export const BoxShadowValuesControl: React.FC<StyleControlProps> = ({ props, actions, controlId = "box-shadow-values" }: StyleControlProps) => {
   const baseId = `box-shadow-values-${controlId}`;
+  const isEnabled = props.enableBoxShadow ?? false;
+
+  const handleNumberChange = (key: "boxShadowHorizontal" | "boxShadowVertical" | "boxShadowBlur" | "boxShadowSpread", value: string) => {
+    const parsed = Number(value);
+    actions.setProp((draft) => {
+      const safeValue = Number.isNaN(parsed) ? 0 : parsed;
+      draft[key] = safeValue;
+      switch (key) {
+        case "boxShadowHorizontal":
+          draft.boxShadowHorizontalResponsive = undefined;
+          break;
+        case "boxShadowVertical":
+          draft.boxShadowVerticalResponsive = undefined;
+          break;
+        case "boxShadowBlur":
+          draft.boxShadowBlurResponsive = undefined;
+          break;
+        case "boxShadowSpread":
+          draft.boxShadowSpreadResponsive = undefined;
+          break;
+      }
+    });
+  };
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
-          Color
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">Normal State</span>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            id={`${baseId}-toggle`}
+            type="checkbox"
+            checked={isEnabled}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.enableBoxShadow = event.target.checked;
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
         </label>
-        <input id={`${baseId}-color`} type="text" value={props.boxShadowColor || "rgba(0, 0, 0, 0.1)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.boxShadowColor = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.1)" />
       </div>
-      <div className="space-y-3">
-        <ResponsiveNumberInput controlId={`${baseId}-horizontal`} label="Horizontal" value={props.boxShadowHorizontalResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowHorizontalResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-vertical`} label="Vertical" value={props.boxShadowVerticalResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowVerticalResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-blur`} label="Blur" value={props.boxShadowBlurResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowBlurResponsive = value))} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-spread`} label="Spread" value={props.boxShadowSpreadResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowSpreadResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-position`}>
-          Position
-        </label>
-        <div id={`${baseId}-position`} className="grid grid-cols-2 gap-1">
-          {["outset", "inset"].map((position) => (
-            <button
-              key={position}
-              type="button"
-              data-component-id={`${baseId}-position-${position}`}
-              onClick={() =>
-                actions.setProp((draft: typeof props) => {
-                  draft.boxShadowPosition = position;
+
+      {isEnabled && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
+              Color
+            </label>
+            <input
+              id={`${baseId}-color`}
+              type="text"
+              value={props.boxShadowColor || "rgba(0, 0, 0, 0.1)"}
+              onChange={(event) =>
+                actions.setProp((draft) => {
+                  draft.boxShadowColor = event.target.value;
                 })
               }
-              className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPosition || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
-              aria-pressed={(props.boxShadowPosition || "outset") === position}
-            >
-              {position}
-            </button>
-          ))}
-        </div>
-      </div>
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              placeholder="rgba(0, 0, 0, 0.1)"
+            />
+          </div>
+          <div className="space-y-3">
+            <NumberField id={`${baseId}-horizontal`} label="Horizontal" min={-100} max={100} value={props.boxShadowHorizontal ?? 0} onChange={(event) => handleNumberChange("boxShadowHorizontal", event.target.value)} />
+            <NumberField id={`${baseId}-vertical`} label="Vertical" min={-100} max={100} value={props.boxShadowVertical ?? 0} onChange={(event) => handleNumberChange("boxShadowVertical", event.target.value)} />
+            <NumberField id={`${baseId}-blur`} label="Blur" min={0} max={100} value={props.boxShadowBlur ?? 0} onChange={(event) => handleNumberChange("boxShadowBlur", event.target.value)} />
+            <NumberField id={`${baseId}-spread`} label="Spread" min={-100} max={100} value={props.boxShadowSpread ?? 0} onChange={(event) => handleNumberChange("boxShadowSpread", event.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-position`}>
+              Position
+            </label>
+            <div id={`${baseId}-position`} className="grid grid-cols-2 gap-1">
+              {["outset", "inset"].map((position) => (
+                <button
+                  key={position}
+                  type="button"
+                  data-component-id={`${baseId}-position-${position}`}
+                  onClick={() =>
+                    actions.setProp((draft) => {
+                      draft.boxShadowPosition = position;
+                    })
+                  }
+                  className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPosition || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                  aria-pressed={(props.boxShadowPosition || "outset") === position}
+                >
+                  {position}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 };
 
 export const BoxShadowHoverControls: React.FC<StyleControlProps> = ({ props, actions, controlId = "box-shadow-hover-values" }: StyleControlProps) => {
   const baseId = `box-shadow-hover-${controlId}`;
+  const isEnabled = props.enableBoxShadowHover ?? false;
+
+  const handleNumberChange = (key: "boxShadowHorizontalHover" | "boxShadowVerticalHover" | "boxShadowBlurHover" | "boxShadowSpreadHover", value: string) => {
+    const parsed = Number(value);
+    actions.setProp((draft) => {
+      const safeValue = Number.isNaN(parsed) ? 0 : parsed;
+      draft[key] = safeValue;
+      switch (key) {
+        case "boxShadowHorizontalHover":
+          draft.boxShadowHorizontalHoverResponsive = undefined;
+          break;
+        case "boxShadowVerticalHover":
+          draft.boxShadowVerticalHoverResponsive = undefined;
+          break;
+        case "boxShadowBlurHover":
+          draft.boxShadowBlurHoverResponsive = undefined;
+          break;
+        case "boxShadowSpreadHover":
+          draft.boxShadowSpreadHoverResponsive = undefined;
+          break;
+      }
+    });
+  };
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
-          Hover Color
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">Hover State</span>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            id={`${baseId}-toggle`}
+            type="checkbox"
+            checked={isEnabled}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.enableBoxShadowHover = event.target.checked;
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
         </label>
-        <input id={`${baseId}-color`} type="text" value={props.boxShadowColorHover || "rgba(0, 0, 0, 0.15)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.boxShadowColorHover = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="rgba(0, 0, 0, 0.15)" />
       </div>
-      <div className="space-y-3">
-        <ResponsiveNumberInput controlId={`${baseId}-horizontal`} label="Horizontal" value={props.boxShadowHorizontalHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowHorizontalHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-vertical`} label="Vertical" value={props.boxShadowVerticalHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowVerticalHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-blur`} label="Blur" value={props.boxShadowBlurHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowBlurHoverResponsive = value))} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-        <ResponsiveNumberInput controlId={`${baseId}-spread`} label="Spread" value={props.boxShadowSpreadHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.boxShadowSpreadHoverResponsive = value))} min={-100} max={100} unit="px" unitOptions={["px"]} defaultValue={0} />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-position`}>
-          Hover Position
-        </label>
-        <div id={`${baseId}-position`} className="grid grid-cols-2 gap-1">
-          {["outset", "inset"].map((position) => (
-            <button
-              key={position}
-              type="button"
-              data-component-id={`${baseId}-position-${position}`}
-              onClick={() =>
-                actions.setProp((draft: typeof props) => {
-                  draft.boxShadowPositionHover = position;
+
+      {isEnabled && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
+              Hover Color
+            </label>
+            <input
+              id={`${baseId}-color`}
+              type="text"
+              value={props.boxShadowColorHover || "rgba(0, 0, 0, 0.15)"}
+              onChange={(event) =>
+                actions.setProp((draft) => {
+                  draft.boxShadowColorHover = event.target.value;
                 })
               }
-              className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPositionHover || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
-              aria-pressed={(props.boxShadowPositionHover || "outset") === position}
-            >
-              {position}
-            </button>
-          ))}
-        </div>
-      </div>
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              placeholder="rgba(0, 0, 0, 0.15)"
+            />
+          </div>
+          <div className="space-y-3">
+            <NumberField id={`${baseId}-horizontal`} label="Horizontal" min={-100} max={100} value={props.boxShadowHorizontalHover ?? 0} onChange={(event) => handleNumberChange("boxShadowHorizontalHover", event.target.value)} />
+            <NumberField id={`${baseId}-vertical`} label="Vertical" min={-100} max={100} value={props.boxShadowVerticalHover ?? 0} onChange={(event) => handleNumberChange("boxShadowVerticalHover", event.target.value)} />
+            <NumberField id={`${baseId}-blur`} label="Blur" min={0} max={100} value={props.boxShadowBlurHover ?? 0} onChange={(event) => handleNumberChange("boxShadowBlurHover", event.target.value)} />
+            <NumberField id={`${baseId}-spread`} label="Spread" min={-100} max={100} value={props.boxShadowSpreadHover ?? 0} onChange={(event) => handleNumberChange("boxShadowSpreadHover", event.target.value)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-position`}>
+              Hover Position
+            </label>
+            <div id={`${baseId}-position`} className="grid grid-cols-2 gap-1">
+              {["outset", "inset"].map((position) => (
+                <button
+                  key={position}
+                  type="button"
+                  data-component-id={`${baseId}-position-${position}`}
+                  onClick={() =>
+                    actions.setProp((draft) => {
+                      draft.boxShadowPositionHover = position;
+                    })
+                  }
+                  className={`px-3 py-2 text-xs border rounded capitalize ${(props.boxShadowPositionHover || "outset") === position ? "bg-blue-500 text-white border-blue-500" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}
+                  aria-pressed={(props.boxShadowPositionHover || "outset") === position}
+                >
+                  {position}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 };
@@ -567,9 +699,11 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
     return getResponsiveValue(unitValues, "px");
   };
 
-  const setValue = (side: string, newValue: number) => {
+  const setValue = (side: string, inputValue: string) => {
+    const parsed = Number(inputValue);
+    const safeValue = Number.isNaN(parsed) ? defaultValue : parsed;
     const currentSideValues = value?.[side] || {};
-    const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, newValue);
+    const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, safeValue);
     onChange({ ...value, [side]: updatedSideValues });
   };
 
@@ -624,7 +758,7 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
             <label className="block text-xs text-gray-500 mb-1 capitalize" htmlFor={`${baseId}-${side}`}>
               {side}
             </label>
-            <input id={`${baseId}-${side}`} type="number" value={getValue(side)} onChange={(e) => setValue(side, parseInt(e.target.value))} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+            <input id={`${baseId}-${side}`} type="number" value={getValue(side)} onChange={(e) => setValue(side, e.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
           </div>
         ))}
       </div>
