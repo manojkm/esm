@@ -107,6 +107,9 @@ export interface ContainerProps {
   textColor?: string | null;
   linkColor?: string | null;
   linkColorHover?: string | null;
+  textColorResponsive?: ResponsiveValue;
+  linkColorResponsive?: ResponsiveValue;
+  linkColorHoverResponsive?: ResponsiveValue;
   className?: string;
   cssId?: string;
   dataAttributes?: string;

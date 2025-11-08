@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import type { BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
 import type { ContainerProps } from "../../ui/Container";
 import type { ContainerControlActions } from "./types";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
@@ -122,26 +123,54 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
 export const PositionControls: React.FC<AdvancedControlProps> = ({ props, actions, controlId = "position" }) => {
   const baseId = `position-controls-${controlId}`;
   const { currentBreakpoint } = useResponsive();
-  const defaultOffset = 0;
 
-  const resolveUnit = () => props.positionTopUnit || props.positionRightUnit || props.positionBottomUnit || props.positionLeftUnit || "px";
+  const resolveExistingUnit = () => props.positionTopUnit || props.positionRightUnit || props.positionBottomUnit || props.positionLeftUnit;
 
-  const positionValue: ResponsiveRecord = {
-    top: { desktop: props.positionTop ?? defaultOffset },
-    right: { desktop: props.positionRight ?? defaultOffset },
-    bottom: { desktop: props.positionBottom ?? defaultOffset },
-    left: { desktop: props.positionLeft ?? defaultOffset },
-    unit: { desktop: resolveUnit() },
+  const buildSideRecord = (val?: number | null) => {
+    if (val === null || val === undefined) return undefined;
+    return { desktop: val } as ResponsiveRecord;
   };
 
+  const offsetsValue: ResponsiveRecord = {};
+  const topRecord = buildSideRecord(props.positionTop);
+  if (topRecord) offsetsValue.top = topRecord;
+  const rightRecord = buildSideRecord(props.positionRight);
+  if (rightRecord) offsetsValue.right = rightRecord;
+  const bottomRecord = buildSideRecord(props.positionBottom);
+  if (bottomRecord) offsetsValue.bottom = bottomRecord;
+  const leftRecord = buildSideRecord(props.positionLeft);
+  if (leftRecord) offsetsValue.left = leftRecord;
+
+  const existingUnit = resolveExistingUnit();
+  if (existingUnit) {
+    offsetsValue.unit = { desktop: existingUnit };
+  }
+
   const handleOffsetResponsiveChange = (nextValue: ResponsiveRecord) => {
+    const fallbackOrder: BreakpointKey[] = [currentBreakpoint, "desktop", "tablet", "mobile"];
+
     const getSideValue = (side: "top" | "right" | "bottom" | "left") => {
-      const sideRecord = (nextValue?.[side] as Record<string, number>) || {};
-      return sideRecord[currentBreakpoint] ?? sideRecord.desktop ?? defaultOffset;
+      const sideRecord = (nextValue?.[side] as Partial<Record<BreakpointKey, number | null>>) || {};
+      for (const bp of fallbackOrder) {
+        if (sideRecord[bp] !== undefined) {
+          const candidate = sideRecord[bp];
+          return candidate === null ? null : candidate;
+        }
+      }
+      return null;
     };
 
-    const unitRecord = (nextValue?.unit as Record<string, string>) || {};
-    const unit = unitRecord[currentBreakpoint] ?? unitRecord.desktop ?? resolveUnit();
+    const unitRecord = (nextValue?.unit as Partial<Record<BreakpointKey, string | null>>) || {};
+    let unit: string | undefined;
+    for (const bp of fallbackOrder) {
+      if (unitRecord[bp] !== undefined) {
+        unit = unitRecord[bp] ?? undefined;
+        break;
+      }
+    }
+    if (!unit) {
+      unit = resolveExistingUnit() || "px";
+    }
 
     actions.setProp((draft) => {
       draft.positionTop = getSideValue("top");
@@ -190,7 +219,7 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
 
       {props.position && props.position !== "default" && props.position !== "static" && (
         <>
-          <ResponsiveSpacingControl controlId={`${baseId}-offsets`} label="Offsets" value={positionValue} onChange={handleOffsetResponsiveChange} unitOptions={["px", "%"]} defaultValue={0} />
+          <ResponsiveSpacingControl controlId={`${baseId}-offsets`} label="Offsets" value={Object.keys(offsetsValue).length ? offsetsValue : undefined} onChange={handleOffsetResponsiveChange} unitOptions={["px", "%"]} />
 
           <div className={INLINE_ROW_CLASS}>
             <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-zindex`}>

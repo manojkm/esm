@@ -17,8 +17,8 @@ type ResponsiveRecord = Record<string, unknown>;
 
 interface ColorInputProps {
   label: string;
-  value: string | null | ResponsiveRecord;
-  onChange: (value: string | null | ResponsiveRecord) => void;
+  value: unknown;
+  onChange: (value: unknown) => void;
   placeholder?: string;
   responsive?: boolean;
 }
@@ -160,8 +160,28 @@ export const BackgroundColorControls: React.FC<StyleControlProps> = ({ props, ac
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <ColorInput label="Background Color" value={props.backgroundColorResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.backgroundColorResponsive = value))} placeholder="#ffffff" responsive={true} />
-      <ColorInput label="Hover Color" value={props.backgroundColorHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.backgroundColorHoverResponsive = value))} placeholder="#f0f0f0" responsive={true} />
+      <ColorInput
+        label="Background Color"
+        value={props.backgroundColorResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.backgroundColorResponsive = value as typeof draft.backgroundColorResponsive;
+          })
+        }
+        placeholder="#ffffff"
+        responsive={true}
+      />
+      <ColorInput
+        label="Hover Color"
+        value={props.backgroundColorHoverResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.backgroundColorHoverResponsive = value as typeof draft.backgroundColorHoverResponsive;
+          })
+        }
+        placeholder="#f0f0f0"
+        responsive={true}
+      />
     </section>
   );
 };
@@ -254,7 +274,20 @@ export const BorderStyleControl: React.FC<StyleControlProps> = ({ props, actions
 export const BorderWidthControl: React.FC<StyleControlProps> = ({ props, actions, controlId = "border-width" }: StyleControlProps) => {
   if (!props.borderStyle || props.borderStyle === "none") return null;
 
-  return <ResponsiveSpacingControl controlId={controlId} label="Border Width" value={props.borderWidthResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.borderWidthResponsive = value))} unitOptions={["px"]} defaultValue={1} />;
+  return (
+    <ResponsiveSpacingControl
+      controlId={controlId}
+      label="Border Width"
+      value={props.borderWidthResponsive as ResponsiveRecord | undefined}
+      onChange={(value) =>
+        actions.setProp((draft: typeof props) => {
+          draft.borderWidthResponsive = value as typeof draft.borderWidthResponsive;
+        })
+      }
+      unitOptions={["px"]}
+      defaultValue={1}
+    />
+  );
 };
 
 export const BorderColorControls: React.FC<StyleControlProps> = ({ props, actions, controlId = "border-color" }: StyleControlProps) => {
@@ -264,14 +297,47 @@ export const BorderColorControls: React.FC<StyleControlProps> = ({ props, action
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <ColorInput label="Border Color" value={props.borderColorResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.borderColorResponsive = value))} placeholder="#000000" responsive={true} />
-      <ColorInput label="Hover Border Color" value={props.borderColorHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.borderColorHoverResponsive = value))} placeholder="#333333" responsive={true} />
+      <ColorInput
+        label="Border Color"
+        value={props.borderColorResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.borderColorResponsive = value as typeof draft.borderColorResponsive;
+          })
+        }
+        placeholder="#000000"
+        responsive={true}
+      />
+      <ColorInput
+        label="Hover Border Color"
+        value={props.borderColorHoverResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.borderColorHoverResponsive = value as typeof draft.borderColorHoverResponsive;
+          })
+        }
+        placeholder="#333333"
+        responsive={true}
+      />
     </section>
   );
 };
 
 export const BorderRadiusControl: React.FC<StyleControlProps> = ({ props, actions, controlId = "border-radius" }: StyleControlProps) => {
-  return <ResponsiveSpacingControl controlId={controlId} label="Border Radius" value={props.borderRadiusResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.borderRadiusResponsive = value))} unitOptions={["px", "%"]} defaultValue={0} />;
+  return (
+    <ResponsiveSpacingControl
+      controlId={controlId}
+      label="Border Radius"
+      value={props.borderRadiusResponsive as ResponsiveRecord | undefined}
+      onChange={(value) =>
+        actions.setProp((draft: typeof props) => {
+          draft.borderRadiusResponsive = value as typeof draft.borderRadiusResponsive;
+        })
+      }
+      unitOptions={["px", "%"]}
+      defaultValue={0}
+    />
+  );
 };
 
 // Border Controls Component
@@ -691,12 +757,13 @@ export const ResponsiveNumberInput: React.FC<ResponsiveNumberInputProps> = ({ co
 };
 
 // Responsive Spacing Control Component
-export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue = 0 }) => {
+export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
 
   const getValue = (side: string) => {
     const sideValues = value?.[side] || {};
-    return getResponsiveValue(sideValues, defaultValue);
+    const fallback = defaultValue !== undefined ? defaultValue : null;
+    return getResponsiveValue(sideValues, fallback);
   };
 
   const getUnit = () => {
@@ -705,10 +772,39 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
   };
 
   const setValue = (side: string, inputValue: string) => {
-    const parsed = Number(inputValue);
-    const safeValue = Number.isNaN(parsed) ? defaultValue : parsed;
-    const currentSideValues = value?.[side] || {};
-    const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, safeValue);
+    const trimmed = inputValue.trim();
+    const currentSideValues = (value?.[side] as Record<string, number | null>) || {};
+
+    if (trimmed === "") {
+      const nextSideValues = { ...currentSideValues };
+      delete nextSideValues[currentBreakpoint];
+      const nextState: ResponsiveRecord = { ...(value || {}) };
+      if (Object.keys(nextSideValues).length === 0) {
+        delete nextState[side];
+      } else {
+        nextState[side] = nextSideValues;
+      }
+
+      if (defaultValue === undefined) {
+        const hasAnySide = ["top", "right", "bottom", "left"].some((key) => {
+          const sideRecord = nextState[key] as Record<string, unknown> | undefined;
+          return sideRecord && Object.keys(sideRecord).length > 0;
+        });
+        if (!hasAnySide) {
+          delete nextState.unit;
+        }
+      }
+
+      onChange(nextState);
+      return;
+    }
+
+    if (!/^-?\d+$/.test(trimmed)) {
+      return;
+    }
+
+    const parsed = parseInt(trimmed, 10);
+    const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, parsed);
     onChange({ ...value, [side]: updatedSideValues });
   };
 
@@ -718,15 +814,42 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
     onChange({ ...value, unit: updatedUnitValues });
   };
 
-  const hasCustomValues = ["top", "right", "bottom", "left"].some((side) => getValue(side) !== defaultValue);
+  const hasCustomValues = ["top", "right", "bottom", "left"].some((side) => {
+    const resolved = getValue(side);
+    if (defaultValue !== undefined) {
+      return resolved !== defaultValue;
+    }
+    return resolved !== null && resolved !== undefined;
+  });
 
   const handleReset = () => {
-    const resetValues: Record<string, unknown> = {};
+    const resetValues: Record<string, unknown> = { ...(value || {}) };
     ["top", "right", "bottom", "left"].forEach((side) => {
-      const currentSideValues = value?.[side] || {};
-      resetValues[side] = setResponsiveValue(currentSideValues, currentBreakpoint, defaultValue);
+      const currentSideValues = (value?.[side] as Record<string, number | null>) || {};
+      if (defaultValue === undefined) {
+        const nextSideValues = { ...currentSideValues };
+        delete nextSideValues[currentBreakpoint];
+        if (Object.keys(nextSideValues).length === 0) {
+          delete resetValues[side];
+        } else {
+          resetValues[side] = nextSideValues;
+        }
+      } else {
+        resetValues[side] = setResponsiveValue(currentSideValues, currentBreakpoint, defaultValue);
+      }
     });
-    onChange({ ...value, ...resetValues });
+
+    if (defaultValue === undefined && resetValues.unit) {
+      const nextUnits = { ...(resetValues.unit as Record<string, string>) };
+      delete nextUnits[currentBreakpoint];
+      if (Object.keys(nextUnits).length === 0) {
+        delete resetValues.unit;
+      } else {
+        resetValues.unit = nextUnits;
+      }
+    }
+
+    onChange(resetValues);
   };
 
   const baseId = `responsive-spacing-${controlId}`;
@@ -743,7 +866,7 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
           </span>
         </label>
         <div className="flex items-center gap-2">
-          {hasCustomValues && (
+          {defaultValue !== undefined && hasCustomValues && (
             <button onClick={handleReset} className="text-gray-400 hover:text-gray-600 transition-colors" title="Reset to default">
               <RotateCcw size={14} />
             </button>
@@ -763,7 +886,7 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
             <label className="block text-xs text-gray-500 mb-1 capitalize" htmlFor={`${baseId}-${side}`}>
               {side}
             </label>
-            <input id={`${baseId}-${side}`} type="number" value={getValue(side)} onChange={(e) => setValue(side, e.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+            <input id={`${baseId}-${side}`} type="text" inputMode="numeric" pattern="-?\\d*" value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""} onChange={(e) => setValue(side, e.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
           </div>
         ))}
       </div>
@@ -778,9 +901,33 @@ export const GapControls: React.FC<StyleControlProps> = ({ props, actions, contr
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <ResponsiveNumberInput controlId={`${baseId}-row`} label="Row Gap" value={props.rowGapResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.rowGapResponsive = value))} max={100} unitOptions={["px", "%"]} defaultValue={20} />
+      <ResponsiveNumberInput
+        controlId={`${baseId}-row`}
+        label="Row Gap"
+        value={props.rowGapResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.rowGapResponsive = value as typeof draft.rowGapResponsive;
+          })
+        }
+        max={100}
+        unitOptions={["px", "%"]}
+        defaultValue={20}
+      />
 
-      <ResponsiveNumberInput controlId={`${baseId}-column`} label="Column Gap" value={props.columnGapResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.columnGapResponsive = value))} max={100} unitOptions={["px", "%"]} defaultValue={20} />
+      <ResponsiveNumberInput
+        controlId={`${baseId}-column`}
+        label="Column Gap"
+        value={props.columnGapResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.columnGapResponsive = value as typeof draft.columnGapResponsive;
+          })
+        }
+        max={100}
+        unitOptions={["px", "%"]}
+        defaultValue={20}
+      />
     </section>
   );
 };
@@ -790,7 +937,17 @@ export const PaddingControl: React.FC<StyleControlProps> = ({ props, actions, co
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <ResponsiveSpacingControl controlId={`${baseId}-responsive`} label="Padding" value={props.paddingResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.paddingResponsive = value))} defaultValue={10} />
+      <ResponsiveSpacingControl
+        controlId={`${baseId}-responsive`}
+        label="Padding"
+        value={props.paddingResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.paddingResponsive = value as typeof draft.paddingResponsive;
+          })
+        }
+        defaultValue={10}
+      />
     </section>
   );
 };
@@ -800,7 +957,17 @@ export const MarginControl: React.FC<StyleControlProps> = ({ props, actions, con
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <ResponsiveSpacingControl controlId={`${baseId}-responsive`} label="Margin" value={props.marginResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.marginResponsive = value))} unitOptions={["px", "%", "auto"]} />
+      <ResponsiveSpacingControl
+        controlId={`${baseId}-responsive`}
+        label="Margin"
+        value={props.marginResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.marginResponsive = value as typeof draft.marginResponsive;
+          })
+        }
+        unitOptions={["px", "%", "auto"]}
+      />
     </section>
   );
 };
@@ -823,7 +990,17 @@ export const TextColorControl: React.FC<StyleControlProps> = ({ props, actions, 
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <ColorInput label="Text Color" value={props.textColorResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.textColorResponsive = value))} placeholder="#000000 or inherit" responsive={true} />
+      <ColorInput
+        label="Text Color"
+        value={props.textColorResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.textColorResponsive = value as typeof draft.textColorResponsive;
+          })
+        }
+        placeholder="#000000 or inherit"
+        responsive={true}
+      />
     </section>
   );
 };
@@ -833,8 +1010,28 @@ export const LinkColorControl: React.FC<StyleControlProps> = ({ props, actions, 
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <ColorInput label="Link Color" value={props.linkColorResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.linkColorResponsive = value))} placeholder="#0066cc or inherit" responsive={true} />
-      <ColorInput label="Link Hover Color" value={props.linkColorHoverResponsive} onChange={(value) => actions.setProp((draft: typeof props) => (draft.linkColorHoverResponsive = value))} placeholder="#004499 or inherit" responsive={true} />
+      <ColorInput
+        label="Link Color"
+        value={props.linkColorResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.linkColorResponsive = value as typeof draft.linkColorResponsive;
+          })
+        }
+        placeholder="#0066cc or inherit"
+        responsive={true}
+      />
+      <ColorInput
+        label="Link Hover Color"
+        value={props.linkColorHoverResponsive}
+        onChange={(value) =>
+          actions.setProp((draft: typeof props) => {
+            draft.linkColorHoverResponsive = value as typeof draft.linkColorHoverResponsive;
+          })
+        }
+        placeholder="#004499 or inherit"
+        responsive={true}
+      />
     </section>
   );
 };
