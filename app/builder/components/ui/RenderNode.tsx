@@ -22,11 +22,12 @@ export const RenderNode: React.FC<RenderNodeProps> = ({ render }) => {
   const { enabled, query } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
+  const isEditMode = enabled;
 
   const isRoot = query.node(id).isRoot();
 
   // Don't show handles if editor is disabled or if it's the root node
-  if (!enabled || isRoot) {
+  if (!isEditMode || isRoot) {
     return render;
   }
 

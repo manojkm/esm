@@ -146,7 +146,12 @@ export const SettingsPanel = () => {
                     </div>
                   </div>
                 </div>
-                {selected.settings && <div className="bg-white">{React.createElement(selected.settings)}</div>}
+                {selected.settings && (
+                  <>
+                    {/* {console.log("Rendering settings for", selected.name, selected.settings)} */}
+                    <div className="bg-white">{React.createElement(selected.settings)}</div>
+                  </>
+                )}
               </div>
             ) : (
               <p className="text-gray-600 text-sm">Select a component to edit its properties</p>

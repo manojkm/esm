@@ -113,6 +113,7 @@ interface ContainerProps {
   layout?: string;
   selectedLayout?: SelectedLayout | null;
   flexBasis?: number | null;
+  flexBasisUnit?: string;
   containerWidth?: string;
   contentWidth?: string;
   contentBoxWidth?: number;
@@ -223,9 +224,10 @@ export const Container: React.FC<ContainerProps> = ({
   hideOnLandscapeMobile = false,
   hideOnMobile = false,
   showLayoutPicker = false,
-  layout = "block",
+  layout,
   selectedLayout = null,
   flexBasis = null,
+  flexBasisUnit = "%",
   containerWidth = "full",
   contentWidth = "boxed",
   contentBoxWidth = 1200,
@@ -238,11 +240,11 @@ export const Container: React.FC<ContainerProps> = ({
   equalHeight = false,
   htmlTag = "div",
   overflow = "visible",
-  flexDirection = "row",
-  justifyContent = "flex-start",
-  alignItems = "stretch",
-  flexWrap = "nowrap",
-  alignContent = "stretch",
+  flexDirection,
+  justifyContent,
+  alignItems,
+  flexWrap,
+  alignContent,
   position = "default",
   positionTop = null,
   positionRight = null,
@@ -285,6 +287,17 @@ export const Container: React.FC<ContainerProps> = ({
   const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
 
+  const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
+  const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
+  const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
+  const effectiveAlignItems = alignItems ?? (isChildContainer ? "center" : "stretch");
+  const effectiveFlexWrap = flexWrap ?? "nowrap";
+  const effectiveAlignContent = alignContent ?? "stretch";
+
+  const childCount = React.Children.count(children);
+  const hasChildren = childCount > 0;
+  const isEmpty = !hasChildren;
+
   const handleLayoutSelect = (layout: { cols: number[] }) => {
     const transformedLayout: SelectedLayout = {
       cols: layout.cols.map((width) => ({ width })),
@@ -297,7 +310,7 @@ export const Container: React.FC<ContainerProps> = ({
 
     if (transformedLayout.cols.length > 1) {
       transformedLayout.cols.forEach((col) => {
-        const newNodeTree = query.parseReactElement(<Element is={Container} padding={15} borderRadius={6} className="border border-gray-200" flexBasis={col.width} canvas />).toNodeTree();
+        const newNodeTree = query.parseReactElement(<Element is={Container} flexBasis={col.width} flexBasisUnit="%" layout="flex" flexDirection="column" justifyContent="center" alignItems="center" flexWrap="nowrap" canvas />).toNodeTree();
         editorActions.addNodeTree(newNodeTree, id);
       });
     }
@@ -579,6 +592,13 @@ export const Container: React.FC<ContainerProps> = ({
     return attrs;
   };
 
+  const hasCustomMinHeight = enableMinHeight && typeof minHeight === "number";
+  const hasCustomBorder = borderStyle && borderStyle !== "none";
+  const shouldShowHelperBorder = isEditMode && !hasCustomBorder && (!isChildContainer || isEmpty);
+  const computedMinHeight = hasCustomMinHeight ? `${minHeight}${minHeightUnit}` : isEditMode ? "20px" : undefined;
+  const hasCustomPosition = position && position !== "default" && position !== "static";
+  const formatPositionValue = (value: number | null | undefined, unit: string) => (value !== null && value !== undefined ? `${value}${unit}` : undefined);
+
   const containerStyle: React.CSSProperties = {
     padding: paddingValue,
     margin: marginValue,
@@ -586,26 +606,31 @@ export const Container: React.FC<ContainerProps> = ({
     ...getBorderStyles(),
     ...getBoxShadowStyles(),
     ...getColorStyles(),
-    minHeight: isChildContainer ? "50px" : enableMinHeight && minHeight ? `${minHeight}${minHeightUnit}` : "50px",
-    display: layout === "flex" && !needsContentWrapper ? "flex" : "block",
-    flexDirection: layout === "flex" && !needsContentWrapper ? (flexDirection as React.CSSProperties["flexDirection"]) : undefined,
-    justifyContent: layout === "flex" && !needsContentWrapper ? (justifyContent as React.CSSProperties["justifyContent"]) : undefined,
-    alignItems: layout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (alignItems as React.CSSProperties["alignItems"])) : undefined,
-    flexWrap: layout === "flex" && !needsContentWrapper ? (flexWrap as React.CSSProperties["flexWrap"]) : undefined,
-    alignContent: layout === "flex" && !needsContentWrapper && flexWrap === "wrap" ? (alignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: layout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
-    columnGap: layout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
-    flexBasis: isChildContainer && flexBasis ? `${flexBasis}%` : "auto",
-    width: isChildContainer && flexBasis ? `${flexBasis}%` : "100%",
+    ...(shouldShowHelperBorder
+      ? {
+          border: "1px dashed rgba(148, 163, 184, 0.9)",
+        }
+      : {}),
+    minHeight: computedMinHeight,
+    display: effectiveLayout === "flex" && !needsContentWrapper ? "flex" : "block",
+    flexDirection: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: effectiveLayout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: effectiveLayout === "flex" && !needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
+    rowGap: effectiveLayout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
+    columnGap: effectiveLayout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
+    flexBasis: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : undefined,
+    width: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : "100%",
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
-    overflow: isChildContainer ? undefined : (overflow as React.CSSProperties["overflow"]),
-    position: isEditMode ? undefined : position && position !== "default" ? (position as React.CSSProperties["position"]) : undefined,
-    top: isEditMode ? undefined : positionTop && position && position !== "default" && position !== "static" ? `${positionTop}${positionTopUnit}` : undefined,
-    right: isEditMode ? undefined : positionRight && position && position !== "default" && position !== "static" ? `${positionRight}${positionRightUnit}` : undefined,
-    bottom: isEditMode ? undefined : positionBottom && position && position !== "default" && position !== "static" ? `${positionBottom}${positionBottomUnit}` : undefined,
-    left: isEditMode ? undefined : positionLeft && position && position !== "default" && position !== "static" ? `${positionLeft}${positionLeftUnit}` : undefined,
+    overflow: overflow as React.CSSProperties["overflow"],
+    position: isEditMode ? undefined : hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,
+    top: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionTop, positionTopUnit) : undefined,
+    right: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionRight, positionRightUnit) : undefined,
+    bottom: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionBottom, positionBottomUnit) : undefined,
+    left: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionLeft, positionLeftUnit) : undefined,
     zIndex: isEditMode ? undefined : zIndex ? zIndex : undefined,
   };
 
@@ -615,19 +640,19 @@ export const Container: React.FC<ContainerProps> = ({
     marginLeft: needsContentWrapper ? "auto" : undefined,
     marginRight: needsContentWrapper ? "auto" : undefined,
     width: "100%",
-    height: isChildContainer ? undefined : equalHeight && layout === "flex" ? "100%" : undefined,
+    height: isChildContainer ? undefined : equalHeight && effectiveLayout === "flex" ? "100%" : undefined,
     // Apply flex properties to content wrapper when needed
-    display: layout === "flex" && needsContentWrapper ? "flex" : undefined,
-    flexDirection: layout === "flex" && needsContentWrapper ? (flexDirection as React.CSSProperties["flexDirection"]) : undefined,
-    justifyContent: layout === "flex" && needsContentWrapper ? (justifyContent as React.CSSProperties["justifyContent"]) : undefined,
-    alignItems: layout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (alignItems as React.CSSProperties["alignItems"])) : undefined,
-    flexWrap: layout === "flex" && needsContentWrapper ? (flexWrap as React.CSSProperties["flexWrap"]) : undefined,
-    alignContent: layout === "flex" && needsContentWrapper && flexWrap === "wrap" ? (alignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: layout === "flex" && needsContentWrapper ? getResponsiveRowGap() : undefined,
-    columnGap: layout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
+    display: effectiveLayout === "flex" && needsContentWrapper ? "flex" : undefined,
+    flexDirection: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: effectiveLayout === "flex" && needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: effectiveLayout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: effectiveLayout === "flex" && needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
+    rowGap: effectiveLayout === "flex" && needsContentWrapper ? getResponsiveRowGap() : undefined,
+    columnGap: effectiveLayout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
   };
 
-  const ContainerTag = isChildContainer ? "div" : htmlTag;
+  const ContainerTag = htmlTag;
 
   const containerProps = {
     ref: (ref: HTMLElement | null) => {
@@ -643,7 +668,7 @@ export const Container: React.FC<ContainerProps> = ({
     ...parseDataAttributes(),
     className: `
       relative
-      ${enabled && selected ? "ring-2 ring-blue-500 ring-offset-0" : enabled ? "hover:ring-1 hover:ring-blue-300" : ""}
+      ${isEditMode && selected ? "ring-2 ring-blue-500 ring-offset-0" : isEditMode ? "hover:ring-1 hover:ring-blue-300" : ""}
       transition-all duration-200
       ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
       ${className}
@@ -665,7 +690,7 @@ export const Container: React.FC<ContainerProps> = ({
             const content = (
               <>
                 {/* Regular drop zone for empty container */}
-                {isEditMode && !children && <div className="flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-gray-300 rounded-md h-20">Drop components here</div>}
+                {isEditMode && isEmpty && <div className="flex items-center justify-center text-gray-400 text-sm h-5">Drop components here</div>}
 
                 {children}
               </>
