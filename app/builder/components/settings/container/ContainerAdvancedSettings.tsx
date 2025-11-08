@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AttributesControls, CSSControls, PositionControls, ResponsiveControls } from "../shared/StyleControls";
+import { AttributesControls, CSSControls, PositionControls, ResponsiveControls } from "../shared/AdvancedControls";
 
 interface ContainerAdvancedSettingsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,5 +53,3 @@ const Accordion: React.FC<AccordionProps> = ({ id, title, isOpen, onToggle, chil
     {isOpen && <div className="p-4 border-t border-gray-200 space-y-3">{children}</div>}
   </div>
 );
-
-

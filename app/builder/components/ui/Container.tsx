@@ -10,6 +10,7 @@ import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
  * Features: Responsive design, drag/drop, styling controls, rename functionality
  */
 
+// Defines the responsive value structure for various CSS properties.
 interface ResponsiveValue {
   desktop?: number | string;
   tablet?: number | string;
@@ -21,14 +22,17 @@ interface ResponsiveValue {
   left?: Record<string, number>;
 }
 
+// Represents a single column in a layout.
 interface LayoutColumn {
   width: number;
 }
 
+// Defines the structure of a selected layout, containing an array of columns.
 interface SelectedLayout {
   cols: LayoutColumn[];
 }
 
+// Defines the props for the Container component.
 interface ContainerProps {
   children?: React.ReactNode;
   padding?: number;
@@ -143,6 +147,7 @@ interface ContainerProps {
   zIndex?: number | null;
 }
 
+// The main Container component.
 export const Container: React.FC<ContainerProps> = ({
   children,
   padding = 10,
@@ -276,6 +281,7 @@ export const Container: React.FC<ContainerProps> = ({
   }));
   const isEditMode = enabled;
 
+  // Hook to get responsive values based on the current device.
   const { getResponsiveValue } = useResponsive();
 
   // Component state management
@@ -287,6 +293,7 @@ export const Container: React.FC<ContainerProps> = ({
   const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
   const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
 
+  // Determine effective layout properties.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
   const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
   const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
@@ -294,15 +301,18 @@ export const Container: React.FC<ContainerProps> = ({
   const effectiveFlexWrap = flexWrap ?? "nowrap";
   const effectiveAlignContent = alignContent ?? "stretch";
 
+  // Check if the container has children.
   const childCount = React.Children.count(children);
   const hasChildren = childCount > 0;
   const isEmpty = !hasChildren;
 
+  // Handles the selection of a layout from the picker.
   const handleLayoutSelect = (layout: { cols: number[] }) => {
     const transformedLayout: SelectedLayout = {
       cols: layout.cols.map((width) => ({ width })),
     };
 
+    // Set layout properties and create new container nodes for columns.
     actions.setProp((props: ContainerProps) => {
       props.layout = transformedLayout.cols.length === 1 ? "block" : "flex";
       props.selectedLayout = transformedLayout;
@@ -318,7 +328,7 @@ export const Container: React.FC<ContainerProps> = ({
     setShowPicker(false);
   };
 
-  // Calculate responsive padding values
+  // Calculate responsive padding values.
   const getResponsivePadding = () => {
     if (paddingResponsive) {
       const top = getResponsiveValue(paddingResponsive.top || {}, paddingTop ?? padding);
@@ -331,7 +341,7 @@ export const Container: React.FC<ContainerProps> = ({
     return paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` : `${padding}px`;
   };
 
-  // Calculate responsive margin values
+  // Calculate responsive margin values.
   const getResponsiveMargin = () => {
     if (marginResponsive) {
       const top = getResponsiveValue(marginResponsive.top || {}, marginTop ?? margin);
@@ -344,7 +354,7 @@ export const Container: React.FC<ContainerProps> = ({
     return marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
   };
 
-  // Calculate responsive gap values
+  // Calculate responsive gap values.
   const getResponsiveRowGap = () => {
     if (rowGapResponsive) {
       const value = getResponsiveValue(rowGapResponsive, rowGap);
@@ -366,10 +376,10 @@ export const Container: React.FC<ContainerProps> = ({
   const paddingValue = getResponsivePadding();
   const marginValue = getResponsiveMargin();
 
-  // Generate unique class for dynamic hover styles (stable for SSR)
+  // Generate unique class for dynamic hover styles (stable for SSR).
   const hoverClassName = `container-hover-${id}`;
 
-  // Calculate background styles only when backgroundType is active
+  // Calculate background styles only when backgroundType is active.
   const getBackgroundStyles = () => {
     if (!backgroundType) return {};
 
@@ -395,7 +405,7 @@ export const Container: React.FC<ContainerProps> = ({
     }
   };
 
-  // Calculate responsive border radius
+  // Calculate responsive border radius.
   const getResponsiveBorderRadius = () => {
     if (borderRadiusResponsive) {
       const topLeft = getResponsiveValue(borderRadiusResponsive.top || {}, borderTopLeftRadius ?? borderRadius);
@@ -408,7 +418,7 @@ export const Container: React.FC<ContainerProps> = ({
     return borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
   };
 
-  // Calculate responsive border width
+  // Calculate responsive border width.
   const getResponsiveBorderWidth = () => {
     if (borderWidthResponsive) {
       const top = getResponsiveValue(borderWidthResponsive.top || {}, borderTopWidth ?? borderWidth);
@@ -420,14 +430,14 @@ export const Container: React.FC<ContainerProps> = ({
     return borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px` : `${borderWidth}px`;
   };
 
-  // Calculate border styles
+  // Calculate border styles.
   const getBorderStyles = (): React.CSSProperties => {
     const styles: React.CSSProperties = {};
 
-    // Always apply border radius
+    // Always apply border radius.
     styles.borderRadius = getResponsiveBorderRadius();
 
-    // Only apply border properties if style is not none
+    // Only apply border properties if style is not none.
     if (borderStyle && borderStyle !== "none") {
       styles.borderStyle = borderStyle as React.CSSProperties["borderStyle"];
       styles.borderWidth = getResponsiveBorderWidth();
@@ -438,7 +448,7 @@ export const Container: React.FC<ContainerProps> = ({
     return styles;
   };
 
-  // Calculate responsive box shadow values
+  // Calculate responsive box shadow values.
   const getResponsiveBoxShadow = () => {
     let horizontal = boxShadowHorizontal;
     let vertical = boxShadowVertical;
@@ -483,7 +493,7 @@ export const Container: React.FC<ContainerProps> = ({
     return { horizontal, vertical, blur, spread };
   };
 
-  // Calculate box shadow styles
+  // Calculate box shadow styles.
   const getBoxShadowStyles = () => {
     const shadowValues = getResponsiveBoxShadow();
 
@@ -497,7 +507,7 @@ export const Container: React.FC<ContainerProps> = ({
     };
   };
 
-  // Calculate color styles
+  // Calculate color styles.
   const getColorStyles = (): React.CSSProperties => {
     const styles: React.CSSProperties = {};
 
@@ -508,9 +518,9 @@ export const Container: React.FC<ContainerProps> = ({
     return styles;
   };
 
-  // Generate responsive styles (only for live pages, not in editor)
+  // Generate responsive styles (only for live pages, not in editor).
   const getResponsiveStyles = () => {
-    // Skip responsive styles in editor mode
+    // Skip responsive styles in editor mode.
     if (isEditMode) {
       return "";
     }
@@ -533,11 +543,11 @@ export const Container: React.FC<ContainerProps> = ({
     return responsiveCSS;
   };
 
-  // Generate hover styles
+  // Generate hover styles.
   const getHoverStyles = () => {
     let hoverCSS = "";
 
-    // Background hover styles
+    // Background hover styles.
     if (backgroundType) {
       switch (backgroundType) {
         case "color":
@@ -552,13 +562,13 @@ export const Container: React.FC<ContainerProps> = ({
       }
     }
 
-    // Border hover styles
+    // Border hover styles.
     if (borderStyle && borderStyle !== "none") {
       const responsiveBorderColorHover = getResponsiveValue(borderColorHoverResponsive || {}, borderColorHover);
       hoverCSS += `border-color: ${responsiveBorderColorHover} !important; `;
     }
 
-    // Box shadow hover styles
+    // Box shadow hover styles.
     const hoverShadowValues = getResponsiveBoxShadowHover();
     if (boxShadowPreset || hoverShadowValues.horizontal !== 0 || hoverShadowValues.vertical !== 0 || hoverShadowValues.blur !== 0) {
       const insetHover = boxShadowPositionHover === "inset" ? "inset " : "";
@@ -566,7 +576,7 @@ export const Container: React.FC<ContainerProps> = ({
       hoverCSS += `box-shadow: ${boxShadowHoverValue} !important; `;
     }
 
-    // Link color styles
+    // Link color styles.
     let linkCSS = "";
     if (linkColor) {
       linkCSS += `.${hoverClassName} a { color: ${linkColor} !important; } `;
@@ -579,7 +589,7 @@ export const Container: React.FC<ContainerProps> = ({
     return combinedCSS;
   };
 
-  // Parse data attributes
+  // Parse data attributes from a string into an object.
   const parseDataAttributes = (): Record<string, string> => {
     if (!dataAttributes) return {};
     const attrs: Record<string, string> = {};
@@ -592,6 +602,7 @@ export const Container: React.FC<ContainerProps> = ({
     return attrs;
   };
 
+  // Determine various conditional styles and properties.
   const hasCustomMinHeight = enableMinHeight && typeof minHeight === "number";
   const hasCustomBorder = borderStyle && borderStyle !== "none";
   const shouldShowHelperBorder = isEditMode && !hasCustomBorder && (!isChildContainer || isEmpty);
@@ -599,6 +610,7 @@ export const Container: React.FC<ContainerProps> = ({
   const hasCustomPosition = position && position !== "default" && position !== "static";
   const formatPositionValue = (value: number | null | undefined, unit: string) => (value !== null && value !== undefined ? `${value}${unit}` : undefined);
 
+  // Define the main container's style object.
   const containerStyle: React.CSSProperties = {
     padding: paddingValue,
     margin: marginValue,
@@ -634,6 +646,7 @@ export const Container: React.FC<ContainerProps> = ({
     zIndex: isEditMode ? undefined : zIndex ? zIndex : undefined,
   };
 
+  // Define the content wrapper's style object.
   const contentWrapperStyle: React.CSSProperties = {
     // Width settings for boxed content
     maxWidth: needsContentWrapper ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined,
@@ -653,8 +666,10 @@ export const Container: React.FC<ContainerProps> = ({
     columnGap: effectiveLayout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
   };
 
+  // Set the HTML tag for the container.
   const ContainerTag = htmlTag;
 
+  // Define the props for the container element.
   const containerProps = {
     ref: (ref: HTMLElement | null) => {
       if (!ref) return;
