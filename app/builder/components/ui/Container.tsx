@@ -265,7 +265,13 @@ export const Container: React.FC<ContainerProps> = ({
   }));
 
   // Editor-level actions and queries
-  const { actions: editorActions, query } = useEditor();
+  const {
+    actions: editorActions,
+    query,
+    enabled,
+  } = useEditor((state) => ({
+    enabled: state.options.enabled,
+  }));
 
   const { getResponsiveValue } = useResponsive();
 
@@ -631,7 +637,7 @@ export const Container: React.FC<ContainerProps> = ({
     ...parseDataAttributes(),
     className: `
       relative
-      ${selected ? "ring-2 ring-blue-500 ring-offset-0" : "hover:ring-1 hover:ring-blue-300"}
+      ${enabled && selected ? "ring-2 ring-blue-500 ring-offset-0" : enabled ? "hover:ring-1 hover:ring-blue-300" : ""}
       transition-all duration-200
       ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0 || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
       ${className}
