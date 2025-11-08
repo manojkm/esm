@@ -640,6 +640,7 @@ export const Container: React.FC<ContainerProps> = ({
     marginLeft: needsContentWrapper ? "auto" : undefined,
     marginRight: needsContentWrapper ? "auto" : undefined,
     width: "100%",
+    minHeight: "inherit",
     height: isChildContainer ? undefined : equalHeight && effectiveLayout === "flex" ? "100%" : undefined,
     // Apply flex properties to content wrapper when needed
     display: effectiveLayout === "flex" && needsContentWrapper ? "flex" : undefined,

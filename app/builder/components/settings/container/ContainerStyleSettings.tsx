@@ -18,23 +18,23 @@ export const ContainerStyleSettings: React.FC<ContainerStyleSettingsProps> = ({ 
   return (
     <div className="space-y-4">
       <Accordion id="spacing" title="Spacing" isOpen={openAccordion === "spacing"} onToggle={toggleAccordion}>
-        <SpacingControls props={props} actions={actions} />
+        <SpacingControls props={props} actions={actions} controlId="container-spacing" />
       </Accordion>
 
       <Accordion id="background" title="Background" isOpen={openAccordion === "background"} onToggle={toggleAccordion}>
-        <BackgroundControls props={props} actions={actions} />
+        <BackgroundControls props={props} actions={actions} controlId="container-background" />
       </Accordion>
 
       <Accordion id="border" title="Border" isOpen={openAccordion === "border"} onToggle={toggleAccordion}>
-        <BorderControls props={props} actions={actions} />
+        <BorderControls props={props} actions={actions} controlId="container-border" />
       </Accordion>
 
       <Accordion id="boxShadow" title="Box Shadow" isOpen={openAccordion === "boxShadow"} onToggle={toggleAccordion}>
-        <BoxShadowControls props={props} actions={actions} />
+        <BoxShadowControls props={props} actions={actions} controlId="container-box-shadow" />
       </Accordion>
 
       <Accordion id="color" title="Color" isOpen={openAccordion === "color"} onToggle={toggleAccordion}>
-        <ColorControls props={props} actions={actions} />
+        <ColorControls props={props} actions={actions} controlId="container-color" />
       </Accordion>
     </div>
   );
