@@ -5,6 +5,7 @@ import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import type { ContainerProps } from "../../ui/Container";
 import type { ContainerControlActions } from "./types";
+import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
 
 interface StyleControlProps {
   props: ContainerProps;
@@ -54,11 +55,11 @@ interface NumberFieldProps {
 }
 
 const NumberField: React.FC<NumberFieldProps> = ({ id, label, value, min, max, step = 1, onChange }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={id}>
+  <div className={INLINE_ROW_CLASS}>
+    <label className={INLINE_LABEL_CLASS} htmlFor={id}>
       {label}
     </label>
-    <input id={id} type="number" value={value} min={min} max={max} step={step} onChange={onChange} className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white" />
+    <input id={id} type="number" value={value} min={min} max={max} step={step} onChange={onChange} className={INLINE_FIELD_CLASS} />
   </div>
 );
 
@@ -172,17 +173,17 @@ export const BackgroundGradientControls: React.FC<StyleControlProps> = ({ props,
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-3">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-gradient`}>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-gradient`}>
           Gradient
         </label>
-        <input id={`${baseId}-gradient`} type="text" value={props.backgroundGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundGradient = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" />
+        <input id={`${baseId}-gradient`} type="text" value={props.backgroundGradient || "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundGradient = e.target.value))} className={INLINE_FIELD_CLASS} placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-hover-gradient`}>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-hover-gradient`}>
           Hover Gradient
         </label>
-        <input id={`${baseId}-hover-gradient`} type="text" value={props.backgroundGradientHover || "linear-gradient(135deg, #764ba2 0%, #667eea 100%)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundGradientHover = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="linear-gradient(135deg, #764ba2 0%, #667eea 100%)" />
+        <input id={`${baseId}-hover-gradient`} type="text" value={props.backgroundGradientHover || "linear-gradient(135deg, #764ba2 0%, #667eea 100%)"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundGradientHover = e.target.value))} className={INLINE_FIELD_CLASS} placeholder="linear-gradient(135deg, #764ba2 0%, #667eea 100%)" />
       </div>
     </section>
   );
@@ -195,10 +196,12 @@ export const BackgroundImageControl: React.FC<StyleControlProps> = ({ props, act
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-input`}>
-        Image URL
-      </label>
-      <input id={`${baseId}-input`} type="text" value={props.backgroundImage || ""} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundImage = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder="https://example.com/image.jpg" />
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-input`}>
+          Image URL
+        </label>
+        <input id={`${baseId}-input`} type="text" value={props.backgroundImage || ""} onChange={(e) => actions.setProp((draft: typeof props) => (draft.backgroundImage = e.target.value))} className={INLINE_FIELD_CLASS} placeholder="https://example.com/image.jpg" />
+      </div>
     </section>
   );
 };
@@ -223,25 +226,27 @@ export const BorderStyleControl: React.FC<StyleControlProps> = ({ props, actions
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-select`}>
-        Border Style
-      </label>
-      <select
-        id={`${baseId}-select`}
-        value={props.borderStyle || "none"}
-        onChange={(e) =>
-          actions.setProp((draft: typeof props) => {
-            draft.borderStyle = e.target.value;
-          })
-        }
-        className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+          Border Style
+        </label>
+        <select
+          id={`${baseId}-select`}
+          value={props.borderStyle || "none"}
+          onChange={(e) =>
+            actions.setProp((draft: typeof props) => {
+              draft.borderStyle = e.target.value;
+            })
+          }
+          className={INLINE_FIELD_CLASS}
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
     </section>
   );
 };
@@ -451,8 +456,8 @@ export const BoxShadowValuesControl: React.FC<StyleControlProps> = ({ props, act
 
       {isEnabled && (
         <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
+          <div className={INLINE_ROW_CLASS}>
+            <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-color`}>
               Color
             </label>
             <input
@@ -464,7 +469,7 @@ export const BoxShadowValuesControl: React.FC<StyleControlProps> = ({ props, act
                   draft.boxShadowColor = event.target.value;
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              className={INLINE_FIELD_CLASS}
               placeholder="rgba(0, 0, 0, 0.1)"
             />
           </div>
@@ -551,8 +556,8 @@ export const BoxShadowHoverControls: React.FC<StyleControlProps> = ({ props, act
 
       {isEnabled && (
         <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-color`}>
+          <div className={INLINE_ROW_CLASS}>
+            <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-color`}>
               Hover Color
             </label>
             <input
@@ -564,7 +569,7 @@ export const BoxShadowHoverControls: React.FC<StyleControlProps> = ({ props, act
                   draft.boxShadowColorHover = event.target.value;
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
+              className={INLINE_FIELD_CLASS}
               placeholder="rgba(0, 0, 0, 0.15)"
             />
           </div>

@@ -5,7 +5,7 @@ import { useState } from "react";
 // Craft.js core components for drag-and-drop editor
 import { Editor, Frame, Element } from "@craftjs/core";
 // Page builder components and UI
-import { Text, Button, Container, Image, Heading, Video, Icon, Toolbar, Toolbox, SettingsPanel } from "./components";
+import { Text, Button, Container, Toolbar, Toolbox, SettingsPanel } from "./components";
 import { ResponsiveToolbar } from "./components/layout/ResponsiveToolbar";
 import { ResponsiveProvider } from "@/app/builder/contexts/ResponsiveContext";
 import { RenderNode } from "./components/ui/RenderNode";
@@ -47,7 +47,7 @@ export default function Builder() {
 
         {/* Craft.js Editor - Main drag/drop functionality */}
         <Editor
-          resolver={{ Text, Button, Container, Image, Heading, Video, Icon }} // Available components
+          resolver={{ Text, Button, Container }} // Available components
           indicator={{
             success: "#10b981", // Drop success color
             error: "#ef4444", // Drop error color

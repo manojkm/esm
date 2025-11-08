@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { LayoutControls } from "../shared/LayoutControls";
+import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "../shared/styles";
 import type { ContainerProps } from "../../ui/Container";
 import type { ContainerControlActions } from "../shared/types";
 
@@ -358,9 +359,13 @@ export const EqualHeightToggle: React.FC<ControlProps> = ({ props, actions }) =>
 );
 
 export const HtmlTagSelect: React.FC<ControlProps> = ({ props, actions }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">HTML Tag</label>
-    <select value={props.htmlTag || "div"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.htmlTag = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white">
+  <div className={INLINE_ROW_CLASS}>
+    <label className={INLINE_LABEL_CLASS}>HTML Tag</label>
+    <select
+      value={props.htmlTag || "div"}
+      onChange={(e) => actions.setProp((draft: typeof props) => (draft.htmlTag = e.target.value))}
+      className={INLINE_FIELD_CLASS}
+    >
       <option value="div">div</option>
       <option value="section">section</option>
       <option value="article">article</option>
@@ -374,9 +379,13 @@ export const HtmlTagSelect: React.FC<ControlProps> = ({ props, actions }) => (
 );
 
 export const OverflowSelect: React.FC<ControlProps> = ({ props, actions }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">Overflow</label>
-    <select value={props.overflow || "visible"} onChange={(e) => actions.setProp((draft: typeof props) => (draft.overflow = e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white">
+  <div className={INLINE_ROW_CLASS}>
+    <label className={INLINE_LABEL_CLASS}>Overflow</label>
+    <select
+      value={props.overflow || "visible"}
+      onChange={(e) => actions.setProp((draft: typeof props) => (draft.overflow = e.target.value))}
+      className={INLINE_FIELD_CLASS}
+    >
       <option value="visible">Visible</option>
       <option value="hidden">Hidden</option>
       <option value="auto">Auto</option>

@@ -1,6 +1,7 @@
 import React from "react";
 import type { ContainerProps } from "../../ui/Container";
 import type { ContainerControlActions } from "./types";
+import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
 
 interface LayoutControlsProps {
   props: ContainerProps;
@@ -87,16 +88,18 @@ export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ co
 
   return (
     <section id={baseId}>
-      <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-select`}>
-        Justify Content
-      </label>
-      <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {getLabel(option)}
-          </option>
-        ))}
-      </select>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+          Justify Content
+        </label>
+        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className={INLINE_FIELD_CLASS}>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {getLabel(option)}
+            </option>
+          ))}
+        </select>
+      </div>
     </section>
   );
 };
@@ -119,16 +122,18 @@ export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId,
 
   return (
     <section id={baseId}>
-      <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-select`}>
-        Align Items
-      </label>
-      <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {getLabel(option)}
-          </option>
-        ))}
-      </select>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+          Align Items
+        </label>
+        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className={INLINE_FIELD_CLASS}>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {getLabel(option)}
+            </option>
+          ))}
+        </select>
+      </div>
     </section>
   );
 };
@@ -181,16 +186,18 @@ export const AlignContentControl: React.FC<AlignContentControlProps> = ({ contro
 
   return (
     <section id={baseId}>
-      <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-select`}>
-        Align Content
-      </label>
-      <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm">
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {getLabel(option)}
-          </option>
-        ))}
-      </select>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+          Align Content
+        </label>
+        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className={INLINE_FIELD_CLASS}>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {getLabel(option)}
+            </option>
+          ))}
+        </select>
+      </div>
     </section>
   );
 };

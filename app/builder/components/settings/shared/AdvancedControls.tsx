@@ -1,12 +1,19 @@
+"use client";
+
 import React from "react";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import type { ContainerProps } from "../../ui/Container";
 import type { ContainerControlActions } from "./types";
+import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
+import { ResponsiveSpacingControl } from "./StyleControls";
 
 interface AdvancedControlProps {
   props: ContainerProps;
   actions: ContainerControlActions;
   controlId?: string;
 }
+
+type ResponsiveRecord = Record<string, unknown>;
 
 export const InfoNotice: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-3">
@@ -19,41 +26,45 @@ export const CSSControls: React.FC<AdvancedControlProps> = ({ props, actions, co
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-classes`}>
-          CSS Classes
-        </label>
-        <input
-          id={`${baseId}-classes`}
-          type="text"
-          value={props.className || ""}
-          onChange={(event) =>
-            actions.setProp((draft) => {
-              draft.className = event.target.value;
-            })
-          }
-          placeholder="custom-class another-class"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-        />
+      <div className="space-y-1.5">
+        <div className={INLINE_ROW_CLASS}>
+          <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-classes`}>
+            CSS Classes
+          </label>
+          <input
+            id={`${baseId}-classes`}
+            type="text"
+            value={props.className || ""}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.className = event.target.value;
+              })
+            }
+            placeholder="custom-class another-class"
+            className={INLINE_FIELD_CLASS}
+          />
+        </div>
         <p className="text-xs text-gray-500 mt-1">Add custom CSS classes separated by spaces</p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-id`}>
-          CSS ID
-        </label>
-        <input
-          id={`${baseId}-id`}
-          type="text"
-          value={props.cssId || ""}
-          onChange={(event) =>
-            actions.setProp((draft) => {
-              draft.cssId = event.target.value;
-            })
-          }
-          placeholder="unique-id"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-        />
+      <div className="space-y-1.5">
+        <div className={INLINE_ROW_CLASS}>
+          <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-id`}>
+            CSS ID
+          </label>
+          <input
+            id={`${baseId}-id`}
+            type="text"
+            value={props.cssId || ""}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.cssId = event.target.value;
+              })
+            }
+            placeholder="unique-id"
+            className={INLINE_FIELD_CLASS}
+          />
+        </div>
         <p className="text-xs text-gray-500 mt-1">Unique identifier for this element</p>
       </div>
     </div>
@@ -84,22 +95,24 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
         <p className="text-xs text-gray-500 mt-1">One attribute per line (e.g., data-scroll=&quot;true&quot;)</p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-aria`}>
-          ARIA Label
-        </label>
-        <input
-          id={`${baseId}-aria`}
-          type="text"
-          value={props.ariaLabel || ""}
-          onChange={(event) =>
-            actions.setProp((draft) => {
-              draft.ariaLabel = event.target.value;
-            })
-          }
-          placeholder="Descriptive label for screen readers"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white"
-        />
+      <div className="space-y-1.5">
+        <div className={INLINE_ROW_CLASS}>
+          <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-aria`}>
+            ARIA Label
+          </label>
+          <input
+            id={`${baseId}-aria`}
+            type="text"
+            value={props.ariaLabel || ""}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.ariaLabel = event.target.value;
+              })
+            }
+            placeholder="Descriptive label for screen readers"
+            className={INLINE_FIELD_CLASS}
+          />
+        </div>
         <p className="text-xs text-gray-500 mt-1">Accessibility label for screen readers</p>
       </div>
     </div>
@@ -108,46 +121,38 @@ export const AttributesControls: React.FC<AdvancedControlProps> = ({ props, acti
 
 export const PositionControls: React.FC<AdvancedControlProps> = ({ props, actions, controlId = "position" }) => {
   const baseId = `position-controls-${controlId}`;
+  const { currentBreakpoint } = useResponsive();
+  const defaultOffset = 0;
 
-  const handleOffsetChange = (side: "Top" | "Right" | "Bottom" | "Left", value: string) => {
-    const parsed = value === "" ? null : Number(value);
+  const resolveUnit = () => props.positionTopUnit || props.positionRightUnit || props.positionBottomUnit || props.positionLeftUnit || "px";
 
-    actions.setProp((draft) => {
-      const normalizedValue = parsed === null || Number.isNaN(parsed) ? null : parsed;
-
-      switch (side) {
-        case "Top":
-          draft.positionTop = normalizedValue;
-          break;
-        case "Right":
-          draft.positionRight = normalizedValue;
-          break;
-        case "Bottom":
-          draft.positionBottom = normalizedValue;
-          break;
-        case "Left":
-          draft.positionLeft = normalizedValue;
-          break;
-      }
-    });
+  const positionValue: ResponsiveRecord = {
+    top: { desktop: props.positionTop ?? defaultOffset },
+    right: { desktop: props.positionRight ?? defaultOffset },
+    bottom: { desktop: props.positionBottom ?? defaultOffset },
+    left: { desktop: props.positionLeft ?? defaultOffset },
+    unit: { desktop: resolveUnit() },
   };
 
-  const handleUnitChange = (side: "Top" | "Right" | "Bottom" | "Left", unit: string) => {
+  const handleOffsetResponsiveChange = (nextValue: ResponsiveRecord) => {
+    const getSideValue = (side: "top" | "right" | "bottom" | "left") => {
+      const sideRecord = (nextValue?.[side] as Record<string, number>) || {};
+      return sideRecord[currentBreakpoint] ?? sideRecord.desktop ?? defaultOffset;
+    };
+
+    const unitRecord = (nextValue?.unit as Record<string, string>) || {};
+    const unit = unitRecord[currentBreakpoint] ?? unitRecord.desktop ?? resolveUnit();
+
     actions.setProp((draft) => {
-      switch (side) {
-        case "Top":
-          draft.positionTopUnit = unit;
-          break;
-        case "Right":
-          draft.positionRightUnit = unit;
-          break;
-        case "Bottom":
-          draft.positionBottomUnit = unit;
-          break;
-        case "Left":
-          draft.positionLeftUnit = unit;
-          break;
-      }
+      draft.positionTop = getSideValue("top");
+      draft.positionRight = getSideValue("right");
+      draft.positionBottom = getSideValue("bottom");
+      draft.positionLeft = getSideValue("left");
+
+      draft.positionTopUnit = unit;
+      draft.positionRightUnit = unit;
+      draft.positionBottomUnit = unit;
+      draft.positionLeftUnit = unit;
     });
   };
 
@@ -160,8 +165,8 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-select`}>
+      <div className={INLINE_ROW_CLASS}>
+        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
           Position
         </label>
         <select
@@ -172,7 +177,7 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
               draft.position = event.target.value;
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white text-sm"
+          className={INLINE_FIELD_CLASS}
         >
           <option value="default">Default</option>
           <option value="static">Static</option>
@@ -185,57 +190,13 @@ export const PositionControls: React.FC<AdvancedControlProps> = ({ props, action
 
       {props.position && props.position !== "default" && props.position !== "static" && (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            {(["Top", "Right", "Bottom", "Left"] as const).map((side) => {
-              const lower = side.toLowerCase();
-              return (
-                <div key={side}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={`${baseId}-${lower}-value`}>
-                    {side}
-                  </label>
-                  <div className="flex items-center gap-1">
-                    <input
-                      id={`${baseId}-${lower}-value`}
-                      type="number"
-                      value={
-                        {
-                          Top: props.positionTop,
-                          Right: props.positionRight,
-                          Bottom: props.positionBottom,
-                          Left: props.positionLeft,
-                        }[side] ?? ""
-                      }
-                      onChange={(event) => handleOffsetChange(side, event.target.value)}
-                      placeholder="0"
-                      className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded-l text-gray-900 bg-white"
-                    />
-                    <select
-                      id={`${baseId}-${lower}-unit`}
-                      value={
-                        {
-                          Top: props.positionTopUnit,
-                          Right: props.positionRightUnit,
-                          Bottom: props.positionBottomUnit,
-                          Left: props.positionLeftUnit,
-                        }[side] || "px"
-                      }
-                      onChange={(event) => handleUnitChange(side, event.target.value)}
-                      className="px-2 py-1 text-xs border border-l-0 border-gray-300 rounded-r text-gray-900 bg-white"
-                    >
-                      <option value="px">px</option>
-                      <option value="%">%</option>
-                    </select>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ResponsiveSpacingControl controlId={`${baseId}-offsets`} label="Offsets" value={positionValue} onChange={handleOffsetResponsiveChange} unitOptions={["px", "%"]} defaultValue={0} />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={`${baseId}-zindex`}>
+          <div className={INLINE_ROW_CLASS}>
+            <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-zindex`}>
               Z-Index
             </label>
-            <input id={`${baseId}-zindex`} type="number" value={props.zIndex ?? ""} onChange={(event) => handleZIndexChange(event.target.value)} placeholder="auto" className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" />
+            <input id={`${baseId}-zindex`} type="number" value={props.zIndex ?? ""} onChange={(event) => handleZIndexChange(event.target.value)} placeholder="auto" className={INLINE_FIELD_CLASS} />
           </div>
 
           <InfoNotice>Above setting will take effect only on preview or live page, and not while you&rsquo;re editing.</InfoNotice>
