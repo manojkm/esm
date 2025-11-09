@@ -1,5 +1,5 @@
 import React from "react";
-import type { ContainerProps } from "../../ui/Container";
+import type { ContainerProps } from "../../ui/container/types";
 import type { ContainerControlActions } from "./types";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
 

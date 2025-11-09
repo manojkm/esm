@@ -5,7 +5,7 @@ import { useNode } from "@craftjs/core";
 import { ContainerGeneralSettings } from "./container/ContainerGeneralSettings";
 import { ContainerStyleSettings } from "./container/ContainerStyleSettings";
 import { ContainerAdvancedSettings } from "./container/ContainerAdvancedSettings";
-import type { ContainerProps } from "../ui/Container";
+import type { ContainerProps } from "../ui/container/types";
 import type { ContainerControlActions } from "./shared/types";
 
 const TABS = [

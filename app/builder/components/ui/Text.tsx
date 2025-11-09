@@ -8,9 +8,9 @@ export const Text = ({ text = "Click to edit", fontSize = "16" }) => {
   const {
     connectors: { connect, drag },
     selected,
-    actions: { setProp }
+    actions: { setProp },
   } = useNode((state) => ({
-    selected: state.events.selected
+    selected: state.events.selected,
   }));
 
   const [editable, setEditable] = useState(false);

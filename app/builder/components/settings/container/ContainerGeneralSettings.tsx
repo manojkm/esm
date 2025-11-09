@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { LayoutControls } from "../shared/LayoutControls";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "../shared/styles";
-import type { ContainerProps } from "../../ui/Container";
+import type { ContainerProps } from "../../ui/container/types";
 import type { ContainerControlActions } from "../shared/types";
 
 interface ContainerGeneralSettingsProps {

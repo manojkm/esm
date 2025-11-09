@@ -9,7 +9,7 @@ export const Toolbox = () => {
 
   return (
     <div className="w-64 bg-gray-100 p-4 border-r">
-      <h3 className="font-semibold mb-4 text-gray-900">Components</h3>
+      <h3 className="font-semibold mb-4 text-gray-900">User Components</h3>
       <div className="space-y-2">
         <div
           ref={(ref) => {

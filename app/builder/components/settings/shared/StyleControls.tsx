@@ -3,7 +3,7 @@
 import React from "react";
 import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
-import type { ContainerProps } from "../../ui/Container";
+import type { ContainerProps } from "../../ui/container/types";
 import type { ContainerControlActions } from "./types";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
 

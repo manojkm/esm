@@ -4,156 +4,16 @@ import React, { useState } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import type { ContainerProps, SelectedLayout } from "./container/types";
 
 /**
- * Container Component - Main building block for page layouts
- * Features: Responsive design, drag/drop, styling controls, rename functionality
+ * The main Container component. It receives props from the craft.js store
+ * and renders the appropriate layout and styles.
  */
-
-// Defines the responsive value structure for various CSS properties.
-interface ResponsiveValue {
-  desktop?: number | string;
-  tablet?: number | string;
-  mobile?: number | string;
-  unit?: Record<string, string>;
-  top?: Record<string, number>;
-  right?: Record<string, number>;
-  bottom?: Record<string, number>;
-  left?: Record<string, number>;
-}
-
-// Represents a single column in a layout.
-interface LayoutColumn {
-  width: number;
-}
-
-// Defines the structure of a selected layout, containing an array of columns.
-interface SelectedLayout {
-  cols: LayoutColumn[];
-}
-
-// Defines the props for the Container component.
-export interface ContainerProps {
-  children?: React.ReactNode;
-  padding?: number;
-  margin?: number;
-  paddingTop?: number | null;
-  paddingRight?: number | null;
-  paddingBottom?: number | null;
-  paddingLeft?: number | null;
-  paddingUnit?: string;
-  marginTop?: number | null;
-  marginRight?: number | null;
-  marginBottom?: number | null;
-  marginLeft?: number | null;
-  marginUnit?: string;
-  rowGap?: number;
-  columnGap?: number;
-  rowGapUnit?: string;
-  columnGapUnit?: string;
-  paddingResponsive?: ResponsiveValue;
-  marginResponsive?: ResponsiveValue;
-  rowGapResponsive?: ResponsiveValue;
-  columnGapResponsive?: ResponsiveValue;
-  backgroundColor?: string;
-  backgroundColorHover?: string;
-  backgroundColorResponsive?: ResponsiveValue;
-  backgroundColorHoverResponsive?: ResponsiveValue;
-  backgroundType?: string | null;
-  backgroundGradient?: string;
-  backgroundGradientHover?: string;
-  backgroundImage?: string;
-  borderRadius?: number;
-  borderTopLeftRadius?: number | null;
-  borderTopRightRadius?: number | null;
-  borderBottomRightRadius?: number | null;
-  borderBottomLeftRadius?: number | null;
-  borderRadiusUnit?: string;
-  borderRadiusResponsive?: ResponsiveValue;
-  borderWidthResponsive?: ResponsiveValue;
-  borderStyle?: string;
-  borderWidth?: number;
-  borderTopWidth?: number | null;
-  borderRightWidth?: number | null;
-  borderBottomWidth?: number | null;
-  borderLeftWidth?: number | null;
-  borderColor?: string;
-  borderColorHover?: string;
-  borderColorResponsive?: ResponsiveValue;
-  borderColorHoverResponsive?: ResponsiveValue;
-  boxShadowColor?: string;
-  boxShadowColorHover?: string;
-  boxShadowHorizontal?: number;
-  boxShadowVertical?: number;
-  boxShadowBlur?: number;
-  boxShadowSpread?: number;
-  boxShadowPosition?: string;
-  boxShadowHorizontalHover?: number;
-  boxShadowVerticalHover?: number;
-  boxShadowBlurHover?: number;
-  boxShadowSpreadHover?: number;
-  boxShadowPositionHover?: string;
-  boxShadowPreset?: string | null;
-  enableBoxShadow?: boolean;
-  enableBoxShadowHover?: boolean;
-  boxShadowHorizontalResponsive?: ResponsiveValue;
-  boxShadowVerticalResponsive?: ResponsiveValue;
-  boxShadowBlurResponsive?: ResponsiveValue;
-  boxShadowSpreadResponsive?: ResponsiveValue;
-  boxShadowHorizontalHoverResponsive?: ResponsiveValue;
-  boxShadowVerticalHoverResponsive?: ResponsiveValue;
-  boxShadowBlurHoverResponsive?: ResponsiveValue;
-  boxShadowSpreadHoverResponsive?: ResponsiveValue;
-  textColor?: string | null;
-  linkColor?: string | null;
-  linkColorHover?: string | null;
-  textColorResponsive?: ResponsiveValue;
-  linkColorResponsive?: ResponsiveValue;
-  linkColorHoverResponsive?: ResponsiveValue;
-  className?: string;
-  cssId?: string;
-  dataAttributes?: string;
-  ariaLabel?: string;
-  hideOnDesktop?: boolean;
-  hideOnTablet?: boolean;
-  hideOnLandscapeMobile?: boolean;
-  hideOnMobile?: boolean;
-  showLayoutPicker?: boolean;
-  layout?: string;
-  selectedLayout?: SelectedLayout | null;
-  flexBasis?: number | null;
-  flexBasisUnit?: string;
-  containerWidth?: string;
-  contentWidth?: string;
-  contentBoxWidth?: number;
-  contentBoxWidthUnit?: string;
-  customWidth?: number;
-  customWidthUnit?: string;
-  minHeight?: number;
-  minHeightUnit?: string;
-  enableMinHeight?: boolean;
-  equalHeight?: boolean;
-  htmlTag?: string;
-  overflow?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  flexWrap?: string;
-  alignContent?: string;
-  position?: string;
-  positionTop?: number | null;
-  positionRight?: number | null;
-  positionBottom?: number | null;
-  positionLeft?: number | null;
-  positionTopUnit?: string;
-  positionRightUnit?: string;
-  positionBottomUnit?: string;
-  positionLeftUnit?: string;
-  zIndex?: number | null;
-}
-
-// The main Container component.
 export const Container: React.FC<ContainerProps> = ({
+  // Props are destructured here. When a user changes a setting in the SettingsPanel,
+  // craft.js updates the corresponding prop, and this component re-renders with the new value.
   children,
   padding = 10,
   margin = 0,
@@ -268,39 +128,43 @@ export const Container: React.FC<ContainerProps> = ({
   positionLeftUnit = "px",
   zIndex = null,
 }) => {
-  // Craft.js hooks for component interaction
+  // The `useNode` hook is the core of craft.js. It connects this component instance
+  // to the editor's state, providing its props, selection status, and actions to modify it.
   const {
-    connectors: { connect, drag }, // Drag/drop connectors (needed for drag functionality)
-    selected, // Is component currently selected
-    actions, // Component prop actions
-    id, // Unique component ID
+    connectors: { connect, drag }, // `connect` makes the component a drop target, `drag` makes it draggable.
+    selected, // `true` if the component is currently selected in the editor.
+    actions, // Contains `setProp`, the function used by settings panels to update this component's props.
+    id, // A unique ID for this component instance (node).
   } = useNode((state) => ({
     selected: state.events.selected,
   }));
 
-  // Editor-level actions and queries
+  // `useEditor` provides access to the global editor state and actions.
   const {
-    actions: editorActions,
-    query,
-    enabled,
+    actions: editorActions, // Global actions, like adding a new component (`addNodeTree`).
+    query, // Functions to query the editor's state (e.g., `query.parseReactElement`).
+    enabled, // `true` if the editor is in "edit" mode.
   } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
   const isEditMode = enabled;
 
-  // Hook to get responsive values based on the current device.
+  // Custom hook to get the correct style value based on the current viewport (desktop, tablet, mobile).
   const { getResponsiveValue } = useResponsive();
+  const responsiveResolver: ResponsiveResolver = (values, fallback) => getResponsiveValue(values ?? {}, fallback);
 
-  // Component state management
-  // Only show picker for new containers (no children, no selectedLayout, and showLayoutPicker prop is true)
+  // State to control the visibility of the layout picker modal.
+  // The picker is shown for new containers that don't have children or a pre-defined layout.
   const shouldShowPicker = showLayoutPicker && !children && !selectedLayout;
-  const [showPicker, setShowPicker] = useState(shouldShowPicker); // Layout picker modal
+  const [showPicker, setShowPicker] = useState(shouldShowPicker);
 
-  // Layout logic
-  const isChildContainer = flexBasis !== null && flexBasis !== undefined; // Is this a column in a layout
-  const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed"; // Needs inner wrapper for boxed content
+  // --- Layout Logic ---
+  // Determines if this container is a column within a parent flex container.
+  const isChildContainer = flexBasis !== null && flexBasis !== undefined;
+  // Determines if a nested content wrapper is needed for "full-width container with boxed content".
+  const needsContentWrapper = !isChildContainer && containerWidth === "full" && contentWidth === "boxed";
 
-  // Determine effective layout properties.
+  // Determine effective layout properties, falling back to defaults if not specified.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
   const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
   const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
@@ -308,26 +172,33 @@ export const Container: React.FC<ContainerProps> = ({
   const effectiveFlexWrap = flexWrap ?? "nowrap";
   const effectiveAlignContent = alignContent ?? "stretch";
 
-  // Check if the container has children.
+  // Check if the container has any children.
   const childCount = React.Children.count(children);
   const hasChildren = childCount > 0;
   const isEmpty = !hasChildren;
 
-  // Handles the selection of a layout from the picker.
+  /**
+   * Handles the selection of a layout from the picker.
+   * It updates this container's props and adds new child containers for each column.
+   * @param layout - The selected layout object with column widths.
+   */
   const handleLayoutSelect = (layout: { cols: number[] }) => {
     const transformedLayout: SelectedLayout = {
       cols: layout.cols.map((width) => ({ width })),
     };
 
-    // Set layout properties and create new container nodes for columns.
+    // Use `actions.setProp` to update this container's own props in the craft.js store.
     actions.setProp((props: ContainerProps) => {
       props.layout = transformedLayout.cols.length === 1 ? "block" : "flex";
       props.selectedLayout = transformedLayout;
     });
 
+    // If a multi-column layout is chosen, create new `Container` nodes for each column.
     if (transformedLayout.cols.length > 1) {
       transformedLayout.cols.forEach((col) => {
+        // Create a new container element configured as a flex column.
         const newNodeTree = query.parseReactElement(<Element is={Container} flexBasis={col.width} flexBasisUnit="%" layout="flex" flexDirection="column" justifyContent="center" alignItems="center" flexWrap="nowrap" canvas />).toNodeTree();
+        // Use the global `editorActions` to add the new column to this container.
         editorActions.addNodeTree(newNodeTree, id);
       });
     }
@@ -335,320 +206,197 @@ export const Container: React.FC<ContainerProps> = ({
     setShowPicker(false);
   };
 
-  // Calculate responsive padding values.
-  const getResponsivePadding = () => {
-    if (paddingResponsive) {
-      const top = getResponsiveValue(paddingResponsive.top || {}, paddingTop ?? padding);
-      const right = getResponsiveValue(paddingResponsive.right || {}, paddingRight ?? padding);
-      const bottom = getResponsiveValue(paddingResponsive.bottom || {}, paddingBottom ?? padding);
-      const left = getResponsiveValue(paddingResponsive.left || {}, paddingLeft ?? padding);
-      const unit = getResponsiveValue(paddingResponsive.unit || {}, paddingUnit);
-      return `${top}${unit} ${right}${unit} ${bottom}${unit} ${left}${unit}`;
-    }
-    return paddingTop !== null || paddingRight !== null || paddingBottom !== null || paddingLeft !== null ? `${paddingTop ?? padding}${paddingUnit} ${paddingRight ?? padding}${paddingUnit} ${paddingBottom ?? padding}${paddingUnit} ${paddingLeft ?? padding}${paddingUnit}` : `${padding}px`;
-  };
+  // --- Style Calculation Helper Functions ---
+  // These computations read the component's props (which are controlled by the settings panel)
+  // and compute the final CSS styles, including responsive adjustments.
+  const paddingValue = buildResponsiveFourSideValue({
+    responsive: paddingResponsive,
+    fallback: {
+      top: paddingTop,
+      right: paddingRight,
+      bottom: paddingBottom,
+      left: paddingLeft,
+      defaultValue: padding,
+    },
+    defaultUnit: paddingUnit,
+    resolver: responsiveResolver,
+  });
 
-  // Calculate responsive margin values.
-  const getResponsiveMargin = () => {
-    if (marginResponsive) {
-      const top = getResponsiveValue(marginResponsive.top || {}, marginTop ?? margin);
-      const right = getResponsiveValue(marginResponsive.right || {}, marginRight ?? margin);
-      const bottom = getResponsiveValue(marginResponsive.bottom || {}, marginBottom ?? margin);
-      const left = getResponsiveValue(marginResponsive.left || {}, marginLeft ?? margin);
-      const unit = getResponsiveValue(marginResponsive.unit || {}, marginUnit);
-      return `${top}${unit} ${right}${unit} ${bottom}${unit} ${left}${unit}`;
-    }
-    return marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null ? `${marginTop ?? margin}${marginUnit} ${marginRight ?? margin}${marginUnit} ${marginBottom ?? margin}${marginUnit} ${marginLeft ?? margin}${marginUnit}` : `${margin}px`;
-  };
+  const marginValue = buildResponsiveFourSideValue({
+    responsive: marginResponsive,
+    fallback: {
+      top: marginTop,
+      right: marginRight,
+      bottom: marginBottom,
+      left: marginLeft,
+      defaultValue: margin,
+    },
+    defaultUnit: marginUnit,
+    resolver: responsiveResolver,
+  });
 
-  // Calculate responsive gap values.
-  const getResponsiveRowGap = () => {
-    if (rowGapResponsive) {
-      const value = getResponsiveValue(rowGapResponsive, rowGap);
-      const unit = getResponsiveValue(rowGapResponsive.unit || {}, rowGapUnit);
-      return `${value}${unit}`;
-    }
-    return `${rowGap}${rowGapUnit}`;
-  };
+  const rowGapValue = buildResponsiveValueWithUnit({
+    responsive: rowGapResponsive,
+    fallbackValue: rowGap,
+    fallbackUnit: rowGapUnit,
+    resolver: responsiveResolver,
+  });
 
-  const getResponsiveColumnGap = () => {
-    if (columnGapResponsive) {
-      const value = getResponsiveValue(columnGapResponsive, columnGap);
-      const unit = getResponsiveValue(columnGapResponsive.unit || {}, columnGapUnit);
-      return `${value}${unit}`;
-    }
-    return `${columnGap}${columnGapUnit}`;
-  };
+  const columnGapValue = buildResponsiveValueWithUnit({
+    responsive: columnGapResponsive,
+    fallbackValue: columnGap,
+    fallbackUnit: columnGapUnit,
+    resolver: responsiveResolver,
+  });
 
-  const paddingValue = getResponsivePadding();
-  const marginValue = getResponsiveMargin();
+  const backgroundStyles = buildBackgroundStyles({
+    type: backgroundType,
+    color: backgroundColor,
+    colorResponsive: backgroundColorResponsive,
+    gradient: backgroundGradient,
+    image: backgroundImage,
+    resolver: responsiveResolver,
+  });
 
-  // Generate unique class for dynamic hover styles (stable for SSR).
+  const borderStyles = buildBorderStyles({
+    style: borderStyle,
+    color: borderColor,
+    colorResponsive: borderColorResponsive,
+    radiusResponsive: borderRadiusResponsive,
+    widthResponsive: borderWidthResponsive,
+    radiusFallback: {
+      topLeft: borderTopLeftRadius,
+      topRight: borderTopRightRadius,
+      bottomRight: borderBottomRightRadius,
+      bottomLeft: borderBottomLeftRadius,
+      defaultValue: borderRadius,
+      defaultUnit: borderRadiusUnit,
+    },
+    widthFallback: {
+      top: borderTopWidth,
+      right: borderRightWidth,
+      bottom: borderBottomWidth,
+      left: borderLeftWidth,
+      defaultValue: borderWidth,
+      defaultUnit: "px",
+    },
+    resolver: responsiveResolver,
+  });
+
+  const boxShadowStyles = buildBoxShadowStyle({
+    enable: enableBoxShadow,
+    preset: boxShadowPreset,
+    position: boxShadowPosition,
+    color: boxShadowColor,
+    horizontal: boxShadowHorizontal,
+    vertical: boxShadowVertical,
+    blur: boxShadowBlur,
+    spread: boxShadowSpread,
+    horizontalResponsive: boxShadowHorizontalResponsive,
+    verticalResponsive: boxShadowVerticalResponsive,
+    blurResponsive: boxShadowBlurResponsive,
+    spreadResponsive: boxShadowSpreadResponsive,
+    resolver: responsiveResolver,
+  });
+
+  const colorStyles = buildTextColorStyles({ color: textColor });
+
+  // Generate a unique, stable class name for this component instance to apply hover styles.
   const hoverClassName = `container-hover-${id}`;
 
-  // Calculate background styles only when backgroundType is active.
-  const getBackgroundStyles = () => {
-    if (!backgroundType) return {};
+  const hoverBackgroundCss = buildBackgroundHoverCss({
+    type: backgroundType,
+    colorHover: backgroundColorHover,
+    colorHoverResponsive: backgroundColorHoverResponsive,
+    gradientHover: backgroundGradientHover,
+    resolver: responsiveResolver,
+  });
 
-    switch (backgroundType) {
-      case "color":
-        const bgColor = getResponsiveValue(backgroundColorResponsive || {}, backgroundColor);
-        return bgColor ? { backgroundColor: bgColor } : {};
-      case "gradient":
-        return {
-          background: backgroundGradient,
-        };
-      case "image":
-        return backgroundImage
-          ? {
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }
-          : {};
-      default:
-        return {};
-    }
-  };
+  const hoverBorderCss = buildBorderHoverCss({
+    style: borderStyle,
+    colorHover: borderColorHover,
+    colorHoverResponsive: borderColorHoverResponsive,
+    resolver: responsiveResolver,
+  });
 
-  // Calculate responsive border radius.
-  const getResponsiveBorderRadius = () => {
-    if (borderRadiusResponsive) {
-      const topLeft = getResponsiveValue(borderRadiusResponsive.top || {}, borderTopLeftRadius ?? borderRadius);
-      const topRight = getResponsiveValue(borderRadiusResponsive.right || {}, borderTopRightRadius ?? borderRadius);
-      const bottomRight = getResponsiveValue(borderRadiusResponsive.bottom || {}, borderBottomRightRadius ?? borderRadius);
-      const bottomLeft = getResponsiveValue(borderRadiusResponsive.left || {}, borderBottomLeftRadius ?? borderRadius);
-      const unit = getResponsiveValue(borderRadiusResponsive.unit || {}, borderRadiusUnit);
-      return `${topLeft}${unit} ${topRight}${unit} ${bottomRight}${unit} ${bottomLeft}${unit}`;
-    }
-    return borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null ? `${borderTopLeftRadius ?? borderRadius}${borderRadiusUnit} ${borderTopRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomRightRadius ?? borderRadius}${borderRadiusUnit} ${borderBottomLeftRadius ?? borderRadius}${borderRadiusUnit}` : `${borderRadius}${borderRadiusUnit}`;
-  };
+  const hoverBoxShadowCss = buildBoxShadowHoverCss({
+    enableHover: enableBoxShadowHover,
+    preset: boxShadowPreset,
+    hoverPosition: boxShadowPositionHover,
+    colorHover: boxShadowColorHover,
+    color: boxShadowColor,
+    horizontal: boxShadowHorizontalHover,
+    vertical: boxShadowVerticalHover,
+    blur: boxShadowBlurHover,
+    spread: boxShadowSpreadHover,
+    horizontalResponsive: boxShadowHorizontalHoverResponsive,
+    verticalResponsive: boxShadowVerticalHoverResponsive,
+    blurResponsive: boxShadowBlurHoverResponsive,
+    spreadResponsive: boxShadowSpreadHoverResponsive,
+    resolver: responsiveResolver,
+  });
 
-  // Calculate responsive border width.
-  const getResponsiveBorderWidth = () => {
-    if (borderWidthResponsive) {
-      const top = getResponsiveValue(borderWidthResponsive.top || {}, borderTopWidth ?? borderWidth);
-      const right = getResponsiveValue(borderWidthResponsive.right || {}, borderRightWidth ?? borderWidth);
-      const bottom = getResponsiveValue(borderWidthResponsive.bottom || {}, borderBottomWidth ?? borderWidth);
-      const left = getResponsiveValue(borderWidthResponsive.left || {}, borderLeftWidth ?? borderWidth);
-      return `${top}px ${right}px ${bottom}px ${left}px`;
-    }
-    return borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null ? `${borderTopWidth ?? borderWidth}px ${borderRightWidth ?? borderWidth}px ${borderBottomWidth ?? borderWidth}px ${borderLeftWidth ?? borderWidth}px` : `${borderWidth}px`;
-  };
+  const hoverRules = mergeCssSegments(hoverBackgroundCss, hoverBorderCss, hoverBoxShadowCss);
 
-  // Calculate border styles.
-  const getBorderStyles = (): React.CSSProperties => {
-    const styles: React.CSSProperties = {};
+  const linkCss = buildLinkColorCss({
+    baseSelector: `.${hoverClassName}`,
+    linkColor,
+    linkColorHover,
+  });
 
-    // Always apply border radius.
-    styles.borderRadius = getResponsiveBorderRadius();
+  const responsiveVisibilityCss = buildVisibilityCss({
+    hoverClassName,
+    isEditMode,
+    hideOnDesktop,
+    hideOnTablet,
+    hideOnLandscapeMobile,
+    hideOnMobile,
+  });
 
-    // Only apply border properties if style is not none.
-    if (borderStyle && borderStyle !== "none") {
-      styles.borderStyle = borderStyle as React.CSSProperties["borderStyle"];
-      styles.borderWidth = getResponsiveBorderWidth();
-      const responsiveBorderColor = getResponsiveValue(borderColorResponsive || {}, borderColor);
-      styles.borderColor = responsiveBorderColor;
-    }
+  const styleTagContent = mergeCssSegments(buildHoverRule(hoverClassName, hoverRules), linkCss, responsiveVisibilityCss);
 
-    return styles;
-  };
+  // --- Final Style and Prop Aggregation ---
 
-  // Calculate responsive box shadow values.
-  const getResponsiveBoxShadow = () => {
-    let horizontal = boxShadowHorizontal;
-    let vertical = boxShadowVertical;
-    let blur = boxShadowBlur;
-    let spread = boxShadowSpread;
-
-    if (boxShadowHorizontalResponsive) {
-      horizontal = getResponsiveValue(boxShadowHorizontalResponsive, boxShadowHorizontal);
-    }
-    if (boxShadowVerticalResponsive) {
-      vertical = getResponsiveValue(boxShadowVerticalResponsive, boxShadowVertical);
-    }
-    if (boxShadowBlurResponsive) {
-      blur = getResponsiveValue(boxShadowBlurResponsive, boxShadowBlur);
-    }
-    if (boxShadowSpreadResponsive) {
-      spread = getResponsiveValue(boxShadowSpreadResponsive, boxShadowSpread);
-    }
-
-    return { horizontal, vertical, blur, spread };
-  };
-
-  const getResponsiveBoxShadowHover = () => {
-    let horizontal = boxShadowHorizontalHover;
-    let vertical = boxShadowVerticalHover;
-    let blur = boxShadowBlurHover;
-    let spread = boxShadowSpreadHover;
-
-    if (boxShadowHorizontalHoverResponsive) {
-      horizontal = getResponsiveValue(boxShadowHorizontalHoverResponsive, boxShadowHorizontalHover);
-    }
-    if (boxShadowVerticalHoverResponsive) {
-      vertical = getResponsiveValue(boxShadowVerticalHoverResponsive, boxShadowVerticalHover);
-    }
-    if (boxShadowBlurHoverResponsive) {
-      blur = getResponsiveValue(boxShadowBlurHoverResponsive, boxShadowBlurHover);
-    }
-    if (boxShadowSpreadHoverResponsive) {
-      spread = getResponsiveValue(boxShadowSpreadHoverResponsive, boxShadowSpreadHover);
-    }
-
-    return { horizontal, vertical, blur, spread };
-  };
-
-  // Calculate box shadow styles.
-  const getBoxShadowStyles = () => {
-    if (!enableBoxShadow) {
-      return {};
-    }
-
-    const shadowValues = getResponsiveBoxShadow();
-
-    if (!boxShadowPreset && shadowValues.horizontal === 0 && shadowValues.vertical === 0 && shadowValues.blur === 0) return {};
-
-    const inset = boxShadowPosition === "inset" ? "inset " : "";
-    const boxShadowValue = `${inset}${shadowValues.horizontal}px ${shadowValues.vertical}px ${shadowValues.blur}px ${shadowValues.spread}px ${boxShadowColor}`;
-
-    return {
-      boxShadow: boxShadowValue,
-    };
-  };
-
-  // Calculate color styles.
-  const getColorStyles = (): React.CSSProperties => {
-    const styles: React.CSSProperties = {};
-
-    if (textColor) {
-      styles.color = textColor;
-    }
-
-    return styles;
-  };
-
-  // Generate responsive styles (only for live pages, not in editor).
-  const getResponsiveStyles = () => {
-    // Skip responsive styles in editor mode.
-    if (isEditMode) {
-      return "";
-    }
-
-    let responsiveCSS = "";
-
-    if (hideOnDesktop) {
-      responsiveCSS += `@media (min-width: 1024px) { .${hoverClassName} { display: none !important; } } `;
-    }
-    if (hideOnTablet) {
-      responsiveCSS += `@media (min-width: 768px) and (max-width: 1023px) { .${hoverClassName} { display: none !important; } } `;
-    }
-    if (hideOnLandscapeMobile) {
-      responsiveCSS += `@media (min-width: 480px) and (max-width: 767px) { .${hoverClassName} { display: none !important; } } `;
-    }
-    if (hideOnMobile) {
-      responsiveCSS += `@media (max-width: 479px) { .${hoverClassName} { display: none !important; } } `;
-    }
-
-    return responsiveCSS;
-  };
-
-  // Generate hover styles.
-  const getHoverStyles = () => {
-    let hoverCSS = "";
-
-    // Background hover styles.
-    if (backgroundType) {
-      switch (backgroundType) {
-        case "color":
-          const bgColorHover = getResponsiveValue(backgroundColorHoverResponsive || {}, backgroundColorHover);
-          if (bgColorHover) {
-            hoverCSS += `background-color: ${bgColorHover} !important; `;
-          }
-          break;
-        case "gradient":
-          hoverCSS += `background: ${backgroundGradientHover} !important; `;
-          break;
-      }
-    }
-
-    // Border hover styles.
-    if (borderStyle && borderStyle !== "none") {
-      const responsiveBorderColorHover = getResponsiveValue(borderColorHoverResponsive || {}, borderColorHover);
-      hoverCSS += `border-color: ${responsiveBorderColorHover} !important; `;
-    }
-
-    // Box shadow hover styles.
-    const hoverShadowValues = getResponsiveBoxShadowHover();
-    if (enableBoxShadowHover && (boxShadowPreset || hoverShadowValues.horizontal !== 0 || hoverShadowValues.vertical !== 0 || hoverShadowValues.blur !== 0)) {
-      const insetHover = boxShadowPositionHover === "inset" ? "inset " : "";
-      const boxShadowHoverValue = `${insetHover}${hoverShadowValues.horizontal}px ${hoverShadowValues.vertical}px ${hoverShadowValues.blur}px ${hoverShadowValues.spread}px ${boxShadowColorHover}`;
-      hoverCSS += `box-shadow: ${boxShadowHoverValue} !important; `;
-    }
-
-    // Link color styles.
-    let linkCSS = "";
-    if (linkColor) {
-      linkCSS += `.${hoverClassName} a { color: ${linkColor} !important; } `;
-    }
-    if (linkColorHover) {
-      linkCSS += `.${hoverClassName} a:hover { color: ${linkColorHover} !important; } `;
-    }
-
-    const combinedCSS = (hoverCSS ? `.${hoverClassName}:hover { ${hoverCSS} }` : "") + linkCSS + getResponsiveStyles();
-    return combinedCSS;
-  };
-
-  // Parse data attributes from a string into an object.
-  const parseDataAttributes = (): Record<string, string> => {
-    if (!dataAttributes) return {};
-    const attrs: Record<string, string> = {};
-    dataAttributes.split("\n").forEach((line) => {
-      const match = line.trim().match(/^([^=]+)=["']([^"']*)["']$/);
-      if (match) {
-        attrs[match[1]] = match[2];
-      }
-    });
-    return attrs;
-  };
-
-  // Determine various conditional styles and properties.
+  // Determine various conditional styles and properties for rendering.
   const hasCustomMinHeight = enableMinHeight && typeof minHeight === "number";
   const hasCustomBorder = borderStyle && borderStyle !== "none";
+  // Show a helper border in edit mode for empty containers or columns without a real border.
   const shouldShowHelperBorder = isEditMode && !hasCustomBorder && (!isChildContainer || isEmpty);
   const computedMinHeight = hasCustomMinHeight ? `${minHeight}${minHeightUnit}` : isEditMode ? "20px" : undefined;
   const hasCustomPosition = position && position !== "default" && position !== "static";
   const formatPositionValue = (value: number | null | undefined, unit: string) => (value !== null && value !== undefined ? `${value}${unit}` : undefined);
 
-  // Define the main container's style object.
+  // Assemble the final style object for the main container element from all the helper functions.
   const containerStyle: React.CSSProperties = {
     padding: paddingValue,
     margin: marginValue,
-    ...getBackgroundStyles(),
-    ...getBorderStyles(),
-    ...getBoxShadowStyles(),
-    ...getColorStyles(),
+    ...backgroundStyles,
+    ...borderStyles,
+    ...boxShadowStyles,
+    ...colorStyles,
     ...(shouldShowHelperBorder
       ? {
           border: "1px dashed rgba(148, 163, 184, 0.9)",
         }
       : {}),
     minHeight: computedMinHeight,
+    // Flexbox properties are applied directly if no content wrapper is needed.
     display: effectiveLayout === "flex" && !needsContentWrapper ? "flex" : "block",
     flexDirection: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
     justifyContent: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
     alignItems: effectiveLayout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
     flexWrap: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
     alignContent: effectiveLayout === "flex" && !needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: effectiveLayout === "flex" && !needsContentWrapper ? getResponsiveRowGap() : undefined,
-    columnGap: effectiveLayout === "flex" && !needsContentWrapper ? getResponsiveColumnGap() : undefined,
+    rowGap: effectiveLayout === "flex" && !needsContentWrapper ? rowGapValue : undefined,
+    columnGap: effectiveLayout === "flex" && !needsContentWrapper ? columnGapValue : undefined,
+    // Sizing properties
     flexBasis: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : undefined,
     width: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : "100%",
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: overflow as React.CSSProperties["overflow"],
+    // Positioning properties (applied only in live mode, not editor)
     position: isEditMode ? undefined : hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,
     top: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionTop, positionTopUnit) : undefined,
     right: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionRight, positionRightUnit) : undefined,
@@ -657,47 +405,50 @@ export const Container: React.FC<ContainerProps> = ({
     zIndex: isEditMode ? undefined : zIndex ? zIndex : undefined,
   };
 
-  // Define the content wrapper's style object.
+  // Define the style object for the inner content wrapper (used for boxed layouts).
   const contentWrapperStyle: React.CSSProperties = {
-    // Width settings for boxed content
     maxWidth: needsContentWrapper ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined,
     marginLeft: needsContentWrapper ? "auto" : undefined,
     marginRight: needsContentWrapper ? "auto" : undefined,
     width: "100%",
     minHeight: "inherit",
     height: isChildContainer ? undefined : equalHeight && effectiveLayout === "flex" ? "100%" : undefined,
-    // Apply flex properties to content wrapper when needed
+    // Flexbox properties are applied here if a content wrapper is used.
     display: effectiveLayout === "flex" && needsContentWrapper ? "flex" : undefined,
     flexDirection: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
     justifyContent: effectiveLayout === "flex" && needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
     alignItems: effectiveLayout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
     flexWrap: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
     alignContent: effectiveLayout === "flex" && needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: effectiveLayout === "flex" && needsContentWrapper ? getResponsiveRowGap() : undefined,
-    columnGap: effectiveLayout === "flex" && needsContentWrapper ? getResponsiveColumnGap() : undefined,
+    rowGap: effectiveLayout === "flex" && needsContentWrapper ? rowGapValue : undefined,
+    columnGap: effectiveLayout === "flex" && needsContentWrapper ? columnGapValue : undefined,
   };
 
-  // Set the HTML tag for the container.
+  // Dynamically set the HTML tag for the container (e.g., 'div', 'section', 'header').
   const ContainerTag = htmlTag;
 
-  // Define the props for the container element.
+  // Aggregate all props for the container element.
   const containerProps = {
+    // The `ref` is crucial. It connects the rendered DOM element back to craft.js,
+    // enabling drag-and-drop and selection highlighting.
     ref: (ref: HTMLElement | null) => {
       if (!ref) return;
+      // In edit mode, the element is both a drop target and draggable.
       if (isEditMode) {
         connect(drag(ref));
       } else {
+        // In live mode, it's just a drop target (for potential future features).
         connect(ref);
       }
     },
     id: cssId || undefined,
     "aria-label": ariaLabel || undefined,
-    ...parseDataAttributes(),
+    ...parseDataAttributes(dataAttributes),
     className: `
       relative
       ${isEditMode && selected ? "ring-2 ring-blue-500 ring-offset-0" : isEditMode ? "hover:ring-1 hover:ring-blue-300" : ""}
       transition-all duration-200
-      ${(backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || (enableBoxShadowHover && (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0)) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile ? hoverClassName : ""}
+      ${hoverClassName}
       ${className}
     `,
     style: containerStyle,
@@ -705,28 +456,32 @@ export const Container: React.FC<ContainerProps> = ({
 
   return (
     <>
-      {/* Inject hover and responsive styles */}
-      {((backgroundType && (backgroundType === "color" || backgroundType === "gradient")) || (borderStyle && borderStyle !== "none") || (enableBoxShadowHover && (boxShadowPreset || boxShadowHorizontalHover !== 0 || boxShadowVerticalHover !== 0 || boxShadowBlurHover !== 0)) || linkColor || linkColorHover || hideOnDesktop || hideOnTablet || hideOnLandscapeMobile || hideOnMobile) && <style>{getHoverStyles()}</style>}
+      {/* Inject a <style> tag for hover and responsive styles. This is necessary because
+          pseudo-classes (:hover) and media queries cannot be applied via inline styles. */}
+      <style>{styleTagContent}</style>
 
+      {/* Render the container using React.createElement to support dynamic HTML tags from props. */}
       {React.createElement(
         ContainerTag,
         containerProps,
         <>
-          {/* Conditionally render content wrapper only when needed for boxed content */}
+          {/* IIFE to conditionally render the content wrapper only when needed. */}
           {(() => {
             const content = (
               <>
-                {/* Regular drop zone for empty container */}
-                {isEditMode && isEmpty && <div className="flex items-center justify-center text-gray-400 text-sm h-5">Drop components here</div>}
+                {/* Show a "Drop components here" message in edit mode for empty containers. */}
+                {isEditMode && isEmpty && <div className="flex items-center justify-center text-gray-400 text-sm h-full min-h-[40px]">Drop components here</div>}
 
+                {/* Render child components passed from the editor. */}
                 {children}
               </>
             );
 
+            // If a content wrapper is needed, wrap the content in it; otherwise, render directly.
             return needsContentWrapper ? <div style={contentWrapperStyle}>{content}</div> : content;
           })()}
 
-          {/* Layout Picker Modal */}
+          {/* Render the layout picker modal if it should be visible. */}
           {showPicker && <ContainerLayoutPicker onSelect={handleLayoutSelect} onClose={() => setShowPicker(false)} />}
         </>,
       )}
@@ -734,24 +489,31 @@ export const Container: React.FC<ContainerProps> = ({
   );
 };
 
-// Craft.js component configuration
+// --- Craft.js Configuration ---
+// This static `craft` object tells craft.js how the Container component should behave in the editor.
+// The `related.settings` property, which links to the settings panel, is attached in a separate file
+// to keep the component's display logic clean.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (Container as any).craft = {
-  displayName: "Container", // Default name in toolbox
-  isCanvas: true, // Can accept child components (droppable + expandable in layers)
+  displayName: "Container", // Name displayed in the editor's toolbox.
+  isCanvas: true, // `true` means this component can host other draggable components.
+  // Rules define how this component interacts with others in the editor.
   rules: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     canMoveIn: (incomingNodes: any, currentNode: any, helpers: any) => {
+      // Limit nesting depth to prevent performance issues and overly complex structures.
       const depth = helpers(currentNode.id).ancestors().length;
-      return depth < 10; // Prevent excessive nesting
+      return depth < 10;
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     canMoveOut: (outgoingNodes: any, currentNode: any, helpers: any) => {
-      return !helpers(currentNode.id).isRoot(); // Can't move root
+      // The root container cannot be moved out of the frame.
+      return !helpers(currentNode.id).isRoot();
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     canDrag: (node: any, helpers: any) => {
-      return !helpers(node.id).isRoot(); // Can't drag root
+      // The root container cannot be dragged.
+      return !helpers(node.id).isRoot();
     },
   },
 };
