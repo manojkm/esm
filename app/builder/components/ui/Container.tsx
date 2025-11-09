@@ -120,10 +120,6 @@ export const Container: React.FC<ContainerProps> = ({
   alignItems,
   flexWrap,
   alignContent,
-  flexDirectionResponsive,
-  justifyContentResponsive,
-  alignItemsResponsive,
-  flexWrapResponsive,
   position = "default",
   positionTop = null,
   positionRight = null,
@@ -174,21 +170,10 @@ export const Container: React.FC<ContainerProps> = ({
   // Determine effective layout properties, falling back to defaults if not specified.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
 
-  const resolveResponsiveString = (responsive: ResponsiveMap<string> | undefined, fallback: string) => getResponsiveValue(responsive ?? {}, fallback);
-
-  const baseFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
-  const fallbackFlexDirection = flexDirectionResponsive || isChildContainer ? baseFlexDirection : currentBreakpoint === "mobile" ? "column" : baseFlexDirection;
-  const effectiveFlexDirection = resolveResponsiveString(flexDirectionResponsive, fallbackFlexDirection);
-
-  const baseJustifyContent = justifyContent ?? "center";
-  const effectiveJustifyContent = resolveResponsiveString(justifyContentResponsive, baseJustifyContent);
-
-  const baseAlignItems = alignItems ?? "center";
-  const effectiveAlignItems = resolveResponsiveString(alignItemsResponsive, baseAlignItems);
-
-  const baseFlexWrap = flexWrap ?? "nowrap";
-  const fallbackFlexWrap = flexWrapResponsive || isChildContainer ? baseFlexWrap : currentBreakpoint === "mobile" ? "wrap" : baseFlexWrap;
-  const effectiveFlexWrap = resolveResponsiveString(flexWrapResponsive, fallbackFlexWrap);
+  const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
+  const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
+  const effectiveAlignItems = alignItems ?? (isChildContainer ? "center" : "stretch");
+  const effectiveFlexWrap = flexWrap ?? "nowrap";
   const effectiveAlignContent = alignContent ?? "stretch";
 
   // Check if the container has any children.

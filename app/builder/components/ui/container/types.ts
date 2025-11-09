@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { ResponsiveMap, ResponsiveValue } from "@/app/builder/lib/style-system";
+import type { ResponsiveValue } from "@/app/builder/lib/style-system";
 
 interface LayoutColumn {
   width: number;
@@ -126,10 +126,6 @@ export interface ContainerProps {
   alignItems?: string;
   flexWrap?: string;
   alignContent?: string;
-  flexDirectionResponsive?: ResponsiveMap<string>;
-  justifyContentResponsive?: ResponsiveMap<string>;
-  alignItemsResponsive?: ResponsiveMap<string>;
-  flexWrapResponsive?: ResponsiveMap<string>;
   // Positioning
   position?: string;
   positionTop?: number | null;
