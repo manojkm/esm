@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import type { ContainerProps } from "../../ui/container/types";
 import type { ContainerControlActions } from "./types";
+import { ResponsiveSelectControl, type ResponsiveSelectOption } from "./controls/ResponsiveSelectControl";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "./styles";
 
 interface LayoutControlsProps {
@@ -44,17 +46,24 @@ export const LayoutTypeControl: React.FC<LayoutTypeControlProps> = ({ controlId,
 interface DirectionControlProps {
   controlId: string;
   value: string;
+  responsiveValue?: any;
   onChange: (value: string) => void;
+  onResponsiveChange?: (value: any) => void;
+  useResponsive?: boolean;
 }
 
-export const DirectionControl: React.FC<DirectionControlProps> = ({ controlId, value, onChange }: DirectionControlProps) => {
+export const DirectionControl: React.FC<DirectionControlProps> = ({ controlId, value, responsiveValue, onChange, onResponsiveChange, useResponsive = false }: DirectionControlProps) => {
   const baseId = `${controlId}-direction`;
-  const options = [
+  const options: ResponsiveSelectOption[] = [
     { value: "row", label: "Row" },
     { value: "column", label: "Column" },
     { value: "row-reverse", label: "Row Reverse" },
     { value: "column-reverse", label: "Column Reverse" },
   ];
+
+  if (useResponsive && onResponsiveChange) {
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Direction" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="row" layout="grid" gridCols={2} />;
+  }
 
   return (
     <section id={baseId}>
@@ -76,9 +85,12 @@ interface JustifyContentControlProps {
   controlId: string;
   value: string;
   onChange: (value: string) => void;
+  responsiveValue?: any;
+  onResponsiveChange?: (value: any) => void;
+  useResponsive?: boolean;
 }
 
-export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ controlId, value, onChange }: JustifyContentControlProps) => {
+export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ controlId, value, onChange, responsiveValue, onResponsiveChange, useResponsive }: JustifyContentControlProps) => {
   const baseId = `${controlId}-justify-content`;
   const options = ["flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly"];
 
@@ -87,6 +99,10 @@ export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ co
     if (option === "flex-end") return "End";
     return option.replace("-", " ");
   };
+
+  if (useResponsive && onResponsiveChange) {
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Justify Content" value={responsiveValue} onChange={onResponsiveChange} options={options.map(opt => ({ value: opt, label: getLabel(opt) }))} defaultValue="flex-start" />;
+  }
 
   return (
     <section id={baseId}>
@@ -110,9 +126,12 @@ interface AlignItemsControlProps {
   controlId: string;
   value: string;
   onChange: (value: string) => void;
+  responsiveValue?: any;
+  onResponsiveChange?: (value: any) => void;
+  useResponsive?: boolean;
 }
 
-export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId, value, onChange }: AlignItemsControlProps) => {
+export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId, value, onChange, responsiveValue, onResponsiveChange, useResponsive }: AlignItemsControlProps) => {
   const baseId = `${controlId}-align-items`;
   const options = ["stretch", "flex-start", "center", "flex-end", "baseline"];
 
@@ -121,6 +140,10 @@ export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId,
     if (option === "flex-end") return "End";
     return option.replace("-", " ");
   };
+
+  if (useResponsive && onResponsiveChange) {
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Align Items" value={responsiveValue} onChange={onResponsiveChange} options={options.map(opt => ({ value: opt, label: getLabel(opt) }))} defaultValue="stretch" />;
+  }
 
   return (
     <section id={baseId}>
@@ -144,15 +167,22 @@ interface WrapControlProps {
   controlId: string;
   value: string;
   onChange: (value: string) => void;
+  responsiveValue?: any;
+  onResponsiveChange?: (value: any) => void;
+  useResponsive?: boolean;
 }
 
-export const WrapControl: React.FC<WrapControlProps> = ({ controlId, value, onChange }: WrapControlProps) => {
+export const WrapControl: React.FC<WrapControlProps> = ({ controlId, value, onChange, responsiveValue, onResponsiveChange, useResponsive }: WrapControlProps) => {
   const baseId = `${controlId}-wrap`;
   const options = [
     { value: "nowrap", label: "No Wrap" },
     { value: "wrap", label: "Wrap" },
     { value: "wrap-reverse", label: "Wrap Reverse" },
   ];
+
+  if (useResponsive && onResponsiveChange) {
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Wrap" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="nowrap" layout="grid" gridCols={3} />;
+  }
 
   return (
     <section id={baseId}>
@@ -193,9 +223,21 @@ export const LayoutControls: React.FC<LayoutControlsComponentProps> = ({ control
     });
   };
 
+  const handleDirectionResponsiveChange = (value: any) => {
+    actions.setProp((draft) => {
+      draft.flexDirectionResponsive = value;
+    });
+  };
+
   const handleJustifyContentChange = (value: string) => {
     actions.setProp((draft) => {
       draft.justifyContent = value;
+    });
+  };
+
+  const handleJustifyContentResponsiveChange = (value: any) => {
+    actions.setProp((draft) => {
+      draft.justifyContentResponsive = value;
     });
   };
 
@@ -205,10 +247,31 @@ export const LayoutControls: React.FC<LayoutControlsComponentProps> = ({ control
     });
   };
 
+  const handleAlignItemsResponsiveChange = (value: any) => {
+    actions.setProp((draft) => {
+      draft.alignItemsResponsive = value;
+    });
+  };
+
   const handleWrapChange = (value: string) => {
     actions.setProp((draft) => {
       draft.flexWrap = value;
     });
+  };
+
+  const handleWrapResponsiveChange = (value: any) => {
+    actions.setProp((draft) => {
+      draft.flexWrapResponsive = value;
+    });
+  };
+
+  // Get the current value, preferring responsive if available
+  const getFlexDirectionValue = () => {
+    if (props.flexDirectionResponsive) {
+      const { getResponsiveValue } = useResponsive();
+      return getResponsiveValue(props.flexDirectionResponsive, isChildContainer ? "column" : "row");
+    }
+    return props.flexDirection || (isChildContainer ? "column" : "row");
   };
 
   return (
@@ -216,13 +279,40 @@ export const LayoutControls: React.FC<LayoutControlsComponentProps> = ({ control
       <LayoutTypeControl controlId={`${controlId}-type`} value={layoutValue} onChange={handleLayoutChange} />
       {layoutValue === "flex" && (
         <div className="space-y-4">
-          <DirectionControl controlId={`${controlId}-direction`} value={props.flexDirection || (isChildContainer ? "column" : "row")} onChange={handleDirectionChange} />
-          <JustifyContentControl controlId={`${controlId}-justify`} value={props.justifyContent || (isChildContainer ? "center" : "flex-start")} onChange={handleJustifyContentChange} />
-          <AlignItemsControl controlId={`${controlId}-align`} value={props.alignItems || (isChildContainer ? "center" : "stretch")} onChange={handleAlignItemsChange} />
-          <WrapControl controlId={`${controlId}-wrap`} value={props.flexWrap || "nowrap"} onChange={handleWrapChange} />
+          <DirectionControl 
+            controlId={`${controlId}-direction`} 
+            value={getFlexDirectionValue()} 
+            responsiveValue={props.flexDirectionResponsive}
+            onChange={handleDirectionChange}
+            onResponsiveChange={handleDirectionResponsiveChange}
+            useResponsive={true}
+          />
+          <JustifyContentControl 
+            controlId={`${controlId}-justify`} 
+            value={props.justifyContent || (isChildContainer ? "center" : "flex-start")} 
+            responsiveValue={props.justifyContentResponsive}
+            onChange={handleJustifyContentChange}
+            onResponsiveChange={handleJustifyContentResponsiveChange}
+            useResponsive={true}
+          />
+          <AlignItemsControl 
+            controlId={`${controlId}-align`} 
+            value={props.alignItems || (isChildContainer ? "center" : "stretch")} 
+            responsiveValue={props.alignItemsResponsive}
+            onChange={handleAlignItemsChange}
+            onResponsiveChange={handleAlignItemsResponsiveChange}
+            useResponsive={true}
+          />
+          <WrapControl 
+            controlId={`${controlId}-wrap`} 
+            value={props.flexWrap || "nowrap"} 
+            responsiveValue={props.flexWrapResponsive}
+            onChange={handleWrapChange}
+            onResponsiveChange={handleWrapResponsiveChange}
+            useResponsive={true}
+          />
         </div>
       )}
     </div>
   );
 };
-

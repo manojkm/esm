@@ -122,9 +122,13 @@ export interface ContainerProps {
   overflow?: string;
   // Flexbox Children Controls
   flexDirection?: string;
+  flexDirectionResponsive?: ResponsiveValue;
   justifyContent?: string;
+  justifyContentResponsive?: ResponsiveValue;
   alignItems?: string;
+  alignItemsResponsive?: ResponsiveValue;
   flexWrap?: string;
+  flexWrapResponsive?: ResponsiveValue;
   alignContent?: string;
   // Positioning
   position?: string;

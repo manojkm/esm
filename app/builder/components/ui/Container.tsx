@@ -116,9 +116,13 @@ export const Container: React.FC<ContainerProps> = ({
   htmlTag = "div",
   overflow = "visible",
   flexDirection,
+  flexDirectionResponsive,
   justifyContent,
+  justifyContentResponsive,
   alignItems,
+  alignItemsResponsive,
   flexWrap,
+  flexWrapResponsive,
   alignContent,
   position = "default",
   positionTop = null,
@@ -170,10 +174,18 @@ export const Container: React.FC<ContainerProps> = ({
   // Determine effective layout properties, falling back to defaults if not specified.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
 
-  const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
-  const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
-  const effectiveAlignItems = alignItems ?? (isChildContainer ? "center" : "stretch");
-  const effectiveFlexWrap = flexWrap ?? "nowrap";
+  const effectiveFlexDirection = flexDirectionResponsive 
+    ? responsiveResolver(flexDirectionResponsive, isChildContainer ? "column" : "row")
+    : (flexDirection ?? (isChildContainer ? "column" : "row"));
+  const effectiveJustifyContent = justifyContentResponsive
+    ? responsiveResolver(justifyContentResponsive, isChildContainer ? "center" : "flex-start")
+    : (justifyContent ?? (isChildContainer ? "center" : "flex-start"));
+  const effectiveAlignItems = alignItemsResponsive
+    ? responsiveResolver(alignItemsResponsive, isChildContainer ? "center" : "stretch")
+    : (alignItems ?? (isChildContainer ? "center" : "stretch"));
+  const effectiveFlexWrap = flexWrapResponsive
+    ? responsiveResolver(flexWrapResponsive, "nowrap")
+    : (flexWrap ?? "nowrap");
   const effectiveAlignContent = alignContent ?? "stretch";
 
   // Check if the container has any children.
