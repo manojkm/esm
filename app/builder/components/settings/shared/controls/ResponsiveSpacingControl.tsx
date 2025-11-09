@@ -3,7 +3,6 @@
 import React from "react";
 import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
-import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "../styles";
 import { ResponsiveRecord } from "../types/responsive";
 
 /**
@@ -21,14 +20,7 @@ export interface ResponsiveSpacingControlProps {
 
 const SIDES = ["top", "right", "bottom", "left"] as const;
 
-export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({
-  controlId = "responsive-spacing",
-  label,
-  value,
-  onChange,
-  unitOptions = ["px", "%"],
-  defaultValue,
-}) => {
+export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
 
   const getValue = (side: (typeof SIDES)[number]) => {
@@ -136,23 +128,20 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
             {currentBreakpoint === "mobile" && <Smartphone size={12} />}
           </span>
         </label>
-        {hasCustomValues && (
-          <button onClick={handleReset} className="text-gray-400 hover:text-gray-600 transition-colors" title="Reset to default">
-            <RotateCcw size={14} />
-          </button>
-        )}
-      </div>
-      <div className="flex items-center gap-2 mb-2">
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-unit`}>
-          Unit
-        </label>
-        <select id={`${baseId}-unit`} value={getUnit()} onChange={(event) => setUnit(event.target.value)} className={INLINE_FIELD_CLASS}>
-          {unitOptions.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          {hasCustomValues && (
+            <button onClick={handleReset} className="text-gray-400 hover:text-gray-600 transition-colors" title="Reset to default">
+              <RotateCcw size={14} />
+            </button>
+          )}
+          <select id={`${baseId}-unit`} value={getUnit()} onChange={(event) => setUnit(event.target.value)} className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white">
+            {unitOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="grid grid-cols-4 gap-1">
         {SIDES.map((side) => (
@@ -160,19 +149,10 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
             <label className="block text-xs text-gray-500 mb-1 capitalize" htmlFor={`${baseId}-${side}`}>
               {side}
             </label>
-            <input
-              id={`${baseId}-${side}`}
-              type="text"
-              inputMode="numeric"
-              pattern="-?\\d*"
-              value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""}
-              onChange={(event) => setValue(side, event.target.value)}
-              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white"
-            />
+            <input id={`${baseId}-${side}`} type="text" inputMode="numeric" pattern="-?\\d*" value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""} onChange={(event) => setValue(side, event.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
           </div>
         ))}
       </div>
     </div>
   );
 };
-

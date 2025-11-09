@@ -104,11 +104,14 @@ export const Container: React.FC<ContainerProps> = ({
   contentWidth = "boxed",
   contentBoxWidth = 1200,
   contentBoxWidthUnit = "px",
+  contentBoxWidthResponsive,
   customWidth = 1200,
   customWidthUnit = "px",
+  customWidthResponsive,
   minHeight = 450,
   minHeightUnit = "px",
   enableMinHeight = false,
+  minHeightResponsive,
   equalHeight = false,
   htmlTag = "div",
   overflow = "visible",
@@ -249,6 +252,29 @@ export const Container: React.FC<ContainerProps> = ({
     resolver: responsiveResolver,
   });
 
+  const contentBoxWidthValue = buildResponsiveValueWithUnit({
+    responsive: contentBoxWidthResponsive,
+    fallbackValue: contentBoxWidth ?? 1200,
+    fallbackUnit: contentBoxWidthUnit ?? "px",
+    resolver: responsiveResolver,
+  });
+
+  const customWidthValue = buildResponsiveValueWithUnit({
+    responsive: customWidthResponsive,
+    fallbackValue: customWidth ?? 100,
+    fallbackUnit: customWidthUnit ?? "%",
+    resolver: responsiveResolver,
+  });
+
+  const minHeightValue = enableMinHeight
+    ? buildResponsiveValueWithUnit({
+        responsive: minHeightResponsive,
+        fallbackValue: minHeight ?? (minHeightUnit === "vh" ? 50 : 450),
+        fallbackUnit: minHeightUnit ?? "px",
+        resolver: responsiveResolver,
+      })
+    : undefined;
+
   const backgroundStyles = buildBackgroundStyles({
     type: backgroundType,
     color: backgroundColor,
@@ -358,11 +384,11 @@ export const Container: React.FC<ContainerProps> = ({
   // --- Final Style and Prop Aggregation ---
 
   // Determine various conditional styles and properties for rendering.
-  const hasCustomMinHeight = enableMinHeight && typeof minHeight === "number";
+  const hasCustomMinHeight = enableMinHeight && !!minHeightValue;
   const hasCustomBorder = borderStyle && borderStyle !== "none";
   // Show a helper border in edit mode for empty containers or columns without a real border.
   const shouldShowHelperBorder = isEditMode && !hasCustomBorder && (!isChildContainer || isEmpty);
-  const computedMinHeight = hasCustomMinHeight ? `${minHeight}${minHeightUnit}` : isEditMode ? "20px" : undefined;
+  const computedMinHeight = enableMinHeight ? minHeightValue : isEditMode ? "20px" : undefined;
   const hasCustomPosition = position && position !== "default" && position !== "static";
   const formatPositionValue = (value: number | null | undefined, unit: string) => (value !== null && value !== undefined ? `${value}${unit}` : undefined);
 
@@ -392,7 +418,7 @@ export const Container: React.FC<ContainerProps> = ({
     // Sizing properties
     flexBasis: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : undefined,
     width: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : "100%",
-    maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? `${customWidth}${customWidthUnit}` : containerWidth === "boxed" ? "1200px" : undefined,
+    maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? customWidthValue : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: overflow as React.CSSProperties["overflow"],
@@ -407,7 +433,7 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Define the style object for the inner content wrapper (used for boxed layouts).
   const contentWrapperStyle: React.CSSProperties = {
-    maxWidth: needsContentWrapper ? `${contentBoxWidth}${contentBoxWidthUnit}` : undefined,
+    maxWidth: needsContentWrapper ? contentBoxWidthValue : undefined,
     marginLeft: needsContentWrapper ? "auto" : undefined,
     marginRight: needsContentWrapper ? "auto" : undefined,
     width: "100%",

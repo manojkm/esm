@@ -109,11 +109,14 @@ export interface ContainerProps {
   contentWidth?: string;
   contentBoxWidth?: number;
   contentBoxWidthUnit?: string;
+  contentBoxWidthResponsive?: ResponsiveValue;
   customWidth?: number;
   customWidthUnit?: string;
+  customWidthResponsive?: ResponsiveValue;
   minHeight?: number;
   minHeightUnit?: string;
   enableMinHeight?: boolean;
+  minHeightResponsive?: ResponsiveValue;
   equalHeight?: boolean;
   htmlTag?: string;
   overflow?: string;

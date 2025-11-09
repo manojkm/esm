@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { ComponentControlActions } from "../shared/types";
-import { DimensionControl } from "../shared/controls";
+import { ResponsiveNumberInput } from "../shared/controls";
+import type { ResponsiveRecord } from "../shared/types/responsive";
+import type { ResponsiveValue } from "@/app/builder/lib/style-system";
 
 /**
  * Feature exposed for top-level containers, covering width presets and content box sizing.
@@ -12,10 +14,12 @@ export interface ContainerParentSizingProps {
   containerWidth?: string;
   customWidth?: number;
   customWidthUnit?: string;
+  customWidthResponsive?: ResponsiveValue;
   contentWidth?: string;
   contentBoxWidth?: number;
   contentBoxWidthUnit?: string;
   flexBasis?: number | null;
+  contentBoxWidthResponsive?: ResponsiveValue;
 }
 
 export interface ContainerParentSizingControlsProps<TProps extends ContainerParentSizingProps> {
@@ -37,10 +41,74 @@ const CUSTOM_WIDTH_CONFIG = {
     px: 1200,
     "%": 100,
   },
-} as const;
+};
 
 export const ContainerParentSizingControls = <TProps extends ContainerParentSizingProps>({ props, actions, controlId = "parent-sizing" }: ContainerParentSizingControlsProps<TProps>) => {
   const isChildContainer = props.flexBasis !== undefined && props.flexBasis !== null;
+
+  useEffect(() => {
+    if (isChildContainer) return;
+
+    const responsive = props.contentBoxWidthResponsive;
+    const needsDesktop = !responsive || responsive.desktop === undefined;
+    const needsTablet = !responsive || responsive.tablet === undefined;
+    const needsMobile = !responsive || responsive.mobile === undefined;
+    const unitMap = responsive?.unit || {};
+    const needsUnitDesktop = !unitMap.desktop;
+    const needsUnitTablet = !unitMap.tablet;
+    const needsUnitMobile = !unitMap.mobile;
+
+    if (!(needsDesktop || needsTablet || needsMobile || needsUnitDesktop || needsUnitTablet || needsUnitMobile)) {
+      return;
+    }
+
+    actions.setProp((draft) => {
+      const nextResponsive: ResponsiveValue = { ...(draft.contentBoxWidthResponsive as ResponsiveValue | undefined) };
+      nextResponsive.desktop ??= draft.contentBoxWidth ?? 1200;
+      nextResponsive.tablet ??= 1024;
+      nextResponsive.mobile ??= 767;
+      nextResponsive.unit = {
+        ...(nextResponsive.unit || {}),
+        desktop: nextResponsive.unit?.desktop ?? draft.contentBoxWidthUnit ?? "px",
+        tablet: nextResponsive.unit?.tablet ?? "px",
+        mobile: nextResponsive.unit?.mobile ?? "px",
+      };
+      draft.contentBoxWidthResponsive = nextResponsive;
+    });
+  }, [actions, isChildContainer, props.contentBoxWidthResponsive, props.contentBoxWidth, props.contentBoxWidthUnit]);
+
+  useEffect(() => {
+    if (isChildContainer || props.containerWidth !== "custom") return;
+
+    const responsive = props.customWidthResponsive;
+    const needsDesktop = !responsive || responsive.desktop === undefined;
+    const needsTablet = !responsive || responsive.tablet === undefined;
+    const needsMobile = !responsive || responsive.mobile === undefined;
+    const unitMap = responsive?.unit || {};
+    const needsUnitDesktop = !unitMap.desktop;
+    const needsUnitTablet = !unitMap.tablet;
+    const needsUnitMobile = !unitMap.mobile;
+
+    if (!(needsDesktop || needsTablet || needsMobile || needsUnitDesktop || needsUnitTablet || needsUnitMobile)) {
+      return;
+    }
+
+    actions.setProp((draft) => {
+      const nextResponsive: ResponsiveValue = { ...(draft.customWidthResponsive as ResponsiveValue | undefined) };
+      const fallback = draft.customWidth ?? (draft.customWidthUnit === "px" ? 1200 : 100);
+      nextResponsive.desktop ??= fallback;
+      nextResponsive.tablet ??= 100;
+      nextResponsive.mobile ??= 100;
+      nextResponsive.unit = {
+        ...(nextResponsive.unit || {}),
+        desktop: nextResponsive.unit?.desktop ?? draft.customWidthUnit ?? "%",
+        tablet: nextResponsive.unit?.tablet ?? "%",
+        mobile: nextResponsive.unit?.mobile ?? "%",
+      };
+      draft.customWidthResponsive = nextResponsive;
+    });
+  }, [actions, isChildContainer, props.containerWidth, props.customWidthResponsive, props.customWidth, props.customWidthUnit]);
+
   if (isChildContainer) return null;
 
   const baseId = `parent-sizing-${controlId}`;
@@ -71,34 +139,23 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
     if (props.containerWidth !== "custom") return null;
 
     return (
-      <DimensionControl
+      <ResponsiveNumberInput
         controlId={`${baseId}-custom`}
         label="Custom Width"
-        value={props.customWidth ?? (props.customWidthUnit === "%" ? 100 : 1200)}
-        unit={props.customWidthUnit || "px"}
-        unitOptions={CUSTOM_WIDTH_CONFIG.unitOptions}
+        value={props.customWidthResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft) => {
+            draft.customWidthResponsive = value as ResponsiveValue;
+            const record = value as ResponsiveRecord;
+            const fallback = (record.desktop as number | undefined) ?? (record.tablet as number | undefined) ?? (record.mobile as number | undefined) ?? draft.customWidth ?? 100;
+            draft.customWidth = fallback;
+            const unitRecord = (record.unit as Record<string, string>) || {};
+            draft.customWidthUnit = unitRecord.desktop ?? draft.customWidthUnit ?? "%";
+          })
+        }
+        unitOptions={["%", "px"]}
+        defaultValue={100}
         minMaxByUnit={CUSTOM_WIDTH_CONFIG.minMaxByUnit}
-        defaultValues={CUSTOM_WIDTH_CONFIG.defaultValues}
-        onValueChange={(value, unit) =>
-          actions.setProp((draft) => {
-            const { min, max } = unit === "%" ? { min: 10, max: 100 } : { min: 100, max: 1600 };
-            const clamped = Math.min(max, Math.max(min, Math.round(value)));
-            draft.customWidth = clamped;
-            draft.customWidthUnit = unit;
-          })
-        }
-        onUnitChange={(unit, defaultValue) =>
-          actions.setProp((draft) => {
-            draft.customWidthUnit = unit;
-            draft.customWidth = defaultValue;
-          })
-        }
-        showReset={Boolean(props.customWidth && props.customWidth !== (props.customWidthUnit === "%" ? 100 : 1200))}
-        onReset={() =>
-          actions.setProp((draft) => {
-            draft.customWidth = draft.customWidthUnit === "%" ? 100 : 1200;
-          })
-        }
       />
     );
   };
@@ -133,34 +190,23 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
     if ((props.containerWidth !== "full" && props.containerWidth) || (props.contentWidth !== "boxed" && props.contentWidth)) return null;
 
     return (
-      <DimensionControl
+      <ResponsiveNumberInput
         controlId={`${baseId}-content-box`}
         label="Content Box Width"
-        value={props.contentBoxWidth ?? (props.contentBoxWidthUnit === "%" ? 100 : 1200)}
-        unit={props.contentBoxWidthUnit || "px"}
-        unitOptions={CUSTOM_WIDTH_CONFIG.unitOptions}
+        value={props.contentBoxWidthResponsive as ResponsiveRecord | undefined}
+        onChange={(value) =>
+          actions.setProp((draft) => {
+            draft.contentBoxWidthResponsive = value as ResponsiveValue;
+            const record = value as ResponsiveRecord;
+            const fallback = (record.desktop as number | undefined) ?? (record.tablet as number | undefined) ?? (record.mobile as number | undefined) ?? draft.contentBoxWidth ?? 1200;
+            draft.contentBoxWidth = fallback;
+            const unitRecord = (record.unit as Record<string, string>) || {};
+            draft.contentBoxWidthUnit = unitRecord.desktop ?? draft.contentBoxWidthUnit ?? "px";
+          })
+        }
+        unitOptions={["px", "%"]}
+        defaultValue={1200}
         minMaxByUnit={CUSTOM_WIDTH_CONFIG.minMaxByUnit}
-        defaultValues={CUSTOM_WIDTH_CONFIG.defaultValues}
-        onValueChange={(value, unit) =>
-          actions.setProp((draft) => {
-            const { min, max } = unit === "%" ? { min: 10, max: 100 } : { min: 100, max: 1600 };
-            const clamped = Math.min(max, Math.max(min, Math.round(value)));
-            draft.contentBoxWidth = clamped;
-            draft.contentBoxWidthUnit = unit;
-          })
-        }
-        onUnitChange={(unit, defaultValue) =>
-          actions.setProp((draft) => {
-            draft.contentBoxWidthUnit = unit;
-            draft.contentBoxWidth = defaultValue;
-          })
-        }
-        showReset={Boolean(props.contentBoxWidth && props.contentBoxWidth !== (props.contentBoxWidthUnit === "%" ? 100 : 1200))}
-        onReset={() =>
-          actions.setProp((draft) => {
-            draft.contentBoxWidth = draft.contentBoxWidthUnit === "%" ? 100 : 1200;
-          })
-        }
       />
     );
   };
@@ -171,8 +217,6 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
       {renderCustomWidthControl()}
       {renderContentWidthButtons()}
       {renderContentBoxWidth()}
-
     </div>
   );
 };
-

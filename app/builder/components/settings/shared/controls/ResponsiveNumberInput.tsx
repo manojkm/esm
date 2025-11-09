@@ -19,6 +19,7 @@ export interface ResponsiveNumberInputProps {
   unit?: string;
   unitOptions?: string[];
   defaultValue?: number;
+  minMaxByUnit?: Record<string, { min: number; max: number }>;
 }
 
 export const ResponsiveNumberInput: React.FC<ResponsiveNumberInputProps> = ({
@@ -31,19 +32,40 @@ export const ResponsiveNumberInput: React.FC<ResponsiveNumberInputProps> = ({
   unit = "px",
   unitOptions = ["px", "%"],
   defaultValue = 0,
+  minMaxByUnit,
 }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
 
   const responsiveValue = getResponsiveValue(value || {}, defaultValue);
   const responsiveUnit = getResponsiveValue((value as ResponsiveRecord)?.unit || {}, unit);
 
+  const getBounds = (unitOverride?: string) => {
+    if (minMaxByUnit) {
+      const byUnit = minMaxByUnit[unitOverride ?? responsiveUnit];
+      if (byUnit) {
+        return byUnit;
+      }
+    }
+    return { min, max };
+  };
+
+  const clampValue = (input: number, unitOverride?: string) => {
+    const bounds = getBounds(unitOverride);
+    return Math.min(bounds.max, Math.max(bounds.min, input));
+  };
+
+  const bounds = getBounds();
+  const clampedResponsiveValue = clampValue(responsiveValue);
+
   const handleValueChange = (newValue: number) => {
-    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+    const clamped = clampValue(newValue);
+    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, clamped);
     onChange(updatedValues);
   };
 
   const handleThrottledChange = (newValue: number) => {
-    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, newValue);
+    const clamped = clampValue(newValue);
+    const updatedValues = setResponsiveValue(value || {}, currentBreakpoint, clamped);
     onChange(updatedValues, true);
   };
 
@@ -82,16 +104,18 @@ export const ResponsiveNumberInput: React.FC<ResponsiveNumberInputProps> = ({
         <input
           id={`${baseId}-range`}
           type="range"
-          min={min}
-          max={max}
-          value={responsiveValue}
+          min={bounds.min}
+          max={bounds.max}
+          value={clampedResponsiveValue}
           onChange={(event) => handleThrottledChange(parseInt(event.target.value, 10))}
           className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
         />
         <input
           id={`${baseId}-number`}
           type="number"
-          value={responsiveValue}
+          value={clampedResponsiveValue}
+          min={bounds.min}
+          max={bounds.max}
           onChange={(event) => handleValueChange(parseInt(event.target.value, 10))}
           className={`w-16 px-2 py-1 text-xs border border-gray-300 text-gray-900 bg-white ${showUnitSelector ? "rounded-l" : "rounded"}`}
         />

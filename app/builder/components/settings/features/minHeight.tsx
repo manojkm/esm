@@ -1,7 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { ComponentControlActions } from "../shared/types";
+import type { ResponsiveValue } from "@/app/builder/lib/style-system";
+import { ResponsiveNumberInput } from "../shared/controls";
+import type { ResponsiveRecord } from "../shared/types/responsive";
 
 /**
  * Toggle + slider for enforcing a minimum height on the component.
@@ -11,6 +14,7 @@ export interface MinHeightFeatureProps {
   enableMinHeight?: boolean;
   minHeight?: number | null;
   minHeightUnit?: string;
+  minHeightResponsive?: ResponsiveValue;
 }
 
 export interface MinHeightControlsProps<TProps extends MinHeightFeatureProps> {
@@ -22,8 +26,29 @@ export interface MinHeightControlsProps<TProps extends MinHeightFeatureProps> {
 export const MinHeightControls = <TProps extends MinHeightFeatureProps>({ props, actions, controlId = "min-height" }: MinHeightControlsProps<TProps>) => {
   const baseId = `min-height-${controlId}`;
 
-  const rangeConfig = props.minHeightUnit === "vh" ? { min: 10, max: 100, fallback: 50 } : { min: 20, max: 1000, fallback: 20 };
-  const currentValue = props.minHeight ?? rangeConfig.fallback;
+  useEffect(() => {
+    if (!props.enableMinHeight) return;
+
+    const responsive = props.minHeightResponsive;
+    const needsDesktop = !responsive || responsive.desktop === undefined;
+    const unitMap = responsive?.unit || {};
+    const needsUnitDesktop = !unitMap.desktop;
+
+    if (!needsDesktop && !needsUnitDesktop) return;
+
+    actions.setProp((draft) => {
+      const nextResponsive: ResponsiveValue = { ...(draft.minHeightResponsive as ResponsiveValue | undefined) };
+      const fallback = draft.minHeight ?? 450;
+      nextResponsive.desktop ??= fallback;
+      nextResponsive.unit = {
+        ...(nextResponsive.unit || {}),
+        desktop: nextResponsive.unit?.desktop ?? draft.minHeightUnit ?? "px",
+      };
+      draft.minHeightResponsive = nextResponsive;
+    });
+  }, [actions, props.enableMinHeight, props.minHeightResponsive, props.minHeight, props.minHeightUnit]);
+
+  const responsiveValue = props.minHeightResponsive as ResponsiveRecord | undefined;
 
   return (
     <section id={baseId} data-component-id={baseId} className="space-y-2">
@@ -39,8 +64,15 @@ export const MinHeightControls = <TProps extends MinHeightFeatureProps>({ props,
                 draft.enableMinHeight = event.target.checked;
                 if (!event.target.checked) {
                   draft.minHeight = null;
+                  draft.minHeightResponsive = undefined;
                 } else {
-                  draft.minHeight = rangeConfig.fallback;
+                  const fallback = draft.minHeight ?? 450;
+                  draft.minHeight = fallback;
+                  draft.minHeightUnit = draft.minHeightUnit ?? "px";
+                  draft.minHeightResponsive = {
+                    desktop: fallback,
+                    unit: { desktop: draft.minHeightUnit ?? "px" },
+                  };
                 }
               })
             }
@@ -51,35 +83,28 @@ export const MinHeightControls = <TProps extends MinHeightFeatureProps>({ props,
       </div>
 
       {props.enableMinHeight && (
-        <div className="flex items-center gap-2">
-          <input
-            id={`${baseId}-range`}
-            type="range"
-            min={rangeConfig.min}
-            max={rangeConfig.max}
-            value={currentValue}
-            onChange={(event) =>
-              actions.setProp((draft) => {
-                draft.minHeight = parseInt(event.target.value, 10);
-              })
-            }
-            className="flex-1 min-w-0 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-          />
-          <input
-            id={`${baseId}-number`}
-            type="number"
-            value={currentValue}
-            onChange={(event) =>
-              actions.setProp((draft) => {
-                const numeric = parseInt(event.target.value, 10);
-                draft.minHeight = Number.isFinite(numeric) ? numeric : rangeConfig.fallback;
-              })
-            }
-            className="w-16 px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white"
-          />
-        </div>
+        <ResponsiveNumberInput
+          controlId={`${baseId}-value`}
+          label="Min Height Value"
+          value={responsiveValue}
+          onChange={(value) =>
+            actions.setProp((draft) => {
+              draft.minHeightResponsive = value as ResponsiveValue;
+              const record = value as ResponsiveRecord;
+              const fallback = (record.desktop as number | undefined) ?? draft.minHeight ?? 450;
+              draft.minHeight = fallback;
+              const unitRecord = (record.unit as Record<string, string>) || {};
+              draft.minHeightUnit = unitRecord.desktop ?? draft.minHeightUnit ?? "px";
+            })
+          }
+          unitOptions={["px", "vh"]}
+          defaultValue={450}
+          minMaxByUnit={{
+            px: { min: 20, max: 1000 },
+            vh: { min: 10, max: 100 },
+          }}
+        />
       )}
     </section>
   );
 };
-
