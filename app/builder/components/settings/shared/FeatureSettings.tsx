@@ -2,10 +2,15 @@ import React, { useState } from "react";
 import type { FeatureKey, FeatureRegistry } from "./featureRegistry";
 import type { ComponentControlActions } from "./types";
 
+export interface FeatureConfigEntry {
+  feature: FeatureKey;
+  meta?: Record<string, unknown>;
+}
+
 export interface FeatureSectionConfig {
   id: string;
   title: string;
-  features: FeatureKey[];
+  features: Array<FeatureKey | FeatureConfigEntry>;
   description?: string;
 }
 
@@ -54,7 +59,15 @@ export const FeatureSettingsAccordion = <TProps,>({
             {isOpen && (
               <div className="p-4 border-t border-gray-200 space-y-4">
                 {section.description && <p className="text-xs text-gray-500">{section.description}</p>}
-                {section.features.map((featureKey) => {
+                {section.features.map((featureItem) => {
+                  const isObject = typeof featureItem === "object";
+                  const featureKey = (isObject ? (featureItem as FeatureConfigEntry).feature : featureItem) as FeatureKey;
+                  const metaFromConfig = isObject ? (featureItem as FeatureConfigEntry).meta : undefined;
+                  const meta = {
+                    ...(featureMeta?.[featureKey] ?? {}),
+                    ...(metaFromConfig ?? {}),
+                  };
+
                   const renderer = registry[featureKey];
                   if (!renderer) {
                     console.warn(`Feature "${featureKey}" is not registered. Skipping.`);
@@ -67,7 +80,7 @@ export const FeatureSettingsAccordion = <TProps,>({
                         props,
                         actions,
                         controlId: `${section.id}-${featureKey}`,
-                        meta: featureMeta?.[featureKey],
+                        meta,
                       })}
                     </div>
                   );

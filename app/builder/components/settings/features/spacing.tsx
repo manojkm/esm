@@ -23,10 +23,11 @@ export interface SpacingControlsProps<TProps extends SpacingFeatureProps> {
   props: TProps;
   actions: ComponentControlActions<TProps>;
   controlId?: string;
+  showGaps?: boolean;
 }
 
-const GapControls = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing-gaps" }: SpacingControlsProps<TProps>) => {
-  if (props.layout !== "flex") return null;
+const GapControls = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing-gaps", showGaps = true }: SpacingControlsProps<TProps>) => {
+  if (!showGaps || props.layout !== "flex") return null;
 
   const baseId = `gap-controls-${controlId}`;
 
@@ -103,12 +104,12 @@ const MarginControl = <TProps extends SpacingFeatureProps>({ props, actions, con
   );
 };
 
-export const SpacingControls = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing" }: SpacingControlsProps<TProps>) => {
+export const SpacingControls = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing", showGaps = true }: SpacingControlsProps<TProps>) => {
   const baseId = `spacing-controls-${controlId}`;
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
-      <GapControls props={props} actions={actions} controlId={`${controlId}-gaps`} />
+      <GapControls props={props} actions={actions} controlId={`${controlId}-gaps`} showGaps={showGaps} />
       <PaddingControl props={props} actions={actions} controlId={`${controlId}-padding`} />
       <MarginControl props={props} actions={actions} controlId={`${controlId}-margin`} />
     </div>

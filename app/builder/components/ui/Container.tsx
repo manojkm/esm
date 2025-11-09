@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
-import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
 import type { ContainerProps, SelectedLayout } from "./container/types";
 
 /**
@@ -120,6 +120,10 @@ export const Container: React.FC<ContainerProps> = ({
   alignItems,
   flexWrap,
   alignContent,
+  flexDirectionResponsive,
+  justifyContentResponsive,
+  alignItemsResponsive,
+  flexWrapResponsive,
   position = "default",
   positionTop = null,
   positionRight = null,
@@ -153,7 +157,7 @@ export const Container: React.FC<ContainerProps> = ({
   const isEditMode = enabled;
 
   // Custom hook to get the correct style value based on the current viewport (desktop, tablet, mobile).
-  const { getResponsiveValue } = useResponsive();
+  const { currentBreakpoint, getResponsiveValue } = useResponsive();
   const responsiveResolver: ResponsiveResolver = (values, fallback) => getResponsiveValue(values ?? {}, fallback);
 
   // State to control the visibility of the layout picker modal.
@@ -169,10 +173,22 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Determine effective layout properties, falling back to defaults if not specified.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
-  const effectiveFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
-  const effectiveJustifyContent = justifyContent ?? (isChildContainer ? "center" : "flex-start");
-  const effectiveAlignItems = alignItems ?? (isChildContainer ? "center" : "stretch");
-  const effectiveFlexWrap = flexWrap ?? "nowrap";
+
+  const resolveResponsiveString = (responsive: ResponsiveMap<string> | undefined, fallback: string) => getResponsiveValue(responsive ?? {}, fallback);
+
+  const baseFlexDirection = flexDirection ?? (isChildContainer ? "column" : "row");
+  const fallbackFlexDirection = flexDirectionResponsive || isChildContainer ? baseFlexDirection : currentBreakpoint === "mobile" ? "column" : baseFlexDirection;
+  const effectiveFlexDirection = resolveResponsiveString(flexDirectionResponsive, fallbackFlexDirection);
+
+  const baseJustifyContent = justifyContent ?? "center";
+  const effectiveJustifyContent = resolveResponsiveString(justifyContentResponsive, baseJustifyContent);
+
+  const baseAlignItems = alignItems ?? "center";
+  const effectiveAlignItems = resolveResponsiveString(alignItemsResponsive, baseAlignItems);
+
+  const baseFlexWrap = flexWrap ?? "nowrap";
+  const fallbackFlexWrap = flexWrapResponsive || isChildContainer ? baseFlexWrap : currentBreakpoint === "mobile" ? "wrap" : baseFlexWrap;
+  const effectiveFlexWrap = resolveResponsiveString(flexWrapResponsive, fallbackFlexWrap);
   const effectiveAlignContent = alignContent ?? "stretch";
 
   // Check if the container has any children.
@@ -384,7 +400,6 @@ export const Container: React.FC<ContainerProps> = ({
   // --- Final Style and Prop Aggregation ---
 
   // Determine various conditional styles and properties for rendering.
-  const hasCustomMinHeight = enableMinHeight && !!minHeightValue;
   const hasCustomBorder = borderStyle && borderStyle !== "none";
   // Show a helper border in edit mode for empty containers or columns without a real border.
   const shouldShowHelperBorder = isEditMode && !hasCustomBorder && (!isChildContainer || isEmpty);

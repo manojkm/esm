@@ -4,7 +4,7 @@
     { "id": "layout", "title": "Layout", "features": ["layout"] }
   ],
   "style": [
-    { "id": "spacing", "title": "Spacing", "features": ["spacing"] },
+    { "id": "spacing", "title": "Spacing", "features": [{ "feature": "spacing", "meta": { "showGaps": true } }] },
     { "id": "background", "title": "Background", "features": ["background"] },
     { "id": "border", "title": "Border", "features": ["border"] },
     { "id": "boxShadow", "title": "Box Shadow", "features": ["boxShadow"] },
@@ -17,4 +17,3 @@
     { "id": "position", "title": "Position", "features": ["position"] }
   ]
 }
-

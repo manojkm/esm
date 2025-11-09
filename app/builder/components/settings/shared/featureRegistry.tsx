@@ -26,7 +26,14 @@ export const createFeatureRegistry = <TProps,>(overrides: Partial<FeatureRegistr
 
 // Default registry used by the Container component; other components can supply overrides.
 export const containerFeatureRegistry: Partial<FeatureRegistry<ContainerProps>> = createFeatureRegistry({
-  spacing: ({ props, actions, controlId }) => <SpacingControls props={props} actions={actions} controlId={`${controlId}-spacing`} />,
+  spacing: ({ props, actions, controlId, meta }) => (
+    <SpacingControls
+      props={props}
+      actions={actions}
+      controlId={`${controlId}-spacing`}
+      showGaps={meta?.showGaps !== false}
+    />
+  ),
   background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
   border: ({ props, actions, controlId }) => <BorderControls props={props} actions={actions} controlId={`${controlId}-border`} />,
   boxShadow: ({ props, actions, controlId }) => <BoxShadowControls props={props} actions={actions} controlId={`${controlId}-box-shadow`} />,
