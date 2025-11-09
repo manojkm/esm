@@ -3,6 +3,7 @@
 import React from "react";
 import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "../shared/styles";
 import type { ComponentControlActions } from "../shared/types";
+import type { ResponsiveValue } from "@/app/builder/lib/style-system";
 
 /**
  * Handles box shadow presets plus normal/hover overrides.
@@ -18,10 +19,10 @@ export interface BoxShadowFeatureProps {
   boxShadowSpread?: number;
   boxShadowPosition?: string | null;
   boxShadowColor?: string | null;
-  boxShadowHorizontalResponsive?: Record<string, unknown>;
-  boxShadowVerticalResponsive?: Record<string, unknown>;
-  boxShadowBlurResponsive?: Record<string, unknown>;
-  boxShadowSpreadResponsive?: Record<string, unknown>;
+  boxShadowHorizontalResponsive?: ResponsiveValue;
+  boxShadowVerticalResponsive?: ResponsiveValue;
+  boxShadowBlurResponsive?: ResponsiveValue;
+  boxShadowSpreadResponsive?: ResponsiveValue;
   enableBoxShadowHover?: boolean;
   boxShadowHorizontalHover?: number;
   boxShadowVerticalHover?: number;
@@ -29,10 +30,10 @@ export interface BoxShadowFeatureProps {
   boxShadowSpreadHover?: number;
   boxShadowPositionHover?: string | null;
   boxShadowColorHover?: string | null;
-  boxShadowHorizontalHoverResponsive?: Record<string, unknown>;
-  boxShadowVerticalHoverResponsive?: Record<string, unknown>;
-  boxShadowBlurHoverResponsive?: Record<string, unknown>;
-  boxShadowSpreadHoverResponsive?: Record<string, unknown>;
+  boxShadowHorizontalHoverResponsive?: ResponsiveValue;
+  boxShadowVerticalHoverResponsive?: ResponsiveValue;
+  boxShadowBlurHoverResponsive?: ResponsiveValue;
+  boxShadowSpreadHoverResponsive?: ResponsiveValue;
 }
 
 export interface BoxShadowControlsProps<TProps extends BoxShadowFeatureProps> {

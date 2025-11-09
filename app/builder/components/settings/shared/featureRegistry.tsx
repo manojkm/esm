@@ -1,42 +1,9 @@
 import React from "react";
-import {
-  BackgroundControls,
-  BorderControls,
-  BoxShadowControls,
-  ColorControls,
-  SpacingControls,
-  LayoutControls,
-  ContainerChildSizingControls,
-  ContainerParentSizingControls,
-  MinHeightControls,
-  EqualHeightToggle,
-  HtmlTagSelect,
-  OverflowSelect,
-  CssControls,
-  AttributesControls,
-  PositionControls,
-  ResponsiveControls,
-} from "../features";
+import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls, LayoutControls, ContainerChildSizingControls, ContainerParentSizingControls, MinHeightControls, EqualHeightToggle, HtmlTagSelect, OverflowSelect, CssControls, AttributesControls, PositionControls, ResponsiveControls } from "../features";
 import type { ContainerProps } from "../../ui/container/types";
 import type { ComponentControlActions } from "./types";
 
-export type FeatureKey =
-  | "spacing"
-  | "background"
-  | "border"
-  | "boxShadow"
-  | "color"
-  | "layout"
-  | "childSizing"
-  | "parentSizing"
-  | "minHeight"
-  | "equalHeight"
-  | "htmlTag"
-  | "overflow"
-  | "css"
-  | "attributes"
-  | "responsive"
-  | "position";
+export type FeatureKey = "spacing" | "background" | "border" | "boxShadow" | "color" | "layout" | "childSizing" | "parentSizing" | "minHeight" | "equalHeight" | "htmlTag" | "overflow" | "css" | "attributes" | "responsive" | "position";
 
 export interface FeatureRenderContext<TProps> {
   props: TProps;
@@ -51,8 +18,9 @@ export type FeatureRegistry<TProps> = Record<FeatureKey, FeatureRenderer<TProps>
 
 /**
  * Utility to build a registry of feature renderers that can be shared across components.
+ * The trailing comma after <TProps,> keeps the generic disambiguated from JSX.
  */
-export const createFeatureRegistry = <TProps>(overrides: Partial<FeatureRegistry<TProps>> = {}): Partial<FeatureRegistry<TProps>> => ({
+export const createFeatureRegistry = <TProps,>(overrides: Partial<FeatureRegistry<TProps>> = {}): Partial<FeatureRegistry<TProps>> => ({
   ...overrides,
 });
 
@@ -75,4 +43,3 @@ export const containerFeatureRegistry: Partial<FeatureRegistry<ContainerProps>> 
   responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,
   position: ({ props, actions, controlId }) => <PositionControls props={props} actions={actions} controlId={`${controlId}-position`} />,
 });
-
