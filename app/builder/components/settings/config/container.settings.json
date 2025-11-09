@@ -1,4 +1,8 @@
 {
+  "general": [
+    { "id": "containerType", "title": "Container Type", "features": ["childSizing", "parentSizing", "minHeight", "equalHeight", "htmlTag", "overflow"] },
+    { "id": "layout", "title": "Layout", "features": ["layout"] }
+  ],
   "style": [
     { "id": "spacing", "title": "Spacing", "features": ["spacing"] },
     { "id": "background", "title": "Background", "features": ["background"] },

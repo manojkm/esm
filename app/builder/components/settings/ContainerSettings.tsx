@@ -24,8 +24,10 @@ export const ContainerSettings = () => {
 
   const [activeTab, setActiveTab] = useState<typeof TABS[number]["id"]>("general");
 
-  const isChildContainer = containerProps.flexBasis !== null && containerProps.flexBasis !== undefined;
-
+  /**
+   * Render the shared three-tab settings shell (General / Style / Advanced).
+   * Each tab delegates to feature-driven components that read from JSON config.
+   */
   return (
     <div className="space-y-4">
       <div className="flex border-b border-gray-200">
@@ -42,7 +44,7 @@ export const ContainerSettings = () => {
         ))}
       </div>
 
-      {activeTab === "general" && <ContainerGeneralSettings props={containerProps} actions={containerActions} isChildContainer={isChildContainer} />}
+      {activeTab === "general" && <ContainerGeneralSettings props={containerProps} actions={containerActions} />}
 
       {activeTab === "style" && <ContainerStyleSettings props={containerProps} actions={containerActions} />}
 

@@ -15,14 +15,20 @@ interface FeatureSettingsProps<TProps> {
   props: TProps;
   actions: ComponentControlActions<TProps>;
   initialOpenSection?: string;
+  featureMeta?: Partial<Record<FeatureKey, Record<string, unknown>>>;
 }
 
+/**
+ * Generic accordion renderer that maps section config to registered feature controls.
+ * Keeps the settings UI declarative and re-usable across components.
+ */
 export const FeatureSettingsAccordion = <TProps,>({
   sections,
   registry,
   props,
   actions,
   initialOpenSection,
+  featureMeta,
 }: FeatureSettingsProps<TProps>) => {
   const defaultSection = initialOpenSection ?? sections[0]?.id ?? "";
   const [openSection, setOpenSection] = useState<string>(defaultSection);
@@ -61,6 +67,7 @@ export const FeatureSettingsAccordion = <TProps,>({
                         props,
                         actions,
                         controlId: `${section.id}-${featureKey}`,
+                        meta: featureMeta?.[featureKey],
                       })}
                     </div>
                   );

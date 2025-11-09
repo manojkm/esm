@@ -10,6 +10,9 @@ interface ContainerStyleSettingsProps {
   actions: ContainerControlActions;
 }
 
+/**
+ * Style tab implementation for containers (spacing/background/border/etc.).
+ */
 export const ContainerStyleSettings: React.FC<ContainerStyleSettingsProps> = ({ props, actions }) => (
   <FeatureSettingsAccordion
     sections={containerStyleSettingsConfig}
