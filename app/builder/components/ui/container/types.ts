@@ -105,6 +105,7 @@ export interface ContainerProps {
   selectedLayout?: SelectedLayout | null;
   flexBasis?: number | null;
   flexBasisUnit?: string;
+  flexBasisResponsive?: ResponsiveValue;
   containerWidth?: string;
   contentWidth?: string;
   contentBoxWidth?: number;
@@ -142,4 +143,3 @@ export interface ContainerProps {
   positionLeftUnit?: string;
   zIndex?: number | null;
 }
-

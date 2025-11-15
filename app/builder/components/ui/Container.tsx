@@ -100,6 +100,7 @@ export const Container: React.FC<ContainerProps> = ({
   selectedLayout = null,
   flexBasis = null,
   flexBasisUnit = "%",
+  flexBasisResponsive,
   containerWidth = "full",
   contentWidth = "boxed",
   contentBoxWidth = 1200,
@@ -279,6 +280,15 @@ export const Container: React.FC<ContainerProps> = ({
     resolver: responsiveResolver,
   });
 
+  const flexBasisValue = flexBasis !== null && flexBasis !== undefined
+    ? buildResponsiveValueWithUnit({
+        responsive: flexBasisResponsive,
+        fallbackValue: flexBasis,
+        fallbackUnit: flexBasisUnit ?? "%",
+        resolver: responsiveResolver,
+      })
+    : undefined;
+
   const minHeightValue = enableMinHeight
     ? buildResponsiveValueWithUnit({
         responsive: minHeightResponsive,
@@ -428,8 +438,8 @@ export const Container: React.FC<ContainerProps> = ({
     rowGap: effectiveLayout === "flex" && !needsContentWrapper ? rowGapValue : undefined,
     columnGap: effectiveLayout === "flex" && !needsContentWrapper ? columnGapValue : undefined,
     // Sizing properties
-    flexBasis: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : undefined,
-    width: isChildContainer && flexBasis !== null && flexBasis !== undefined ? `${flexBasis}${flexBasisUnit}` : "100%",
+    flexBasis: flexBasisValue,
+    width: isChildContainer && flexBasisValue ? flexBasisValue : "100%",
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? customWidthValue : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
