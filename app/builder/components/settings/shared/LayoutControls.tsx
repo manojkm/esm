@@ -101,7 +101,7 @@ export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ co
   };
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Justify Content" value={responsiveValue} onChange={onResponsiveChange} options={options.map(opt => ({ value: opt, label: getLabel(opt) }))} defaultValue="flex-start" />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Justify Content" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="flex-start" />;
   }
 
   return (
@@ -142,7 +142,7 @@ export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId,
   };
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Align Items" value={responsiveValue} onChange={onResponsiveChange} options={options.map(opt => ({ value: opt, label: getLabel(opt) }))} defaultValue="stretch" />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Align Items" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="stretch" />;
   }
 
   return (
@@ -266,9 +266,9 @@ export const LayoutControls: React.FC<LayoutControlsComponentProps> = ({ control
   };
 
   // Get the current value, preferring responsive if available
+  const { getResponsiveValue } = useResponsive();
   const getFlexDirectionValue = () => {
     if (props.flexDirectionResponsive) {
-      const { getResponsiveValue } = useResponsive();
       return getResponsiveValue(props.flexDirectionResponsive, isChildContainer ? "column" : "row");
     }
     return props.flexDirection || (isChildContainer ? "column" : "row");
@@ -279,38 +279,10 @@ export const LayoutControls: React.FC<LayoutControlsComponentProps> = ({ control
       <LayoutTypeControl controlId={`${controlId}-type`} value={layoutValue} onChange={handleLayoutChange} />
       {layoutValue === "flex" && (
         <div className="space-y-4">
-          <DirectionControl 
-            controlId={`${controlId}-direction`} 
-            value={getFlexDirectionValue()} 
-            responsiveValue={props.flexDirectionResponsive}
-            onChange={handleDirectionChange}
-            onResponsiveChange={handleDirectionResponsiveChange}
-            useResponsive={true}
-          />
-          <JustifyContentControl 
-            controlId={`${controlId}-justify`} 
-            value={props.justifyContent || (isChildContainer ? "center" : "flex-start")} 
-            responsiveValue={props.justifyContentResponsive}
-            onChange={handleJustifyContentChange}
-            onResponsiveChange={handleJustifyContentResponsiveChange}
-            useResponsive={true}
-          />
-          <AlignItemsControl 
-            controlId={`${controlId}-align`} 
-            value={props.alignItems || (isChildContainer ? "center" : "stretch")} 
-            responsiveValue={props.alignItemsResponsive}
-            onChange={handleAlignItemsChange}
-            onResponsiveChange={handleAlignItemsResponsiveChange}
-            useResponsive={true}
-          />
-          <WrapControl 
-            controlId={`${controlId}-wrap`} 
-            value={props.flexWrap || "nowrap"} 
-            responsiveValue={props.flexWrapResponsive}
-            onChange={handleWrapChange}
-            onResponsiveChange={handleWrapResponsiveChange}
-            useResponsive={true}
-          />
+          <DirectionControl controlId={`${controlId}-direction`} value={getFlexDirectionValue()} responsiveValue={props.flexDirectionResponsive} onChange={handleDirectionChange} onResponsiveChange={handleDirectionResponsiveChange} useResponsive={true} />
+          <JustifyContentControl controlId={`${controlId}-justify`} value={props.justifyContent || (isChildContainer ? "center" : "flex-start")} responsiveValue={props.justifyContentResponsive} onChange={handleJustifyContentChange} onResponsiveChange={handleJustifyContentResponsiveChange} useResponsive={true} />
+          <AlignItemsControl controlId={`${controlId}-align`} value={props.alignItems || (isChildContainer ? "center" : "stretch")} responsiveValue={props.alignItemsResponsive} onChange={handleAlignItemsChange} onResponsiveChange={handleAlignItemsResponsiveChange} useResponsive={true} />
+          <WrapControl controlId={`${controlId}-wrap`} value={props.flexWrap || "nowrap"} responsiveValue={props.flexWrapResponsive} onChange={handleWrapChange} onResponsiveChange={handleWrapResponsiveChange} useResponsive={true} />
         </div>
       )}
     </div>

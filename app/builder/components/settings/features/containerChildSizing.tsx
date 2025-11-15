@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
+import { useNode, useEditor } from "@craftjs/core";
 import type { ComponentControlActions } from "../shared/types";
 import { ResponsiveNumberInput } from "../shared/controls";
 import type { ResponsiveRecord } from "../shared/types/responsive";
 import type { ResponsiveValue } from "@/app/builder/lib/style-system";
+import type { ContainerProps } from "../../ui/container/types";
 
 /**
  * Feature exposed only when the container is used as a child (column).
@@ -30,6 +32,10 @@ export interface ContainerChildSizingControlsProps<TProps extends ContainerChild
 
 export const ContainerChildSizingControls = <TProps extends ContainerChildSizingProps>({ props, actions, controlId = "child-sizing" }: ContainerChildSizingControlsProps<TProps>) => {
   const isChildContainer = props.flexBasis !== null && props.flexBasis !== undefined;
+  const { id } = useNode();
+  const { query } = useEditor((state) => ({
+    enabled: state.options.enabled,
+  }));
 
   // Initialize responsive values if not already set
   useEffect(() => {
@@ -48,21 +54,47 @@ export const ContainerChildSizingControls = <TProps extends ContainerChildSizing
       return;
     }
 
+    // Check if parent container's flexDirection is "column" on mobile
+    let isParentColumnOnMobile = false;
+    try {
+      const currentNode = query.node(id).get();
+      const parentId = currentNode.data.parent;
+
+      if (parentId && parentId !== "ROOT") {
+        const parentNode = query.node(parentId).get();
+        const parentProps = parentNode.data.props as ContainerProps;
+
+        if (parentProps) {
+          const flexDirectionResponsive = parentProps.flexDirectionResponsive;
+          const flexDirection = parentProps.flexDirection;
+          const mobileFlexDirection = (flexDirectionResponsive?.mobile as string | undefined) ?? flexDirection ?? "row";
+          isParentColumnOnMobile = mobileFlexDirection === "column";
+        }
+      }
+    } catch {
+      // If we can't access parent, default to false
+      isParentColumnOnMobile = false;
+    }
+
     actions.setProp((draft) => {
       const nextResponsive: ResponsiveValue = { ...(draft.flexBasisResponsive as ResponsiveValue | undefined) };
       const fallback = draft.flexBasis ?? (draft.flexBasisUnit === "px" ? 320 : 100);
+
+      // Set mobile default to 100% if parent flexDirection is column on mobile
+      const mobileDefault = isParentColumnOnMobile ? 100 : fallback;
+
       nextResponsive.desktop ??= fallback;
       nextResponsive.tablet ??= fallback;
-      nextResponsive.mobile ??= fallback;
+      nextResponsive.mobile ??= mobileDefault;
       nextResponsive.unit = {
         ...(nextResponsive.unit || {}),
         desktop: nextResponsive.unit?.desktop ?? draft.flexBasisUnit ?? "%",
         tablet: nextResponsive.unit?.tablet ?? draft.flexBasisUnit ?? "%",
-        mobile: nextResponsive.unit?.mobile ?? draft.flexBasisUnit ?? "%",
+        mobile: nextResponsive.unit?.mobile ?? (isParentColumnOnMobile ? "%" : draft.flexBasisUnit ?? "%"),
       };
       draft.flexBasisResponsive = nextResponsive;
     });
-  }, [actions, props.flexBasisResponsive, props.flexBasis, props.flexBasisUnit, isChildContainer]);
+  }, [actions, props.flexBasisResponsive, props.flexBasis, props.flexBasisUnit, isChildContainer, id, query]);
 
   if (!isChildContainer) return null;
 
