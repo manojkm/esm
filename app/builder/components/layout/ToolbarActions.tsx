@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useEditor } from "@craftjs/core";
 import lz from "lz-string";
 import { CombinedToolbar } from "./CombinedToolbar";
+import { exportRenderedHTML, downloadHTML } from "@/app/builder/lib/export-html";
 
 interface ToolbarActionsProps {
   isPreviewMode: boolean;
@@ -49,6 +50,37 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
     }
   };
 
+  const handleExport = () => {
+    try {
+      // Find the craft.js editor container
+      const editorContainer = document.querySelector('[data-craftjs="editor"]') as HTMLElement;
+      if (!editorContainer) {
+        // Fallback: try to find by class or other identifier
+        const frame = document.querySelector('[data-craftjs="frame"]');
+        if (frame) {
+          const html = exportRenderedHTML();
+          downloadHTML(html, "ebay-template.html");
+          setSaveStatus("Exported!");
+          setTimeout(() => setSaveStatus(""), 2000);
+        } else {
+          setSaveStatus("Export failed - editor not found");
+          setTimeout(() => setSaveStatus(""), 2000);
+        }
+        return;
+      }
+
+      // Get the HTML
+      const html = exportRenderedHTML();
+      downloadHTML(html, "ebay-template.html");
+      setSaveStatus("Exported!");
+      setTimeout(() => setSaveStatus(""), 2000);
+    } catch (error) {
+      console.error("Export error:", error);
+      setSaveStatus("Export failed");
+      setTimeout(() => setSaveStatus(""), 2000);
+    }
+  };
+
   return (
     <CombinedToolbar
       isPreviewMode={isPreviewMode}
@@ -57,6 +89,7 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
       onRedo={() => actions.history.redo()}
       onSave={handleSave}
       onLoad={handleLoad}
+      onExport={handleExport}
       canUndo={canUndo}
       canRedo={canRedo}
       saveStatus={saveStatus}

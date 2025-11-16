@@ -3,8 +3,10 @@
 import React, { useState } from "react";
 import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
-import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import { useResponsive, type BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
+import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss } from "@/app/builder/lib/style-system/css-responsive";
 import type { ContainerProps, SelectedLayout } from "./container/types";
 
 /**
@@ -159,7 +161,31 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Custom hook to get the correct style value based on the current viewport (desktop, tablet, mobile).
   const { currentBreakpoint, getResponsiveValue } = useResponsive();
-  const responsiveResolver: ResponsiveResolver = (values, fallback) => getResponsiveValue(values ?? {}, fallback);
+  const { actualBreakpoint } = useCanvasWidth();
+  
+  // In editor mode, use actual canvas breakpoint for responsive simulation
+  // This makes responsive styles work based on canvas width, not browser window width
+  // Memoized to prevent unnecessary recalculations
+  const getEditorResponsiveValue = React.useCallback(<T,>(
+    values: ResponsiveMap<T> | undefined,
+    fallback: T
+  ): T => {
+    if (!isEditMode || !values) {
+      return getResponsiveValue(values ?? {}, fallback);
+    }
+
+    // Use actual canvas breakpoint from CanvasWidthContext
+    // This is updated by ResizeObserver in CanvasArea, causing re-renders
+    if (actualBreakpoint && values[actualBreakpoint] !== undefined) {
+      return values[actualBreakpoint];
+    }
+
+    // Fallback to current breakpoint from context
+    return getResponsiveValue(values ?? {}, fallback);
+  }, [isEditMode, getResponsiveValue, actualBreakpoint, currentBreakpoint]);
+
+  const responsiveResolver: ResponsiveResolver = (values, fallback) => 
+    getEditorResponsiveValue(values, fallback);
 
   // State to control the visibility of the layout picker modal.
   // The picker is shown for new containers that don't have children or a pre-defined layout.
@@ -352,6 +378,9 @@ export const Container: React.FC<ContainerProps> = ({
 
   // Generate a unique, stable class name for this component instance to apply hover styles.
   const hoverClassName = `container-hover-${id}`;
+  
+  // Generate a unique class name for the content wrapper if needed
+  const contentWrapperClassName = needsContentWrapper ? `container-content-${id}` : "";
 
   const hoverBackgroundCss = buildBackgroundHoverCss({
     type: backgroundType,
@@ -402,7 +431,156 @@ export const Container: React.FC<ContainerProps> = ({
     hideOnMobile,
   });
 
-  const styleTagContent = mergeCssSegments(buildHoverRule(hoverClassName, hoverRules), linkCss, responsiveVisibilityCss);
+  // Generate CSS media queries for responsive values (for exported HTML - no JS required)
+  // These will work even without JavaScript in the browser
+  // IMPORTANT: In editor mode, we disable CSS media queries and use inline styles instead
+  // because CSS media queries respond to browser viewport, not canvas width
+  // Only generate CSS media queries for exported HTML (when not in edit mode)
+  let responsiveCss = "";
+  
+  // Skip CSS media queries in editor mode - use inline styles from responsiveResolver instead
+  const shouldGenerateMediaQueries = !isEditMode;
+
+  // Only generate CSS media queries for exported HTML, not for editor preview
+  if (shouldGenerateMediaQueries) {
+    // Padding responsive CSS
+    if (paddingResponsive) {
+      responsiveCss += generatePaddingCss(hoverClassName, paddingResponsive, {
+        top: paddingTop,
+        right: paddingRight,
+        bottom: paddingBottom,
+        left: paddingLeft,
+        defaultValue: padding,
+      }, paddingUnit);
+    }
+
+    // Margin responsive CSS
+    if (marginResponsive) {
+      responsiveCss += generateMarginCss(hoverClassName, marginResponsive, {
+        top: marginTop,
+        right: marginRight,
+        bottom: marginBottom,
+        left: marginLeft,
+        defaultValue: margin,
+      }, marginUnit);
+    }
+
+    // Gap responsive CSS (only applies to main container when no content wrapper)
+    if (!needsContentWrapper) {
+      if (rowGapResponsive) {
+        responsiveCss += generateResponsiveCss(hoverClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
+      }
+      if (columnGapResponsive) {
+        responsiveCss += generateResponsiveCss(hoverClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
+      }
+    }
+
+    // Flex properties responsive CSS (applies to main container when no content wrapper)
+    if (!needsContentWrapper) {
+      if (flexDirectionResponsive) {
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-direction", flexDirectionResponsive, flexDirection ?? undefined);
+      }
+      if (justifyContentResponsive) {
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "justify-content", justifyContentResponsive, justifyContent ?? undefined);
+      }
+      if (alignItemsResponsive) {
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "align-items", alignItemsResponsive, alignItems ?? undefined);
+      }
+      if (flexWrapResponsive) {
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-wrap", flexWrapResponsive, flexWrap ?? undefined);
+      }
+    }
+
+    // Flex properties responsive CSS (applies to content wrapper when it exists)
+    if (needsContentWrapper && effectiveLayout === "flex") {
+      if (flexDirectionResponsive) {
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-direction", flexDirectionResponsive, flexDirection ?? undefined);
+      }
+      if (justifyContentResponsive) {
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "justify-content", justifyContentResponsive, justifyContent ?? undefined);
+      }
+      if (alignItemsResponsive) {
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "align-items", alignItemsResponsive, alignItems ?? undefined);
+      }
+      if (flexWrapResponsive) {
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-wrap", flexWrapResponsive, flexWrap ?? undefined);
+      }
+      // Gap responsive CSS for content wrapper
+      if (rowGapResponsive) {
+        responsiveCss += generateResponsiveCss(contentWrapperClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
+      }
+      if (columnGapResponsive) {
+        responsiveCss += generateResponsiveCss(contentWrapperClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
+      }
+    }
+
+    // Background color responsive CSS
+    if (backgroundType === "color" && backgroundColorResponsive) {
+      responsiveCss += generateBackgroundColorCss(hoverClassName, backgroundColorResponsive, backgroundColor ?? undefined);
+    }
+
+    // Border color responsive CSS
+    if (borderStyle && borderStyle !== "none" && borderColorResponsive) {
+      responsiveCss += generateBorderColorCss(hoverClassName, borderColorResponsive, borderColor ?? undefined);
+    }
+
+    // Border radius responsive CSS
+    if (borderRadiusResponsive) {
+      responsiveCss += generateResponsiveFourSideCss(hoverClassName, "border-radius", borderRadiusResponsive, {
+        top: borderTopLeftRadius,
+        right: borderTopRightRadius,
+        bottom: borderBottomRightRadius,
+        left: borderBottomLeftRadius,
+        defaultValue: borderRadius,
+      }, borderRadiusUnit);
+    }
+
+    // Border width responsive CSS
+    if (borderWidthResponsive) {
+      responsiveCss += generateResponsiveFourSideCss(hoverClassName, "border-width", borderWidthResponsive, {
+        top: borderTopWidth,
+        right: borderRightWidth,
+        bottom: borderBottomWidth,
+        left: borderLeftWidth,
+        defaultValue: borderWidth,
+      }, "px");
+    }
+
+    // Flex basis responsive CSS
+    if (flexBasisResponsive) {
+      responsiveCss += generateResponsiveCss(hoverClassName, "flex-basis", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+    }
+
+    // Min height responsive CSS
+    if (minHeightResponsive && enableMinHeight) {
+      responsiveCss += generateResponsiveCss(hoverClassName, "min-height", minHeightResponsive, minHeight, minHeightUnit ?? "px");
+    }
+
+    // Content box width responsive CSS (applies to content wrapper, not main container)
+    if (contentBoxWidthResponsive && needsContentWrapper) {
+      responsiveCss += generateResponsiveCss(contentWrapperClassName, "max-width", contentBoxWidthResponsive, contentBoxWidth, contentBoxWidthUnit ?? "px");
+    }
+
+    // Custom width responsive CSS (applies to main container)
+    if (customWidthResponsive && containerWidth === "custom") {
+      responsiveCss += generateResponsiveCss(hoverClassName, "max-width", customWidthResponsive, customWidth, customWidthUnit ?? "px");
+    }
+  }
+
+  // Box shadow responsive CSS
+  if (enableBoxShadow) {
+    if (boxShadowHorizontalResponsive) {
+      // For box-shadow, we need to generate complete box-shadow value for each breakpoint
+      // This is more complex, so we'll handle it separately if needed
+    }
+  }
+
+  const styleTagContent = mergeCssSegments(
+    buildHoverRule(hoverClassName, hoverRules),
+    linkCss,
+    responsiveVisibilityCss,
+    responsiveCss
+  );
 
   // --- Final Style and Prop Aggregation ---
 
@@ -526,7 +704,14 @@ export const Container: React.FC<ContainerProps> = ({
             );
 
             // If a content wrapper is needed, wrap the content in it; otherwise, render directly.
-            return needsContentWrapper ? <div style={contentWrapperStyle}>{content}</div> : content;
+            return needsContentWrapper ? (
+              <div 
+                className={contentWrapperClassName}
+                style={contentWrapperStyle}
+              >
+                {content}
+              </div>
+            ) : content;
           })()}
 
           {/* Render the layout picker modal if it should be visible. */}

@@ -13,6 +13,7 @@ import { CanvasGrid } from "./components/layout/CanvasGrid";
 import { CanvasArea } from "./components/layout/CanvasArea";
 import { ResponsiveProvider } from "@/app/builder/contexts/ResponsiveContext";
 import { CanvasProvider } from "@/app/builder/contexts/CanvasContext";
+import { CanvasWidthProvider } from "@/app/builder/contexts/CanvasWidthContext";
 import { RenderNode } from "./components/ui/RenderNode";
 
 /**
@@ -25,8 +26,10 @@ export default function Builder() {
   return (
     // Responsive context for breakpoint management
     <ResponsiveProvider>
-      {/* Canvas context for zoom, grid, guides */}
-      <CanvasProvider>
+      {/* Canvas width context for actual canvas width tracking */}
+      <CanvasWidthProvider>
+        {/* Canvas context for zoom, grid, guides */}
+        <CanvasProvider>
         {/* Full-height layout container */}
         <div className="h-screen flex flex-col bg-white">
           {/* Craft.js Editor - Main drag/drop functionality */}
@@ -67,6 +70,7 @@ export default function Builder() {
           </Editor>
         </div>
       </CanvasProvider>
+      </CanvasWidthProvider>
     </ResponsiveProvider>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Monitor, Tablet, Smartphone, Undo, Redo, Save, Upload, Eye, Edit } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Undo, Redo, Save, Upload, Eye, Edit, Download } from "lucide-react";
 import { useResponsive, BREAKPOINTS, BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
+import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 
 interface CombinedToolbarProps {
   isPreviewMode: boolean;
@@ -11,6 +12,7 @@ interface CombinedToolbarProps {
   onRedo?: () => void;
   onSave?: () => void;
   onLoad?: () => void;
+  onExport?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
   saveStatus?: string;
@@ -23,11 +25,29 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
   onRedo,
   onSave,
   onLoad,
+  onExport,
   canUndo = false,
   canRedo = false,
   saveStatus = "",
 }) => {
   const { currentBreakpoint, setCurrentBreakpoint } = useResponsive();
+  const { actualCanvasWidth } = useCanvasWidth();
+  
+  // Get canvas width for display
+  const getCanvasWidth = (breakpoint: keyof typeof BREAKPOINTS): number | null => {
+    switch (breakpoint) {
+      case "mobile":
+        return 375;
+      case "tablet":
+        return 768;
+      case "desktop":
+        return null;
+      default:
+        return null;
+    }
+  };
+  
+  const displayWidth = actualCanvasWidth || getCanvasWidth(currentBreakpoint);
 
   return (
     <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-4">
@@ -43,6 +63,23 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
           {isPreviewMode ? "Preview" : "Edit"}
         </span>
       </div>
+
+      {/* Center: Breakpoint indicator (only in edit mode when canvas is constrained) */}
+      {!isPreviewMode && displayWidth && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center gap-1.5">
+            {currentBreakpoint === 'desktop' && <Monitor size={14} className="text-blue-600" />}
+            {currentBreakpoint === 'tablet' && <Tablet size={14} className="text-blue-600" />}
+            {currentBreakpoint === 'mobile' && <Smartphone size={14} className="text-blue-600" />}
+            <span className="text-xs font-semibold text-blue-700">
+              {BREAKPOINTS[currentBreakpoint].label}
+            </span>
+            <span className="text-xs text-blue-600">
+              {displayWidth}px
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Right: Responsive icons + Undo/Redo/Save/Load/Preview */}
       <div className="flex items-center gap-2">
@@ -119,6 +156,17 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
             title="Load"
           >
             <Upload size={16} />
+          </button>
+        )}
+
+        {/* Export */}
+        {onExport && (
+          <button
+            onClick={onExport}
+            className="p-1.5 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            title="Export HTML/CSS for eBay"
+          >
+            <Download size={16} />
           </button>
         )}
 
