@@ -161,13 +161,15 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 shrink-0 border border-gray-300 rounded cursor-pointer relative overflow-hidden shadow-sm hover:shadow-md transition-shadow"
         style={{
-          background: `linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                       linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                       linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                       linear-gradient(-45deg, transparent 75%, #ccc 75%),
-                       ${displayColor}`,
-          backgroundSize: "8px 8px, 8px 8px, 8px 8px, 8px 8px, 100% 100%",
-          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px, 0 0",
+          // Use non-shorthand properties to avoid React warnings about mixing
+          // background and backgroundSize/backgroundPosition.
+          backgroundColor: displayColor,
+          backgroundImage: `linear-gradient(45deg, #ccc 25%, transparent 25%),
+                            linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                            linear-gradient(45deg, transparent 75%, #ccc 75%),
+                            linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
+          backgroundSize: "8px 8px, 8px 8px, 8px 8px, 8px 8px",
+          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
         }}
         title={isTransparent ? "Transparent" : (currentColor || "No color")}
       >

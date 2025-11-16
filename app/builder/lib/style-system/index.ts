@@ -2,6 +2,7 @@ export * from "./types";
 export * from "./responsive";
 export * from "./spacing";
 export * from "./background";
+export { buildOverlayStyles } from "./background";
 export * from "./border";
 export * from "./boxShadow";
 export * from "./color";

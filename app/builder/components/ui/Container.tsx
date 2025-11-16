@@ -5,7 +5,7 @@ import { useNode, Element, useEditor } from "@craftjs/core";
 import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive, type BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
 import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
-import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildOverlayStyles, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
 import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss } from "@/app/builder/lib/style-system/css-responsive";
 import type { ContainerProps, SelectedLayout } from "./container/types";
 
@@ -46,6 +46,24 @@ export const Container: React.FC<ContainerProps> = ({
   backgroundGradient = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   backgroundGradientHover = "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
   backgroundImage = "",
+  // Background Overlay
+  enableBackgroundOverlay = false,
+  overlayType = null,
+  overlayColor = null,
+  overlayColorResponsive,
+  overlayImage,
+  overlayPosition = "center",
+  overlayPositionResponsive,
+  overlayAttachment = "scroll",
+  overlayAttachmentResponsive,
+  overlayBlendMode = "normal",
+  overlayBlendModeResponsive,
+  overlayRepeat = "no-repeat",
+  overlayRepeatResponsive,
+  overlaySize = "cover",
+  overlaySizeResponsive,
+  overlayOpacity = 50,
+  overlayOpacityResponsive,
   borderRadius = 0,
   borderTopLeftRadius = null,
   borderTopRightRadius = null,
@@ -334,6 +352,33 @@ export const Container: React.FC<ContainerProps> = ({
     resolver: responsiveResolver,
   });
 
+  // Generate a unique, stable class name for this component instance to apply hover styles.
+  // This must be defined before buildOverlayStyles since it needs className.
+  const hoverClassName = `container-hover-${id}`;
+
+  // Build overlay styles for editor preview and export CSS
+  const overlayStylesResult = buildOverlayStyles({
+    enableOverlay: enableBackgroundOverlay,
+    overlayType,
+    overlayColor,
+    overlayColorResponsive,
+    overlayImage,
+    overlayPosition,
+    overlayPositionResponsive,
+    overlayAttachment,
+    overlayAttachmentResponsive,
+    overlayBlendMode,
+    overlayBlendModeResponsive,
+    overlayRepeat,
+    overlayRepeatResponsive,
+    overlaySize,
+    overlaySizeResponsive,
+    overlayOpacity,
+    overlayOpacityResponsive,
+    resolver: responsiveResolver,
+    className: hoverClassName,
+  });
+
   const borderStyles = buildBorderStyles({
     style: borderStyle,
     color: borderColor,
@@ -377,9 +422,6 @@ export const Container: React.FC<ContainerProps> = ({
 
   const colorStyles = buildTextColorStyles({ color: textColor });
 
-  // Generate a unique, stable class name for this component instance to apply hover styles.
-  const hoverClassName = `container-hover-${id}`;
-  
   // Generate a unique class name for the content wrapper if needed
   const contentWrapperClassName = needsContentWrapper ? `container-content-${id}` : "";
 
@@ -585,6 +627,11 @@ export const Container: React.FC<ContainerProps> = ({
         boxShadowPosition ?? "outset"
       );
     }
+
+    // Overlay CSS (for export - pure CSS using pseudo-element)
+    if (overlayStylesResult.css) {
+      responsiveCss += overlayStylesResult.css;
+    }
   }
 
   const styleTagContent = mergeCssSegments(
@@ -609,6 +656,7 @@ export const Container: React.FC<ContainerProps> = ({
     padding: paddingValue,
     margin: marginValue,
     ...backgroundStyles,
+    ...overlayStylesResult.style, // Overlay position relative for pseudo-element
     ...borderStyles,
     ...boxShadowStyles,
     ...colorStyles,
@@ -705,6 +753,63 @@ export const Container: React.FC<ContainerProps> = ({
         <>
           {/* IIFE to conditionally render the content wrapper only when needed. */}
           {(() => {
+            // Build overlay styles for editor preview (visual feedback)
+            const overlayOpacityDecimal = (overlayOpacity ?? 50) / 100;
+            let overlayBackgroundStyle: React.CSSProperties = {};
+            
+            if (enableBackgroundOverlay && overlayType) {
+              if (overlayType === "color" && overlayColor) {
+                const resolvedOverlayColor = resolveResponsiveValue<string>({
+                  resolver: responsiveResolver,
+                  responsive: overlayColorResponsive as ResponsiveMap<string>,
+                  fallback: overlayColor ?? "rgba(0, 0, 0, 0.5)",
+                });
+                overlayBackgroundStyle = {
+                  backgroundColor: resolvedOverlayColor || "rgba(0, 0, 0, 0.5)",
+                };
+              } else if (overlayType === "image" && overlayImage) {
+                const resolvedPosition = resolveResponsiveValue<string>({
+                  resolver: responsiveResolver,
+                  responsive: overlayPositionResponsive as ResponsiveMap<string>,
+                  fallback: overlayPosition ?? "center",
+                });
+                const resolvedSize = resolveResponsiveValue<string>({
+                  resolver: responsiveResolver,
+                  responsive: overlaySizeResponsive as ResponsiveMap<string>,
+                  fallback: overlaySize ?? "cover",
+                });
+                const resolvedRepeat = resolveResponsiveValue<string>({
+                  resolver: responsiveResolver,
+                  responsive: overlayRepeatResponsive as ResponsiveMap<string>,
+                  fallback: overlayRepeat ?? "no-repeat",
+                });
+                const resolvedAttachment = resolveResponsiveValue<string>({
+                  resolver: responsiveResolver,
+                  responsive: overlayAttachmentResponsive as ResponsiveMap<string>,
+                  fallback: overlayAttachment ?? "scroll",
+                });
+                overlayBackgroundStyle = {
+                  backgroundImage: `url(${overlayImage})`,
+                  backgroundPosition: resolvedPosition,
+                  backgroundSize: resolvedSize,
+                  backgroundRepeat: resolvedRepeat,
+                  backgroundAttachment: resolvedAttachment,
+                };
+              }
+              
+              const resolvedBlendMode = resolveResponsiveValue<string>({
+                resolver: responsiveResolver,
+                responsive: overlayBlendModeResponsive as ResponsiveMap<string>,
+                fallback: overlayBlendMode ?? "normal",
+              });
+              
+              overlayBackgroundStyle = {
+                ...overlayBackgroundStyle,
+                mixBlendMode: resolvedBlendMode as React.CSSProperties["mixBlendMode"],
+                opacity: overlayOpacityDecimal,
+              };
+            }
+
             const content = (
               <>
                 {/* Show a "Drop components here" message in edit mode for empty containers. */}
@@ -712,6 +817,17 @@ export const Container: React.FC<ContainerProps> = ({
 
                 {/* Render child components passed from the editor. */}
                 {children}
+
+                {/* Visual overlay for editor preview (only in edit mode) */}
+                {isEditMode && enableBackgroundOverlay && overlayType && Object.keys(overlayBackgroundStyle).length > 0 && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      ...overlayBackgroundStyle,
+                      zIndex: 1,
+                    }}
+                  />
+                )}
               </>
             );
 

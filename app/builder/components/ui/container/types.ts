@@ -42,6 +42,24 @@ export interface ContainerProps {
   backgroundGradient?: string;
   backgroundGradientHover?: string;
   backgroundImage?: string;
+  // Background Overlay
+  enableBackgroundOverlay?: boolean;
+  overlayType?: string | null;
+  overlayColor?: string | null;
+  overlayColorResponsive?: ResponsiveValue;
+  overlayImage?: string;
+  overlayPosition?: string;
+  overlayPositionResponsive?: ResponsiveValue;
+  overlayAttachment?: string;
+  overlayAttachmentResponsive?: ResponsiveValue;
+  overlayBlendMode?: string;
+  overlayBlendModeResponsive?: ResponsiveValue;
+  overlayRepeat?: string;
+  overlayRepeatResponsive?: ResponsiveValue;
+  overlaySize?: string;
+  overlaySizeResponsive?: ResponsiveValue;
+  overlayOpacity?: number;
+  overlayOpacityResponsive?: ResponsiveValue;
   // Border & Shadow
   borderRadius?: number;
   borderTopLeftRadius?: number | null;
