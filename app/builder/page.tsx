@@ -57,9 +57,6 @@ export default function Builder() {
                 {/* Canvas Grid Overlay */}
                 {!isPreviewMode && <CanvasGrid />}
 
-                {/* Canvas Controls */}
-                {!isPreviewMode && <CanvasControls />}
-
                 {/* Main canvas with default content */}
                 <CanvasArea isPreviewMode={isPreviewMode} />
               </div>

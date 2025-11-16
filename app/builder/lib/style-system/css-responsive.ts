@@ -227,6 +227,66 @@ export const generateBorderColorCss = (
 };
 
 /**
+ * Generates CSS for responsive box-shadow
+ * Box shadow format: [inset] horizontal vertical blur spread color
+ */
+export const generateBoxShadowCss = (
+  className: string,
+  horizontalResponsive?: ResponsiveValue,
+  verticalResponsive?: ResponsiveValue,
+  blurResponsive?: ResponsiveValue,
+  spreadResponsive?: ResponsiveValue,
+  horizontalFallback: number = 0,
+  verticalFallback: number = 0,
+  blurFallback: number = 0,
+  spreadFallback: number = 0,
+  color: string = "rgba(0, 0, 0, 0.1)",
+  position: string = "outset"
+): string => {
+  // Check if any responsive values exist
+  const hasResponsive = 
+    horizontalResponsive || 
+    verticalResponsive || 
+    blurResponsive || 
+    spreadResponsive;
+
+  if (!hasResponsive) {
+    return "";
+  }
+
+  let css = "";
+  const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
+
+  for (const bp of breakpoints) {
+    // Get values for this breakpoint, fallback to base values if not set
+    const hVal = (horizontalResponsive as ResponsiveMap<number> | undefined)?.[bp];
+    const vVal = (verticalResponsive as ResponsiveMap<number> | undefined)?.[bp];
+    const bVal = (blurResponsive as ResponsiveMap<number> | undefined)?.[bp];
+    const sVal = (spreadResponsive as ResponsiveMap<number> | undefined)?.[bp];
+
+    // Check if this breakpoint has any custom values
+    const hasHorizontal = hVal !== undefined && hVal !== null;
+    const hasVertical = vVal !== undefined && vVal !== null;
+    const hasBlur = bVal !== undefined && bVal !== null;
+    const hasSpread = sVal !== undefined && sVal !== null;
+
+    // Only generate CSS if there's at least one custom value for this breakpoint
+    if (hasHorizontal || hasVertical || hasBlur || hasSpread) {
+      const h = hasHorizontal ? hVal : horizontalFallback;
+      const v = hasVertical ? vVal : verticalFallback;
+      const b = hasBlur ? bVal : blurFallback;
+      const s = hasSpread ? sVal : spreadFallback;
+
+      const inset = position === "inset" ? "inset " : "";
+      const boxShadowValue = `${inset}${h}px ${v}px ${b}px ${s}px ${color}`;
+      css += `${getMediaQuery(bp)} { .${className} { box-shadow: ${boxShadowValue} !important; } }\n`;
+    }
+  }
+
+  return css;
+};
+
+/**
  * Generates base inline styles (non-responsive) that can be applied directly
  * Returns an object with CSS properties and their values
  */

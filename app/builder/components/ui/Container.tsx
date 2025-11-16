@@ -6,7 +6,7 @@ import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive, type BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
 import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
-import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss } from "@/app/builder/lib/style-system/css-responsive";
+import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss } from "@/app/builder/lib/style-system/css-responsive";
 import type { ContainerProps, SelectedLayout } from "./container/types";
 
 /**
@@ -565,13 +565,22 @@ export const Container: React.FC<ContainerProps> = ({
     if (customWidthResponsive && containerWidth === "custom") {
       responsiveCss += generateResponsiveCss(hoverClassName, "max-width", customWidthResponsive, customWidth, customWidthUnit ?? "px");
     }
-  }
 
-  // Box shadow responsive CSS
-  if (enableBoxShadow) {
-    if (boxShadowHorizontalResponsive) {
-      // For box-shadow, we need to generate complete box-shadow value for each breakpoint
-      // This is more complex, so we'll handle it separately if needed
+    // Box shadow responsive CSS
+    if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
+      responsiveCss += generateBoxShadowCss(
+        hoverClassName,
+        boxShadowHorizontalResponsive,
+        boxShadowVerticalResponsive,
+        boxShadowBlurResponsive,
+        boxShadowSpreadResponsive,
+        boxShadowHorizontal ?? 0,
+        boxShadowVertical ?? 0,
+        boxShadowBlur ?? 0,
+        boxShadowSpread ?? 0,
+        boxShadowColor ?? "rgba(0, 0, 0, 0.1)",
+        boxShadowPosition ?? "outset"
+      );
     }
   }
 

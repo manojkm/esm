@@ -93,6 +93,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({ isPreviewMode }) => {
   }, [isPreviewMode, setCanvasWidth]);
 
   // Calculate container styles
+  // Always center the canvas to prevent shifting when switching breakpoints
   const containerStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "center",
@@ -105,24 +106,33 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({ isPreviewMode }) => {
   };
 
   // Calculate frame wrapper styles
+  // Use flex-shrink: 0 to prevent the wrapper from shrinking and causing layout shifts
+  // Ensure proper centering and containment to prevent shifting when switching breakpoints
   const frameWrapperStyle: React.CSSProperties = {
     width: canvasWidth ? `${canvasWidth}px` : "100%",
     maxWidth: "100%",
-    margin: "0 auto",
+    marginLeft: "auto",
+    marginRight: "auto",
+    flexShrink: 0, // Prevent shrinking when parent flexbox changes
     backgroundColor: "transparent",
     boxShadow: canvasWidth ? "0 0 0 1px rgba(0, 0, 0, 0.1)" : "none",
     transition: "width 0.3s ease, box-shadow 0.3s ease",
     position: "relative",
+    // Ensure content inside doesn't shift - contain everything properly
+    overflow: "visible", // Allow overflow for zoom scaling
   };
 
   // Frame wrapper inner style with zoom transform
   // Zoom should be applied to the content, not the canvas width itself
+  // Use left top origin since the wrapper is already centered with margin: auto
   const frameInnerStyle: React.CSSProperties = {
+    width: "100%", // Always fill parent width to prevent shifting
     ...(!isPreviewMode && zoom !== 100
       ? {
           transform: `scale(${zoom / 100})`,
-          transformOrigin: canvasWidth ? "top center" : "top left",
-          width: canvasWidth ? `${100 / (zoom / 100)}%` : undefined,
+          transformOrigin: "left top", // Use left top since wrapper is already centered
+          // Adjust width to compensate for scale to maintain layout
+          width: `${100 / (zoom / 100)}%`,
         }
       : {}),
   };
