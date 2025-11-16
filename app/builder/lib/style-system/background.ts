@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { ResponsiveMap, ResponsiveResolver, ResponsiveValue } from "./types";
 import { resolveResponsiveValue } from "./responsive";
+import type { BreakpointKey } from "./css-responsive";
+import { getMediaQuery } from "./css-responsive";
 
 interface BackgroundOptions {
   type?: string | null;
@@ -134,12 +136,10 @@ export const buildOverlayStyles = ({
 
   let overlayBackground = "";
   if (overlayType === "color") {
-    const resolvedColor = resolveResponsiveValue<string>({
-      resolver,
-      responsive: overlayColorResponsive as ResponsiveMap<string>,
-      fallback: overlayColor ?? "rgba(0, 0, 0, 0.5)",
-    });
-    overlayBackground = resolvedColor || "rgba(0, 0, 0, 0.5)";
+    // Base overlay color comes from non-responsive value (typically desktop),
+    // so it applies to all breakpoints unless overridden by responsive values.
+    const baseColor = overlayColor ?? "rgba(0, 0, 0, 0.5)";
+    overlayBackground = baseColor;
   } else if (overlayType === "image" && overlayImage) {
     overlayBackground = `url(${overlayImage})`;
   } else {
@@ -155,9 +155,10 @@ export const buildOverlayStyles = ({
     position: "relative",
   };
 
-  // Generate CSS for pseudo-element overlay (for export)
-  // Using ::before pseudo-element for pure CSS overlay (eBay compatible - no JS)
-  const css = `
+  // Base rule for pseudo-element overlay.
+  // For color overlays, we apply the base (desktop/global) color here;
+  // breakpoint-specific overrides are added below using media queries.
+  let css = `
     .${className}::before {
       content: '';
       position: absolute;
@@ -165,7 +166,8 @@ export const buildOverlayStyles = ({
       left: 0;
       right: 0;
       bottom: 0;
-      ${overlayType === "color" ? `background-color: ${overlayBackground};` : `background-image: ${overlayBackground};`}
+      ${overlayType === "image" ? `background-image: ${overlayBackground};` : ""}
+      ${overlayType === "color" ? `background-color: ${overlayBackground};` : ""}
       ${overlayType === "image" ? `background-position: ${resolvedPosition};` : ""}
       ${overlayType === "image" ? `background-size: ${resolvedSize};` : ""}
       ${overlayType === "image" ? `background-repeat: ${resolvedRepeat};` : ""}
@@ -180,6 +182,25 @@ export const buildOverlayStyles = ({
       z-index: 2;
     }
   `;
+
+  // If overlay color has responsive values, generate media-query-based color rules per breakpoint
+  if (overlayType === "color" && overlayColorResponsive) {
+    const responsive = overlayColorResponsive as ResponsiveMap<string>;
+    const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
+
+    for (const bp of breakpoints) {
+      const value = responsive[bp];
+      if (value !== undefined && value !== null) {
+        css += `
+          ${getMediaQuery(bp)} {
+            .${className}::before {
+              background-color: ${value} !important;
+            }
+          }
+        `;
+      }
+    }
+  }
 
   return { css: css.trim(), style };
 };
