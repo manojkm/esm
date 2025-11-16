@@ -34,7 +34,8 @@ export interface ContainerProps {
   columnGapResponsive?: ResponsiveValue;
   // Background
   backgroundColor?: string;
-  backgroundColorHover?: string;
+  enableBackgroundColorHover?: boolean;
+  backgroundColorHover?: string | null;
   backgroundColorResponsive?: ResponsiveValue;
   backgroundColorHoverResponsive?: ResponsiveValue;
   backgroundType?: string | null;

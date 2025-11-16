@@ -4,6 +4,7 @@ import React from "react";
 import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import { ResponsiveRecord } from "../types/responsive";
+import { ColorPicker } from "./ColorPicker";
 
 /**
  * Shared color input that optionally supports per-breakpoint overrides.
@@ -52,8 +53,18 @@ export const ColorInput: React.FC<ColorInputProps> = ({ label, value, onChange, 
           )}
         </div>
         <div className="flex gap-2">
-          <input type="color" value={responsiveValue || placeholder} onChange={(event) => handleResponsiveChange(event.target.value)} className="w-10 h-10 shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
-          <input type="text" value={responsiveValue || ""} onChange={(event) => handleResponsiveChange(event.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
+          <ColorPicker
+            color={responsiveValue}
+            onChange={handleResponsiveChange}
+            allowTransparent={true}
+          />
+          <input
+            type="text"
+            value={responsiveValue || ""}
+            onChange={(event) => handleResponsiveChange(event.target.value || null)}
+            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder={placeholder}
+          />
         </div>
       </div>
     );
@@ -65,8 +76,18 @@ export const ColorInput: React.FC<ColorInputProps> = ({ label, value, onChange, 
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
       <div className="flex gap-2">
-        <input type="color" value={stringValue || placeholder} onChange={(event) => onChange(event.target.value)} className="w-10 h-10 shrink-0 border border-gray-300 rounded-full cursor-pointer appearance-none" />
-        <input type="text" value={stringValue} onChange={(event) => onChange(event.target.value || null)} className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white" placeholder={placeholder} />
+        <ColorPicker
+          color={stringValue}
+          onChange={(color) => onChange(color)}
+          allowTransparent={true}
+        />
+        <input
+          type="text"
+          value={stringValue}
+          onChange={(event) => onChange(event.target.value || null)}
+          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder={placeholder}
+        />
       </div>
     </div>
   );

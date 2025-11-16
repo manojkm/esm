@@ -15,7 +15,8 @@ import type { ResponsiveRecord } from "../shared/types/responsive";
 export interface BackgroundFeatureProps {
   backgroundType?: string | null;
   backgroundColor?: string;
-  backgroundColorHover?: string;
+  enableBackgroundColorHover?: boolean;
+  backgroundColorHover?: string | null;
   backgroundColorResponsive?: ResponsiveValue;
   backgroundColorHoverResponsive?: ResponsiveValue;
   backgroundGradient?: string;
@@ -81,17 +82,47 @@ const BackgroundColorControls = <TProps extends BackgroundFeatureProps>({ props,
         placeholder="#ffffff"
         responsive
       />
-      <ColorInput
-        label="Hover Color"
-        value={props.backgroundColorHoverResponsive as ResponsiveRecord | undefined}
-        onChange={(value) =>
-          actions.setProp((draft) => {
-            draft.backgroundColorHoverResponsive = value as ResponsiveValue;
-          })
-        }
-        placeholder="#f0f0f0"
-        responsive
-      />
+      
+      {/* Hover Color Toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">Hover Background Color</span>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            id={`${baseId}-hover-toggle`}
+            type="checkbox"
+            checked={props.enableBackgroundColorHover || false}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.enableBackgroundColorHover = event.target.checked;
+                if (!event.target.checked) {
+                  draft.backgroundColorHover = null;
+                  draft.backgroundColorHoverResponsive = undefined;
+                }
+                // When enabled, don't initialize with any default value - let user choose
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+
+      {props.enableBackgroundColorHover && (
+        <ColorInput
+          label="Hover Color"
+          value={props.backgroundColorHoverResponsive as ResponsiveRecord | undefined}
+          onChange={(value) =>
+            actions.setProp((draft) => {
+              draft.backgroundColorHoverResponsive = value as ResponsiveValue;
+              const record = value as ResponsiveRecord;
+              const fallback = (record.desktop as string | undefined) ?? draft.backgroundColorHover ?? null;
+              draft.backgroundColorHover = fallback;
+            })
+          }
+          placeholder="#000000"
+          responsive
+        />
+      )}
     </section>
   );
 };

@@ -38,7 +38,8 @@ export const Container: React.FC<ContainerProps> = ({
   rowGapResponsive,
   columnGapResponsive,
   backgroundColor = "#ffffff",
-  backgroundColorHover = "#f0f0f0",
+  enableBackgroundColorHover = false,
+  backgroundColorHover = null,
   backgroundColorResponsive,
   backgroundColorHoverResponsive,
   backgroundType = null,
@@ -382,13 +383,15 @@ export const Container: React.FC<ContainerProps> = ({
   // Generate a unique class name for the content wrapper if needed
   const contentWrapperClassName = needsContentWrapper ? `container-content-${id}` : "";
 
-  const hoverBackgroundCss = buildBackgroundHoverCss({
-    type: backgroundType,
-    colorHover: backgroundColorHover,
-    colorHoverResponsive: backgroundColorHoverResponsive,
-    gradientHover: backgroundGradientHover,
-    resolver: responsiveResolver,
-  });
+  const hoverBackgroundCss = enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover
+    ? buildBackgroundHoverCss({
+        type: backgroundType,
+        colorHover: backgroundColorHover,
+        colorHoverResponsive: backgroundColorHoverResponsive,
+        gradientHover: backgroundGradientHover,
+        resolver: responsiveResolver,
+      })
+    : "";
 
   const hoverBorderCss = buildBorderHoverCss({
     style: borderStyle,
