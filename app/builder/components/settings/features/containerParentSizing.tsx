@@ -5,6 +5,7 @@ import type { ComponentControlActions } from "../shared/types";
 import { ResponsiveNumberInput } from "../shared/controls";
 import type { ResponsiveRecord } from "../shared/types/responsive";
 import type { ResponsiveValue } from "@/app/builder/lib/style-system";
+import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 
 /**
  * Feature exposed for top-level containers, covering width presets and content box sizing.
@@ -44,6 +45,7 @@ const CUSTOM_WIDTH_CONFIG = {
 };
 
 export const ContainerParentSizingControls = <TProps extends ContainerParentSizingProps>({ props, actions, controlId = "parent-sizing" }: ContainerParentSizingControlsProps<TProps>) => {
+  const { settings } = useGlobalSettings();
   const isChildContainer = props.flexBasis !== undefined && props.flexBasis !== null;
 
   useEffect(() => {
@@ -93,12 +95,14 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
       return;
     }
 
+    const globalCustomWidth = settings.containerDefaults.maxWidth?.custom ?? 100;
+
     actions.setProp((draft) => {
       const nextResponsive: ResponsiveValue = { ...(draft.customWidthResponsive as ResponsiveValue | undefined) };
-      const fallback = draft.customWidth ?? (draft.customWidthUnit === "px" ? 1200 : 100);
+      const fallback = draft.customWidth ?? (draft.customWidthUnit === "px" ? 1200 : globalCustomWidth);
       nextResponsive.desktop ??= fallback;
-      nextResponsive.tablet ??= 100;
-      nextResponsive.mobile ??= 100;
+      nextResponsive.tablet ??= globalCustomWidth;
+      nextResponsive.mobile ??= globalCustomWidth;
       nextResponsive.unit = {
         ...(nextResponsive.unit || {}),
         desktop: nextResponsive.unit?.desktop ?? draft.customWidthUnit ?? "%",
@@ -107,7 +111,7 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
       };
       draft.customWidthResponsive = nextResponsive;
     });
-  }, [actions, isChildContainer, props.containerWidth, props.customWidthResponsive, props.customWidth, props.customWidthUnit]);
+  }, [actions, isChildContainer, props.containerWidth, props.customWidthResponsive, props.customWidth, props.customWidthUnit, settings.containerDefaults.maxWidth?.custom]);
 
   if (isChildContainer) return null;
 
@@ -138,6 +142,8 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
   const renderCustomWidthControl = () => {
     if (props.containerWidth !== "custom") return null;
 
+    const globalCustomWidth = settings.containerDefaults.maxWidth?.custom ?? 100;
+
     return (
       <ResponsiveNumberInput
         controlId={`${baseId}-custom`}
@@ -147,14 +153,14 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
           actions.setProp((draft) => {
             draft.customWidthResponsive = value as ResponsiveValue;
             const record = value as ResponsiveRecord;
-            const fallback = (record.desktop as number | undefined) ?? (record.tablet as number | undefined) ?? (record.mobile as number | undefined) ?? draft.customWidth ?? 100;
+            const fallback = (record.desktop as number | undefined) ?? (record.tablet as number | undefined) ?? (record.mobile as number | undefined) ?? draft.customWidth ?? globalCustomWidth;
             draft.customWidth = fallback;
             const unitRecord = (record.unit as Record<string, string>) || {};
             draft.customWidthUnit = unitRecord.desktop ?? draft.customWidthUnit ?? "%";
           })
         }
         unitOptions={["%", "px"]}
-        defaultValue={100}
+        defaultValue={globalCustomWidth}
         minMaxByUnit={CUSTOM_WIDTH_CONFIG.minMaxByUnit}
       />
     );

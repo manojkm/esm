@@ -14,6 +14,7 @@ import { CanvasArea } from "./components/layout/CanvasArea";
 import { ResponsiveProvider } from "@/app/builder/contexts/ResponsiveContext";
 import { CanvasProvider } from "@/app/builder/contexts/CanvasContext";
 import { CanvasWidthProvider } from "@/app/builder/contexts/CanvasWidthContext";
+import { GlobalSettingsProvider } from "@/app/builder/contexts/GlobalSettingsContext";
 import { RenderNode } from "./components/ui/RenderNode";
 
 /**
@@ -24,12 +25,14 @@ export default function Builder() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   return (
-    // Responsive context for breakpoint management
-    <ResponsiveProvider>
-      {/* Canvas width context for actual canvas width tracking */}
-      <CanvasWidthProvider>
-        {/* Canvas context for zoom, grid, guides */}
-        <CanvasProvider>
+    // Global settings context for color palette, typography, custom CSS
+    <GlobalSettingsProvider>
+      {/* Responsive context for breakpoint management */}
+      <ResponsiveProvider>
+        {/* Canvas width context for actual canvas width tracking */}
+        <CanvasWidthProvider>
+          {/* Canvas context for zoom, grid, guides */}
+          <CanvasProvider>
         {/* Full-height layout container */}
         <div className="h-screen flex flex-col bg-white">
           {/* Craft.js Editor - Main drag/drop functionality */}
@@ -69,5 +72,6 @@ export default function Builder() {
       </CanvasProvider>
       </CanvasWidthProvider>
     </ResponsiveProvider>
+    </GlobalSettingsProvider>
   );
 }

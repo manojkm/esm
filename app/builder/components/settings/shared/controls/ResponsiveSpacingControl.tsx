@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Monitor, Tablet, Smartphone, RotateCcw } from "lucide-react";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
+import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 import { ResponsiveRecord } from "../types/responsive";
 
 /**
@@ -22,6 +23,9 @@ const SIDES = ["top", "right", "bottom", "left"] as const;
 
 export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
+  const { getSpacingScale } = useGlobalSettings();
+  const spacingScale = getSpacingScale();
+  const [showQuickSelect, setShowQuickSelect] = useState(false);
 
   const getValue = (side: (typeof SIDES)[number]) => {
     const sideValues = value?.[side] || {};
@@ -117,6 +121,11 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
 
   const baseId = `responsive-spacing-${controlId}`;
 
+  const handleQuickSelect = (side: (typeof SIDES)[number], spacingValue: number) => {
+    setValue(side, String(spacingValue));
+    setShowQuickSelect(false);
+  };
+
   return (
     <div id={baseId} data-component-id={baseId}>
       <div className="flex items-center justify-between mb-2">
@@ -143,13 +152,62 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
           </select>
         </div>
       </div>
+      
+      {/* Quick Select Spacing Scale */}
+      {spacingScale.values.length > 0 && getUnit() === (spacingScale.unit || "px") && (
+        <div className="mb-2">
+          <button
+            type="button"
+            onClick={() => setShowQuickSelect(!showQuickSelect)}
+            className="text-xs text-blue-600 hover:text-blue-800 underline"
+          >
+            {showQuickSelect ? "Hide" : "Show"} Quick Select
+          </button>
+          {showQuickSelect && (
+            <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded">
+              <div className="text-xs font-medium text-gray-700 mb-2">Quick Select Values (click to apply to all sides):</div>
+              <div className="flex flex-wrap gap-1">
+                {spacingScale.values.map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => {
+                      // Apply to all sides
+                      const updatedValue: ResponsiveRecord = { ...value };
+                      SIDES.forEach((side) => {
+                        const currentSideValues = (value?.[side] as Record<string, number | null>) || {};
+                        updatedValue[side] = setResponsiveValue(currentSideValues, currentBreakpoint, val);
+                      });
+                      onChange(updatedValue);
+                      setShowQuickSelect(false);
+                    }}
+                    className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-500 transition-colors"
+                    title={`Apply ${val}${spacingScale.unit || "px"} to all sides`}
+                  >
+                    {val}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-4 gap-1">
         {SIDES.map((side) => (
           <div key={side}>
             <label className="block text-xs text-gray-500 mb-1 capitalize" htmlFor={`${baseId}-${side}`}>
               {side}
             </label>
-            <input id={`${baseId}-${side}`} type="text" inputMode="numeric" pattern="-?\\d*" value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""} onChange={(event) => setValue(side, event.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
+            <input
+              id={`${baseId}-${side}`}
+              type="text"
+              inputMode="numeric"
+              pattern="-?\\d*"
+              value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""}
+              onChange={(event) => setValue(side, event.target.value)}
+              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white"
+            />
           </div>
         ))}
       </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
-import { Monitor, Tablet, Smartphone, Undo, Redo, Save, Upload, Eye, Edit, Download, ZoomIn, ZoomOut, Grid, Maximize2 } from "lucide-react";
+import React, { useState } from "react";
+import { Monitor, Tablet, Smartphone, Undo, Redo, Save, Upload, Eye, Edit, Download, ZoomIn, ZoomOut, Grid, Maximize2, Settings } from "lucide-react";
 import { useResponsive, BREAKPOINTS, BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
 import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { useCanvas } from "@/app/builder/contexts/CanvasContext";
+import { GlobalSettingsPanel } from "@/app/builder/components/settings/GlobalSettingsPanel";
 
 interface CombinedToolbarProps {
   isPreviewMode: boolean;
@@ -34,6 +35,7 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
   const { currentBreakpoint, setCurrentBreakpoint } = useResponsive();
   const { actualCanvasWidth } = useCanvasWidth();
   const { zoom, setZoom, showGrid, setShowGrid, snapToGrid, setSnapToGrid } = useCanvas();
+  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
   
   // Zoom levels
   const ZOOM_LEVELS = [50, 75, 100, 125, 150, 200];
@@ -74,7 +76,8 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
   };
 
   return (
-    <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+    <>
+      <div className="h-10 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       {/* Left: Logo + Mode */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
@@ -255,6 +258,17 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
           </button>
         )}
 
+        {/* Global Settings */}
+        {!isPreviewMode && (
+          <button
+            onClick={() => setIsGlobalSettingsOpen(true)}
+            className="p-1.5 text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            title="Global Settings"
+          >
+            <Settings size={16} />
+          </button>
+        )}
+
         {/* Export */}
         {onExport && (
           <button
@@ -293,7 +307,11 @@ export const CombinedToolbar: React.FC<CombinedToolbarProps> = ({
           )}
         </button>
       </div>
-    </div>
+      </div>
+
+      {/* Global Settings Panel */}
+      <GlobalSettingsPanel isOpen={isGlobalSettingsOpen} onClose={() => setIsGlobalSettingsOpen(false)} />
+    </>
   );
 };
 

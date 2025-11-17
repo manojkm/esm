@@ -95,8 +95,9 @@ export const exportToHTML = async (query: ReturnType<Editor["query"]>): Promise<
 /**
  * Generates HTML from the rendered DOM (client-side)
  * This extracts the actual HTML and CSS from the browser
+ * @param customCSS - Optional custom CSS to include in the export
  */
-export const exportRenderedHTML = (): string => {
+export const exportRenderedHTML = (customCSS: string = ""): string => {
   // Find the Frame element (the actual content)
   // Craft.js uses a Frame component that renders with data-craftjs="frame"
   let frame = document.querySelector('[data-craftjs="frame"]') as HTMLElement;
@@ -168,6 +169,9 @@ export const exportRenderedHTML = (): string => {
   // Consolidate all styles
   const consolidatedStyles = Array.from(allStyles).join("\n\n");
 
+  // Combine component styles with custom CSS
+  const allCSS = [consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
+
   // Generate the complete HTML document
   const fullHTML = `<!DOCTYPE html>
 <html lang="en">
@@ -177,7 +181,7 @@ export const exportRenderedHTML = (): string => {
     <title>eBay Template</title>
     <style>
 /* eBay Template Styles - No JavaScript Required */
-${consolidatedStyles}
+${allCSS}
     </style>
 </head>
 <body>

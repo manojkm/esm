@@ -5,6 +5,7 @@ import { useEditor } from "@craftjs/core";
 import lz from "lz-string";
 import { CombinedToolbar } from "./CombinedToolbar";
 import { exportRenderedHTML, downloadHTML } from "@/app/builder/lib/export-html";
+import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 
 interface ToolbarActionsProps {
   isPreviewMode: boolean;
@@ -17,6 +18,7 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
     canRedo: query.history.canRedo(),
   }));
 
+  const { settings } = useGlobalSettings();
   const [saveStatus, setSaveStatus] = useState("");
 
   const handleSave = () => {
@@ -58,7 +60,7 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
         // Fallback: try to find by class or other identifier
         const frame = document.querySelector('[data-craftjs="frame"]');
         if (frame) {
-          const html = exportRenderedHTML();
+          const html = exportRenderedHTML(settings.customCSS);
           downloadHTML(html, "ebay-template.html");
           setSaveStatus("Exported!");
           setTimeout(() => setSaveStatus(""), 2000);
@@ -69,8 +71,8 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
         return;
       }
 
-      // Get the HTML
-      const html = exportRenderedHTML();
+      // Get the HTML with custom CSS
+      const html = exportRenderedHTML(settings.customCSS);
       downloadHTML(html, "ebay-template.html");
       setSaveStatus("Exported!");
       setTimeout(() => setSaveStatus(""), 2000);

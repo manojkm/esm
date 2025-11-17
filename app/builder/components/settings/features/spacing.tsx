@@ -5,6 +5,7 @@ import type { ResponsiveValue } from "@/app/builder/lib/style-system";
 import { ResponsiveNumberInput, ResponsiveSpacingControl } from "../shared/controls";
 import type { ComponentControlActions } from "../shared/types";
 import type { ResponsiveRecord } from "../shared/types/responsive";
+import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 
 /**
  * Feature bundle that exposes flex gaps, padding and margin controls.
@@ -65,7 +66,9 @@ const GapControls = <TProps extends SpacingFeatureProps>({ props, actions, contr
 };
 
 const PaddingControl = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing-padding" }: SpacingControlsProps<TProps>) => {
+  const { settings } = useGlobalSettings();
   const baseId = `padding-control-${controlId}`;
+  const globalPaddingDefault = settings.containerDefaults.padding?.default ?? 10;
 
   return (
     <section id={baseId} data-component-id={baseId}>
@@ -78,14 +81,16 @@ const PaddingControl = <TProps extends SpacingFeatureProps>({ props, actions, co
             draft.paddingResponsive = value as ResponsiveValue;
           })
         }
-        defaultValue={10}
+        defaultValue={globalPaddingDefault}
       />
     </section>
   );
 };
 
 const MarginControl = <TProps extends SpacingFeatureProps>({ props, actions, controlId = "spacing-margin" }: SpacingControlsProps<TProps>) => {
+  const { settings } = useGlobalSettings();
   const baseId = `margin-control-${controlId}`;
+  const globalMarginDefault = settings.containerDefaults.margin?.default ?? 0;
 
   return (
     <section id={baseId} data-component-id={baseId}>
@@ -99,6 +104,7 @@ const MarginControl = <TProps extends SpacingFeatureProps>({ props, actions, con
           })
         }
         unitOptions={["px", "%", "auto"]}
+        defaultValue={globalMarginDefault}
       />
     </section>
   );

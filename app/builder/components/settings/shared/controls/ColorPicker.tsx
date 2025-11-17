@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { SketchPicker, ColorResult } from "react-color";
+import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 
 /**
  * Converts CSS color value to react-color format
@@ -114,10 +115,20 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   onChange,
   allowTransparent = true,
 }) => {
+  const { settings } = useGlobalSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [pickerColor, setPickerColor] = useState<string | { r: number; g: number; b: number; a: number }>(parseColorForPicker(color));
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Get theme colors from global settings
+  const themeColors = [
+    { key: "primary", label: "Primary", color: settings.colorPalette.primary },
+    { key: "secondary", label: "Secondary", color: settings.colorPalette.secondary },
+    { key: "accent", label: "Accent", color: settings.colorPalette.accent },
+    { key: "text", label: "Text", color: settings.colorPalette.text },
+    { key: "background", label: "Background", color: settings.colorPalette.background },
+  ].filter((item) => item.color); // Only show colors that are defined
 
   // Update picker color when prop changes
   useEffect(() => {
@@ -200,27 +211,63 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 : "0",
             }}
           >
-            <SketchPicker
-              color={pickerColor}
-              onChange={handleColorChange}
-              disableAlpha={false}
-              width={220}
-            />
-            {allowTransparent && (
-              <div className="mt-2 p-2 bg-white border border-gray-200 rounded shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(null);
-                    setIsOpen(false);
-                  }}
-                  className="w-full px-3 py-1.5 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-300"
-                  title="Clear color (transparent)"
-                >
-                  Clear (Transparent)
-                </button>
+            <div className="bg-white border border-gray-200 rounded shadow-sm">
+              {/* Theme Colors */}
+              {themeColors.length > 0 && (
+                <div className="p-2 border-b border-gray-200">
+                  <div className="text-xs font-medium text-gray-700 mb-2">Theme Colors</div>
+                  <div className="flex flex-wrap gap-2">
+                    {themeColors.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => {
+                          onChange(item.color || null);
+                          setIsOpen(false);
+                        }}
+                        className="group relative"
+                        title={item.label}
+                      >
+                        <div
+                          className="w-8 h-8 rounded border-2 border-gray-300 hover:border-blue-500 transition-colors shadow-sm"
+                          style={{ backgroundColor: item.color || "#ffffff" }}
+                        />
+                        <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-[10px] text-gray-600 opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Color Picker */}
+              <div className="p-2">
+                <SketchPicker
+                  color={pickerColor}
+                  onChange={handleColorChange}
+                  disableAlpha={false}
+                  width={220}
+                />
               </div>
-            )}
+
+              {/* Clear Button */}
+              {allowTransparent && (
+                <div className="p-2 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(null);
+                      setIsOpen(false);
+                    }}
+                    className="w-full px-3 py-1.5 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-300"
+                    title="Clear color (transparent)"
+                  >
+                    Clear (Transparent)
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
