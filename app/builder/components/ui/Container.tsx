@@ -6,7 +6,7 @@ import { ContainerLayoutPicker } from "./ContainerLayoutPicker";
 import { useResponsive, type BreakpointKey } from "@/app/builder/contexts/ResponsiveContext";
 import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildOverlayStyles, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
-import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss } from "@/app/builder/lib/style-system/css-responsive";
+import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateResponsiveFlexCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss, generateHoverBackgroundColorCss, generateHoverBorderColorCss, generateTextColorCss, generateLinkColorCss, generatePositionCss, generateZIndexCss } from "@/app/builder/lib/style-system/css-responsive";
 import type { ContainerProps, SelectedLayout } from "./container/types";
 
 /**
@@ -106,8 +106,11 @@ export const Container: React.FC<ContainerProps> = ({
   boxShadowBlurHoverResponsive,
   boxShadowSpreadHoverResponsive,
   textColor = null,
+  textColorResponsive,
   linkColor = null,
+  linkColorResponsive,
   linkColorHover = null,
+  linkColorHoverResponsive,
   className = "",
   cssId = "",
   dataAttributes = "",
@@ -155,7 +158,12 @@ export const Container: React.FC<ContainerProps> = ({
   positionRightUnit = "px",
   positionBottomUnit = "px",
   positionLeftUnit = "px",
+  positionTopResponsive,
+  positionRightResponsive,
+  positionBottomResponsive,
+  positionLeftResponsive,
   zIndex = null,
+  zIndexResponsive,
 }) => {
   // The `useNode` hook is the core of craft.js. It connects this component instance
   // to the editor's state, providing its props, selection status, and actions to modify it.
@@ -425,6 +433,7 @@ export const Container: React.FC<ContainerProps> = ({
   // Generate a unique class name for the content wrapper if needed
   const contentWrapperClassName = needsContentWrapper ? `container-content-${id}` : "";
 
+  // Hover CSS for editor mode (uses resolver for current breakpoint)
   const hoverBackgroundCss = enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover
     ? buildBackgroundHoverCss({
         type: backgroundType,
@@ -461,11 +470,13 @@ export const Container: React.FC<ContainerProps> = ({
 
   const hoverRules = mergeCssSegments(hoverBackgroundCss, hoverBorderCss, hoverBoxShadowCss);
 
-  const linkCss = buildLinkColorCss({
+  // Link color CSS for editor mode (non-responsive, uses static values)
+  // In export mode, responsive link color CSS is generated in responsiveCss
+  const linkCss = isEditMode ? buildLinkColorCss({
     baseSelector: `.${hoverClassName}`,
     linkColor,
     linkColorHover,
-  });
+  }) : "";
 
   const responsiveVisibilityCss = buildVisibilityCss({
     hoverClassName,
@@ -485,6 +496,20 @@ export const Container: React.FC<ContainerProps> = ({
   
   // Skip CSS media queries in editor mode - use inline styles from responsiveResolver instead
   const shouldGenerateMediaQueries = !isEditMode;
+
+  // Generate responsive hover CSS for export mode (base value + media queries for overrides)
+  let responsiveHoverCss = "";
+  if (shouldGenerateMediaQueries) {
+    // Hover background color responsive CSS
+    if (enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover && backgroundColorHoverResponsive) {
+      responsiveHoverCss += generateHoverBackgroundColorCss(hoverClassName, backgroundColorHoverResponsive, backgroundColorHover);
+    }
+
+    // Hover border color responsive CSS
+    if (borderStyle && borderStyle !== "none" && borderColorHover && borderColorHoverResponsive) {
+      responsiveHoverCss += generateHoverBorderColorCss(hoverClassName, borderColorHoverResponsive, borderColorHover);
+    }
+  }
 
   // Only generate CSS media queries for exported HTML, not for editor preview
   if (shouldGenerateMediaQueries) {
@@ -511,51 +536,101 @@ export const Container: React.FC<ContainerProps> = ({
     }
 
     // Gap responsive CSS (only applies to main container when no content wrapper)
-    if (!needsContentWrapper) {
+    if (!needsContentWrapper && effectiveLayout === "flex") {
+      // Generate CSS for row-gap (with or without responsive)
       if (rowGapResponsive) {
         responsiveCss += generateResponsiveCss(hoverClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
+      } else if (rowGap !== null && rowGap !== undefined) {
+        responsiveCss += `.${hoverClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
       }
+      
+      // Generate CSS for column-gap (with or without responsive)
       if (columnGapResponsive) {
         responsiveCss += generateResponsiveCss(hoverClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
+      } else if (columnGap !== null && columnGap !== undefined) {
+        responsiveCss += `.${hoverClassName} { column-gap: ${columnGap}${columnGapUnit}; }\n`;
       }
     }
 
     // Flex properties responsive CSS (applies to main container when no content wrapper)
-    if (!needsContentWrapper) {
+    if (!needsContentWrapper && effectiveLayout === "flex") {
+      // Generate CSS for flex-direction (with or without responsive)
+      const flexDirFallback = flexDirection ?? (isChildContainer ? "column" : "row");
       if (flexDirectionResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-direction", flexDirectionResponsive, flexDirection ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-direction", flexDirectionResponsive, flexDirFallback);
+      } else if (flexDirFallback) {
+        responsiveCss += `.${hoverClassName} { flex-direction: ${flexDirFallback}; }\n`;
       }
+      
+      // Generate CSS for justify-content (with or without responsive)
+      const justifyContentFallback = justifyContent ?? (isChildContainer ? "center" : "flex-start");
       if (justifyContentResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "justify-content", justifyContentResponsive, justifyContent ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "justify-content", justifyContentResponsive, justifyContentFallback);
+      } else if (justifyContentFallback) {
+        responsiveCss += `.${hoverClassName} { justify-content: ${justifyContentFallback}; }\n`;
       }
+      
+      // Generate CSS for align-items (with or without responsive)
+      const alignItemsFallback = alignItems ?? (isChildContainer ? "center" : "stretch");
       if (alignItemsResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "align-items", alignItemsResponsive, alignItems ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "align-items", alignItemsResponsive, alignItemsFallback);
+      } else if (alignItemsFallback) {
+        responsiveCss += `.${hoverClassName} { align-items: ${alignItemsFallback}; }\n`;
       }
+      
+      // Generate CSS for flex-wrap (with or without responsive)
+      const flexWrapFallback = flexWrap ?? "nowrap";
       if (flexWrapResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-wrap", flexWrapResponsive, flexWrap ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-wrap", flexWrapResponsive, flexWrapFallback);
+      } else if (flexWrapFallback) {
+        responsiveCss += `.${hoverClassName} { flex-wrap: ${flexWrapFallback}; }\n`;
       }
     }
 
     // Flex properties responsive CSS (applies to content wrapper when it exists)
     if (needsContentWrapper && effectiveLayout === "flex") {
+      // Generate CSS for flex-direction (with or without responsive)
+      const flexDirFallback = flexDirection ?? (isChildContainer ? "column" : "row");
       if (flexDirectionResponsive) {
-        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-direction", flexDirectionResponsive, flexDirection ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-direction", flexDirectionResponsive, flexDirFallback);
+      } else if (flexDirFallback) {
+        responsiveCss += `.${contentWrapperClassName} { flex-direction: ${flexDirFallback}; }\n`;
       }
+      
+      // Generate CSS for justify-content (with or without responsive)
+      const justifyContentFallback = justifyContent ?? (isChildContainer ? "center" : "flex-start");
       if (justifyContentResponsive) {
-        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "justify-content", justifyContentResponsive, justifyContent ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "justify-content", justifyContentResponsive, justifyContentFallback);
+      } else if (justifyContentFallback) {
+        responsiveCss += `.${contentWrapperClassName} { justify-content: ${justifyContentFallback}; }\n`;
       }
+      
+      // Generate CSS for align-items (with or without responsive)
+      const alignItemsFallback = alignItems ?? (isChildContainer ? "center" : "stretch");
       if (alignItemsResponsive) {
-        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "align-items", alignItemsResponsive, alignItems ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "align-items", alignItemsResponsive, alignItemsFallback);
+      } else if (alignItemsFallback) {
+        responsiveCss += `.${contentWrapperClassName} { align-items: ${alignItemsFallback}; }\n`;
       }
+      
+      // Generate CSS for flex-wrap (with or without responsive)
+      const flexWrapFallback = flexWrap ?? "nowrap";
       if (flexWrapResponsive) {
-        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-wrap", flexWrapResponsive, flexWrap ?? undefined);
+        responsiveCss += generateResponsiveFlexCss(contentWrapperClassName, "flex-wrap", flexWrapResponsive, flexWrapFallback);
+      } else if (flexWrapFallback) {
+        responsiveCss += `.${contentWrapperClassName} { flex-wrap: ${flexWrapFallback}; }\n`;
       }
       // Gap responsive CSS for content wrapper
       if (rowGapResponsive) {
         responsiveCss += generateResponsiveCss(contentWrapperClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
+      } else if (rowGap !== null && rowGap !== undefined) {
+        responsiveCss += `.${contentWrapperClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
       }
+      
       if (columnGapResponsive) {
         responsiveCss += generateResponsiveCss(contentWrapperClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
+      } else if (columnGap !== null && columnGap !== undefined) {
+        responsiveCss += `.${contentWrapperClassName} { column-gap: ${columnGap}${columnGapUnit}; }\n`;
       }
     }
 
@@ -591,9 +666,18 @@ export const Container: React.FC<ContainerProps> = ({
       }, "px");
     }
 
-    // Flex basis responsive CSS
-    if (flexBasisResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "flex-basis", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+    // Flex basis responsive CSS (for child containers)
+    // Generate CSS for width/flex-basis even if no responsive prop exists
+    if (isChildContainer) {
+      if (flexBasisResponsive) {
+        responsiveCss += generateResponsiveCss(hoverClassName, "flex-basis", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+        // Also set width to ensure it works in preview mode
+        responsiveCss += generateResponsiveCss(hoverClassName, "width", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+      } else if (flexBasis !== null && flexBasis !== undefined) {
+        // Generate base CSS even without responsive prop
+        const baseValue = `${flexBasis}${flexBasisUnit ?? "%"}`;
+        responsiveCss += `.${hoverClassName} { flex-basis: ${baseValue}; width: ${baseValue}; }\n`;
+      }
     }
 
     // Min height responsive CSS
@@ -632,10 +716,54 @@ export const Container: React.FC<ContainerProps> = ({
     if (overlayStylesResult.css) {
       responsiveCss += overlayStylesResult.css;
     }
+
+    // Text color responsive CSS
+    if (textColor && textColorResponsive) {
+      responsiveCss += generateTextColorCss(hoverClassName, textColorResponsive, textColor);
+    }
+
+    // Link color responsive CSS
+    if ((linkColor || linkColorHover) && (linkColorResponsive || linkColorHoverResponsive)) {
+      responsiveCss += generateLinkColorCss(
+        hoverClassName,
+        linkColorResponsive,
+        linkColor ?? undefined,
+        linkColorHoverResponsive,
+        linkColorHover ?? undefined
+      );
+    }
+
+    // Position responsive CSS (only when position is set and not default/static)
+    if (position && position !== "default" && position !== "static") {
+      if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
+        responsiveCss += generatePositionCss(
+          hoverClassName,
+          positionTopResponsive,
+          positionRightResponsive,
+          positionBottomResponsive,
+          positionLeftResponsive,
+          positionTop,
+          positionRight,
+          positionBottom,
+          positionLeft,
+          positionTopUnit,
+          positionRightUnit,
+          positionBottomUnit,
+          positionLeftUnit
+        );
+      }
+
+      // Z-index responsive CSS
+      if (zIndex !== null && zIndex !== undefined && zIndexResponsive) {
+        responsiveCss += generateZIndexCss(hoverClassName, zIndexResponsive, zIndex);
+      }
+    }
   }
 
   const styleTagContent = mergeCssSegments(
-    buildHoverRule(hoverClassName, hoverRules),
+    // In editor mode, use buildHoverRule with resolved values
+    // In export mode, use responsiveHoverCss which has base + media queries
+    isEditMode ? buildHoverRule(hoverClassName, hoverRules) : responsiveHoverCss,
     linkCss,
     responsiveVisibilityCss,
     responsiveCss
@@ -667,17 +795,23 @@ export const Container: React.FC<ContainerProps> = ({
       : {}),
     minHeight: computedMinHeight,
     // Flexbox properties are applied directly if no content wrapper is needed.
+    // In edit mode, use inline styles (responsive via responsiveResolver).
+    // In preview/export mode, use CSS classes (responsive via media queries).
     display: effectiveLayout === "flex" && !needsContentWrapper ? "flex" : "block",
-    flexDirection: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
-    justifyContent: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
-    alignItems: effectiveLayout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
-    flexWrap: effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
-    alignContent: effectiveLayout === "flex" && !needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: effectiveLayout === "flex" && !needsContentWrapper ? rowGapValue : undefined,
-    columnGap: effectiveLayout === "flex" && !needsContentWrapper ? columnGapValue : undefined,
+    flexDirection: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: isEditMode && effectiveLayout === "flex" && !needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
+    rowGap: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? rowGapValue : undefined,
+    columnGap: isEditMode && effectiveLayout === "flex" && !needsContentWrapper ? columnGapValue : undefined,
     // Sizing properties
-    flexBasis: flexBasisValue,
-    width: isChildContainer && flexBasisValue ? flexBasisValue : "100%",
+    // In edit mode, use inline styles for child container width (responsive via responsiveResolver)
+    // In preview/export mode, use CSS classes (responsive via media queries)
+    flexBasis: isEditMode ? flexBasisValue : (isChildContainer ? undefined : undefined),
+    width: isEditMode 
+      ? (isChildContainer && flexBasisValue ? flexBasisValue : "100%")
+      : (isChildContainer ? undefined : "100%"),
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? customWidthValue : containerWidth === "boxed" ? "1200px" : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
@@ -700,14 +834,16 @@ export const Container: React.FC<ContainerProps> = ({
     minHeight: "inherit",
     height: isChildContainer ? undefined : equalHeight && effectiveLayout === "flex" ? "100%" : undefined,
     // Flexbox properties are applied here if a content wrapper is used.
+    // In edit mode, use inline styles (responsive via responsiveResolver).
+    // In preview/export mode, use CSS classes (responsive via media queries).
     display: effectiveLayout === "flex" && needsContentWrapper ? "flex" : undefined,
-    flexDirection: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
-    justifyContent: effectiveLayout === "flex" && needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
-    alignItems: effectiveLayout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
-    flexWrap: effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
-    alignContent: effectiveLayout === "flex" && needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
-    rowGap: effectiveLayout === "flex" && needsContentWrapper ? rowGapValue : undefined,
-    columnGap: effectiveLayout === "flex" && needsContentWrapper ? columnGapValue : undefined,
+    flexDirection: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexDirection as React.CSSProperties["flexDirection"]) : undefined,
+    justifyContent: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? (effectiveJustifyContent as React.CSSProperties["justifyContent"]) : undefined,
+    alignItems: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? (equalHeight ? "stretch" : (effectiveAlignItems as React.CSSProperties["alignItems"])) : undefined,
+    flexWrap: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? (effectiveFlexWrap as React.CSSProperties["flexWrap"]) : undefined,
+    alignContent: isEditMode && effectiveLayout === "flex" && needsContentWrapper && effectiveFlexWrap === "wrap" ? (effectiveAlignContent as React.CSSProperties["alignContent"]) : undefined,
+    rowGap: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? rowGapValue : undefined,
+    columnGap: isEditMode && effectiveLayout === "flex" && needsContentWrapper ? columnGapValue : undefined,
   };
 
   // Dynamically set the HTML tag for the container (e.g., 'div', 'section', 'header').

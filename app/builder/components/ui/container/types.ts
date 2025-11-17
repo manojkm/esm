@@ -160,5 +160,10 @@ export interface ContainerProps {
   positionRightUnit?: string;
   positionBottomUnit?: string;
   positionLeftUnit?: string;
+  positionTopResponsive?: ResponsiveValue;
+  positionRightResponsive?: ResponsiveValue;
+  positionBottomResponsive?: ResponsiveValue;
+  positionLeftResponsive?: ResponsiveValue;
   zIndex?: number | null;
+  zIndexResponsive?: ResponsiveValue;
 }
