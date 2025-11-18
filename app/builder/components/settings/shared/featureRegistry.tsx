@@ -1,9 +1,10 @@
 import React from "react";
-import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls, LayoutControls, ContainerChildSizingControls, ContainerParentSizingControls, MinHeightControls, EqualHeightToggle, HtmlTagSelect, OverflowSelect, CssControls, AttributesControls, PositionControls, ResponsiveControls } from "../features";
+import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls, LayoutControls, ContainerChildSizingControls, ContainerParentSizingControls, MinHeightControls, EqualHeightToggle, HtmlTagSelect, OverflowSelect, CssControls, AttributesControls, PositionControls, ResponsiveControls, TextGeneralControls, TextTypographyControls } from "../features";
 import type { ContainerProps } from "../../ui/container/types";
+import type { TextProps } from "../../ui/text/types";
 import type { ComponentControlActions } from "./types";
 
-export type FeatureKey = "spacing" | "background" | "border" | "boxShadow" | "color" | "layout" | "childSizing" | "parentSizing" | "minHeight" | "equalHeight" | "htmlTag" | "overflow" | "css" | "attributes" | "responsive" | "position";
+export type FeatureKey = "spacing" | "background" | "border" | "boxShadow" | "color" | "layout" | "childSizing" | "parentSizing" | "minHeight" | "equalHeight" | "htmlTag" | "overflow" | "css" | "attributes" | "responsive" | "position" | "textGeneral" | "textTypography";
 
 export interface FeatureRenderContext<TProps> {
   props: TProps;
@@ -45,6 +46,28 @@ export const containerFeatureRegistry: Partial<FeatureRegistry<ContainerProps>> 
   equalHeight: ({ props, actions, controlId }) => <EqualHeightToggle props={props} actions={actions} controlId={`${controlId}-equal-height`} />,
   htmlTag: ({ props, actions, controlId }) => <HtmlTagSelect props={props} actions={actions} controlId={`${controlId}-html-tag`} />,
   overflow: ({ props, actions, controlId }) => <OverflowSelect props={props} actions={actions} controlId={`${controlId}-overflow`} />,
+  css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
+  attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
+  responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,
+  position: ({ props, actions, controlId }) => <PositionControls props={props} actions={actions} controlId={`${controlId}-position`} />,
+});
+
+// Text component feature registry
+export const textFeatureRegistry: Partial<FeatureRegistry<TextProps>> = createFeatureRegistry({
+  textGeneral: ({ props, actions, controlId }) => <TextGeneralControls props={props} actions={actions} controlId={`${controlId}-general`} />,
+  textTypography: ({ props, actions, controlId }) => <TextTypographyControls props={props} actions={actions} controlId={`${controlId}-typography`} />,
+  spacing: ({ props, actions, controlId, meta }) => (
+    <SpacingControls
+      props={props}
+      actions={actions}
+      controlId={`${controlId}-spacing`}
+      showGaps={meta?.showGaps !== false}
+    />
+  ),
+  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
+  border: ({ props, actions, controlId }) => <BorderControls props={props} actions={actions} controlId={`${controlId}-border`} />,
+  boxShadow: ({ props, actions, controlId }) => <BoxShadowControls props={props} actions={actions} controlId={`${controlId}-box-shadow`} />,
+  color: ({ props, actions, controlId }) => <ColorControls props={props} actions={actions} controlId={`${controlId}-color`} />,
   css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
   attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
   responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,

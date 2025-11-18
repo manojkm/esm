@@ -1,0 +1,19 @@
+{
+  "general": [
+    { "id": "general", "title": "General", "features": ["textGeneral"] }
+  ],
+  "style": [
+    { "id": "typography", "title": "Typography", "features": ["textTypography"] },
+    { "id": "spacing", "title": "Spacing", "features": [{ "feature": "spacing", "meta": { "showGaps": false } }] },
+    { "id": "background", "title": "Background", "features": ["background"] },
+    { "id": "border", "title": "Border", "features": ["border"] },
+    { "id": "boxShadow", "title": "Box Shadow", "features": ["boxShadow"] }
+  ],
+  "advanced": [
+    { "id": "css", "title": "CSS", "features": ["css"] },
+    { "id": "attributes", "title": "Attributes", "features": ["attributes"] },
+    { "id": "responsive", "title": "Responsive", "features": ["responsive"] },
+    { "id": "position", "title": "Position", "features": ["position"] }
+  ]
+}
+

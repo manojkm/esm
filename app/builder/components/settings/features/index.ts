@@ -16,4 +16,6 @@ export * from "./overflow";
 export * from "./containerChildSizing";
 export * from "./containerParentSizing";
 export * from "./layout";
+export * from "./textGeneral";
+export * from "./textTypography";
 
