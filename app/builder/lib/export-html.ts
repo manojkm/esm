@@ -1,4 +1,5 @@
 import type { Editor } from "@craftjs/core";
+import { generateGoogleFontsLinkTag } from "./google-fonts";
 
 /**
  * Extracts all CSS styles from style tags in the rendered HTML
@@ -179,6 +180,89 @@ export const exportRenderedHTML = (customCSS: string = ""): string => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eBay Template</title>
+    <style>
+/* eBay Template Styles - No JavaScript Required */
+${allCSS}
+    </style>
+</head>
+<body>
+    ${processedHTML}
+</body>
+</html>`;
+
+  return fullHTML;
+};
+
+/**
+ * Generates HTML with Google Fonts included
+ * @param customCSS - Optional custom CSS to include in the export
+ * @param googleFonts - Optional Google Fonts configuration
+ */
+export const exportRenderedHTMLWithFonts = (customCSS: string = "", googleFonts?: { headings?: { family: string; weights?: string[]; styles?: string[] }; body?: { family: string; weights?: string[]; styles?: string[] } }): string => {
+  // Find the Frame element (the actual content)
+  let frame = document.querySelector('[data-craftjs="frame"]') as HTMLElement;
+  
+  if (!frame) {
+    const canvasArea = document.querySelector('.flex-1.overflow-auto, [class*="canvas"]');
+    if (canvasArea) {
+      frame = canvasArea.querySelector('[data-craftjs="frame"]') as HTMLElement;
+    }
+  }
+  
+  if (!frame) {
+    throw new Error("Craft.js Frame not found. Make sure you're exporting from the builder page.");
+  }
+
+  const clonedFrame = frame.cloneNode(true) as HTMLElement;
+  const allStyles = new Set<string>();
+  
+  const styleTags = clonedFrame.querySelectorAll("style");
+  styleTags.forEach((styleTag) => {
+    const css = styleTag.textContent || styleTag.innerHTML;
+    if (css && css.trim()) {
+      allStyles.add(css.trim());
+    }
+    styleTag.remove();
+  });
+
+  const documentStyleTags = document.querySelectorAll("style");
+  documentStyleTags.forEach((styleTag) => {
+    const css = styleTag.textContent || styleTag.innerHTML;
+    if (css && css.trim()) {
+      if (css.includes("container-hover") || css.includes("container-content")) {
+        allStyles.add(css.trim());
+      }
+    }
+  });
+
+  let htmlContent = clonedFrame.innerHTML;
+  htmlContent = htmlContent.replace(/\s*data-craftjs[^=]*="[^"]*"/gi, "");
+  htmlContent = htmlContent.replace(/\s*data-cy="[^"]*"/gi, "");
+  htmlContent = htmlContent.replace(/\s*ring-[^"]*/gi, "");
+  htmlContent = htmlContent.replace(/\s*ring-offset-[^"]*/gi, "");
+  htmlContent = htmlContent.replace(/\s*hover:ring-[^"]*/gi, "");
+  htmlContent = htmlContent.replace(/\s*border.*dashed.*gray-300/gi, "");
+  
+  const helperTextRegex = /<div[^>]*>Drop components here<\/div>/gi;
+  htmlContent = htmlContent.replace(helperTextRegex, "");
+
+  const { html: processedHTML } = processImages(htmlContent);
+  const consolidatedStyles = Array.from(allStyles).join("\n\n");
+  const allCSS = [consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
+
+  // Generate Google Fonts links if provided
+  let fontLinks = "";
+  if (googleFonts) {
+    fontLinks = generateGoogleFontsLinkTag(googleFonts);
+  }
+
+  const fullHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eBay Template</title>
+    ${fontLinks}
     <style>
 /* eBay Template Styles - No JavaScript Required */
 ${allCSS}

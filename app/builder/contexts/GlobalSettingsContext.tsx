@@ -11,11 +11,24 @@ export interface ColorPalette {
   [key: string]: string | undefined; // Allow custom color keys
 }
 
+export interface GoogleFont {
+  family: string; // Font family name (e.g., "Roboto", "Open Sans")
+  weights?: string[]; // Available weights (e.g., ["300", "400", "500", "700"])
+  styles?: string[]; // Available styles (e.g., ["normal", "italic"])
+}
+
 export interface TypographySettings {
+  // Google Fonts
+  googleFonts?: {
+    headings?: GoogleFont;
+    body?: GoogleFont;
+  };
+  // Fallback font families (used if Google Font not set)
   fontFamily?: {
     headings?: string;
     body?: string;
   };
+  // Responsive font sizes
   fontSize?: {
     desktop?: {
       h1?: number;
@@ -45,13 +58,36 @@ export interface TypographySettings {
       body?: number;
     };
   };
+  // Font weights
+  fontWeight?: {
+    headings?: number | string; // e.g., 400, 500, 700 or "normal", "bold"
+    body?: number | string;
+  };
+  // Font styles
+  fontStyle?: {
+    headings?: "normal" | "italic" | "oblique";
+    body?: "normal" | "italic" | "oblique";
+  };
+  // Text colors
+  textColor?: {
+    headings?: string;
+    body?: string;
+  };
+  // Line height
   lineHeight?: {
     headings?: number;
     body?: number;
   };
+  // Letter spacing
   letterSpacing?: {
     headings?: number;
     body?: number;
+  };
+  // Paragraph spacing (margin-bottom)
+  paragraphSpacing?: {
+    desktop?: number;
+    tablet?: number;
+    mobile?: number;
   };
 }
 
@@ -90,6 +126,10 @@ const defaultGlobalSettings: GlobalSettings = {
     background: "#ffffff",
   },
   typography: {
+    googleFonts: {
+      headings: undefined,
+      body: undefined,
+    },
     fontFamily: {
       headings: "Arial, sans-serif",
       body: "Arial, sans-serif",
@@ -123,6 +163,18 @@ const defaultGlobalSettings: GlobalSettings = {
         body: 16,
       },
     },
+    fontWeight: {
+      headings: 700,
+      body: 400,
+    },
+    fontStyle: {
+      headings: "normal",
+      body: "normal",
+    },
+    textColor: {
+      headings: "#1f2937",
+      body: "#1f2937",
+    },
     lineHeight: {
       headings: 1.2,
       body: 1.6,
@@ -130,6 +182,11 @@ const defaultGlobalSettings: GlobalSettings = {
     letterSpacing: {
       headings: 0,
       body: 0,
+    },
+    paragraphSpacing: {
+      desktop: 16,
+      tablet: 14,
+      mobile: 12,
     },
   },
   spacingScale: {
@@ -202,6 +259,10 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
     setSettings((prev) => {
       const updated = { ...prev.typography };
       
+      if (typography.googleFonts !== undefined) {
+        updated.googleFonts = { ...prev.typography.googleFonts, ...typography.googleFonts };
+      }
+      
       if (typography.fontFamily) {
         updated.fontFamily = { ...prev.typography.fontFamily, ...typography.fontFamily };
       }
@@ -214,12 +275,28 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
         };
       }
       
+      if (typography.fontWeight) {
+        updated.fontWeight = { ...prev.typography.fontWeight, ...typography.fontWeight };
+      }
+      
+      if (typography.fontStyle) {
+        updated.fontStyle = { ...prev.typography.fontStyle, ...typography.fontStyle };
+      }
+      
+      if (typography.textColor) {
+        updated.textColor = { ...prev.typography.textColor, ...typography.textColor };
+      }
+      
       if (typography.lineHeight) {
         updated.lineHeight = { ...prev.typography.lineHeight, ...typography.lineHeight };
       }
       
       if (typography.letterSpacing) {
         updated.letterSpacing = { ...prev.typography.letterSpacing, ...typography.letterSpacing };
+      }
+      
+      if (typography.paragraphSpacing) {
+        updated.paragraphSpacing = { ...prev.typography.paragraphSpacing, ...typography.paragraphSpacing };
       }
       
       return {

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useEditor } from "@craftjs/core";
 import lz from "lz-string";
 import { CombinedToolbar } from "./CombinedToolbar";
-import { exportRenderedHTML, downloadHTML } from "@/app/builder/lib/export-html";
+import { exportRenderedHTMLWithFonts, downloadHTML } from "@/app/builder/lib/export-html";
 import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 
 interface ToolbarActionsProps {
@@ -60,7 +60,7 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
         // Fallback: try to find by class or other identifier
         const frame = document.querySelector('[data-craftjs="frame"]');
         if (frame) {
-          const html = exportRenderedHTML(settings.customCSS);
+          const html = exportRenderedHTMLWithFonts(settings.customCSS, settings.typography.googleFonts);
           downloadHTML(html, "ebay-template.html");
           setSaveStatus("Exported!");
           setTimeout(() => setSaveStatus(""), 2000);
@@ -71,8 +71,8 @@ export const ToolbarActions: React.FC<ToolbarActionsProps> = ({ isPreviewMode, o
         return;
       }
 
-      // Get the HTML with custom CSS
-      const html = exportRenderedHTML(settings.customCSS);
+      // Get the HTML with custom CSS and Google Fonts
+      const html = exportRenderedHTMLWithFonts(settings.customCSS, settings.typography.googleFonts);
       downloadHTML(html, "ebay-template.html");
       setSaveStatus("Exported!");
       setTimeout(() => setSaveStatus(""), 2000);

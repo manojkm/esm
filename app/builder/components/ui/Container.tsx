@@ -175,7 +175,8 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Apply global defaults if props are undefined
   const finalPadding = padding ?? containerDefaults.padding?.default ?? 10;
   const finalMargin = margin ?? containerDefaults.margin?.default ?? 0;
-  const finalContentBoxWidth = contentBoxWidth ?? containerDefaults.maxWidth?.boxed ?? 1200;
+  // Content box width is for content wrappers (Full Width + Content Width = Boxed), NOT for Container Width = Boxed
+  const finalContentBoxWidth = contentBoxWidth ?? 1200;
   const finalCustomWidth = customWidth ?? containerDefaults.maxWidth?.custom ?? 100;
 
   // The `useNode` hook is the core of craft.js. It connects this component instance
@@ -701,6 +702,12 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Content box width responsive CSS (applies to content wrapper, not main container)
     if (contentBoxWidthResponsive && needsContentWrapper) {
       responsiveCss += generateResponsiveCss(contentWrapperClassName, "max-width", contentBoxWidthResponsive, contentBoxWidth, contentBoxWidthUnit ?? "px");
+    }
+
+    // Boxed width CSS (applies to main container when containerWidth is "boxed")
+    if (containerWidth === "boxed" && !isChildContainer) {
+      const boxedMaxWidth = containerDefaults.maxWidth?.boxed ?? 1200;
+      responsiveCss += `.${hoverClassName} { max-width: ${boxedMaxWidth}px; margin-left: auto; margin-right: auto; }\n`;
     }
 
     // Custom width responsive CSS (applies to main container)

@@ -64,6 +64,8 @@ export const ContainerParentSizingControls = <TProps extends ContainerParentSizi
       return;
     }
 
+    // Content box width is for content wrappers (Full Width + Content Width = Boxed), NOT for Container Width = Boxed
+    // So it should NOT use global boxed max-width
     actions.setProp((draft) => {
       const nextResponsive: ResponsiveValue = { ...(draft.contentBoxWidthResponsive as ResponsiveValue | undefined) };
       nextResponsive.desktop ??= draft.contentBoxWidth ?? 1200;
