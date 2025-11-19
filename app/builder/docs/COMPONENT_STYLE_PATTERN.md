@@ -117,24 +117,140 @@ Apply to `.${componentClassName} .${componentName}-content` (e.g., `.text-conten
 
 ## Responsive Pattern
 
-Always follow: **Base value applies to all breakpoints, media queries only for overrides**
+**CRITICAL**: Always follow: **Desktop values are used as base, media queries only for mobile/tablet overrides**
 
+### Pattern Rules
+
+1. **Base CSS uses desktop values** (if set in responsive object), otherwise uses fallback
+2. **Media queries only generated** for mobile/tablet when they differ from desktop/base
+3. **All responsive CSS generation functions** automatically handle this pattern
+
+### Available Responsive Functions
+
+All functions in `css-responsive.ts` follow the desktop-as-base pattern:
+
+#### Single Value Properties
 ```typescript
-// ✅ Correct: Base CSS + media queries for overrides
-const contentSelector = `${componentClassName} .button-content`;
+// Typography, colors, etc.
 if (fontSizeResponsive) {
   responsiveCss += generateResponsiveCss(
-    contentSelector,
+    `${componentClassName} .button-content`,
     "font-size",
     fontSizeResponsive,
-    fontSize ?? 16, // Base value
+    fontSize ?? 16, // Fallback if desktop not set
     "px"
   );
 } else {
-  // Always generate base CSS even without responsive
-  responsiveCss += `${contentSelector} { font-size: ${fontSize ?? 16}px; }\n`;
+  // Non-responsive: Generate static CSS
+  responsiveCss += `${componentClassName} .button-content { font-size: ${fontSize ?? 16}px; }\n`;
 }
 ```
+
+#### Four-Side Properties (Padding, Margin, Border)
+```typescript
+// Padding, margin, border-width, border-radius
+if (paddingResponsive) {
+  responsiveCss += generatePaddingCss(
+    componentClassName,
+    paddingResponsive,
+    {
+      top: paddingTop,
+      right: paddingRight,
+      bottom: paddingBottom,
+      left: paddingLeft,
+      defaultValue: padding ?? 0, // Fallback if desktop not set
+    },
+    paddingUnit
+  );
+} else if (padding !== null && padding !== undefined) {
+  // Non-responsive: Build static CSS directly
+  const top = paddingTop ?? padding;
+  const right = paddingRight ?? padding;
+  const bottom = paddingBottom ?? padding;
+  const left = paddingLeft ?? padding;
+  responsiveCss += `.${componentClassName} { padding: ${top}${paddingUnit} ${right}${paddingUnit} ${bottom}${paddingUnit} ${left}${paddingUnit}; }\n`;
+}
+```
+
+#### Color Properties
+```typescript
+// Text color, background color, border color
+if (textColorResponsive) {
+  responsiveCss += generateTextColorCss(
+    `${componentClassName} .button-content`,
+    textColorResponsive,
+    textColor ?? "#000" // Fallback if desktop not set
+  );
+} else if (textColor) {
+  // Non-responsive: Generate static CSS
+  responsiveCss += `.${componentClassName} .button-content { color: ${textColor}; }\n`;
+}
+```
+
+#### Link Colors
+```typescript
+// Link color and hover
+if (linkColorResponsive || linkColorHoverResponsive) {
+  responsiveCss += generateLinkColorCss(
+    `${componentClassName} .button-content`,
+    linkColorResponsive,
+    linkColor ?? undefined,
+    linkColorHoverResponsive,
+    linkColorHover ?? undefined
+  );
+} else if (linkColor || linkColorHover) {
+  // Non-responsive: Generate static CSS
+  if (linkColor) {
+    responsiveCss += `.${componentClassName} .button-content a { color: ${linkColor}; }\n`;
+  }
+  if (linkColorHover) {
+    responsiveCss += `.${componentClassName} .button-content a:hover { color: ${linkColorHover}; }\n`;
+  }
+}
+```
+
+#### Box Shadow
+```typescript
+// Box shadow (multiple values)
+if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
+  responsiveCss += generateBoxShadowCss(
+    componentClassName,
+    boxShadowHorizontalResponsive,
+    boxShadowVerticalResponsive,
+    boxShadowBlurResponsive,
+    boxShadowSpreadResponsive,
+    boxShadowHorizontal ?? 0, // Fallback if desktop not set
+    boxShadowVertical ?? 0,
+    boxShadowBlur ?? 0,
+    boxShadowSpread ?? 0,
+    boxShadowColor
+  );
+}
+```
+
+### How It Works
+
+**Example: Font Size with responsive values**
+- Responsive object: `{ mobile: 14, tablet: 16, desktop: 18 }`
+- Generated CSS:
+  ```css
+  /* Base CSS uses desktop value (18px) */
+  .button-abc123 .button-content { font-size: 18px; }
+  
+  /* Media queries only for mobile/tablet (differ from desktop) */
+  @media (max-width: 767px) {
+    .button-abc123 .button-content { font-size: 14px !important; }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .button-abc123 .button-content { font-size: 16px !important; }
+  }
+  ```
+
+**Important**: All functions automatically:
+- ✅ Use `responsive.desktop` as base (if exists)
+- ✅ Fall back to provided fallback value if desktop not set
+- ✅ Generate media queries only for mobile/tablet when they differ
+- ✅ Skip desktop in media query loop (it's already the base)
 
 ## Helper Functions
 
@@ -210,19 +326,43 @@ export const Button: React.FC<ButtonProps> = (props) => {
 
 ## Checklist for New Components
 
-- [ ] Generate unique component class name using `generateComponentClassName()`
-- [ ] Generate CSS only when `!isEditMode`
-- [ ] Apply layout styles to wrapper div (`.${componentClassName}`)
-- [ ] Apply typography styles to content class (`.${componentClassName} .${componentName}-content`)
-- [ ] Wrap actual content in `<div className="${componentName}-content">` (e.g., `text-content`, `container-content`)
-- [ ] Apply inline styles only in edit mode (`isEditMode ? styles : undefined`)
+### Basic Structure
+- [ ] Generate unique component class name using `generateComponentClassName(nodeId, cssId, "componentName")`
+- [ ] Generate CSS only when `!isEditMode` (`const shouldGenerateMediaQueries = !isEditMode`)
+- [ ] Wrap actual content in `<div className="${componentName}-content">` (e.g., `text-content`, `button-content`)
 - [ ] Wrap content in `<div className={componentClassName}>` in preview mode
-- [ ] Follow responsive pattern: base value + media queries for overrides
+- [ ] Apply inline styles only in edit mode (`isEditMode ? styles : undefined`)
+
+### Style Application
+- [ ] Apply layout styles to wrapper div (`.${componentClassName}`): padding, margin, background, border, box-shadow, position, z-index
+- [ ] Apply typography styles to content class (`.${componentClassName} .${componentName}-content`): font, color, text-align, etc.
+- [ ] Exclude editor UI elements (toolbars, wrappers) from content styles using CSS reset if needed
+
+### Responsive CSS Generation
+- [ ] **ALWAYS use responsive generation functions** from `css-responsive.ts` (they handle desktop-as-base automatically)
+- [ ] For single values: Use `generateResponsiveCss()` for typography, `generateTextColorCss()`, `generateBackgroundColorCss()`, etc.
+- [ ] For four-side values: Use `generatePaddingCss()`, `generateMarginCss()`, `generateResponsiveFourSideCss()` for borders
+- [ ] For colors: Use `generateTextColorCss()`, `generateLinkColorCss()`, `generateBorderColorCss()`, etc.
+- [ ] For complex: Use `generateBoxShadowCss()`, `generatePositionCss()`, `generateZIndexCss()`
+- [ ] **NEVER manually build responsive CSS** - always use the provided functions
+- [ ] For non-responsive values: Build static CSS directly (don't use resolver in preview mode)
+
+### Testing
 - [ ] Test in both edit and preview modes
+- [ ] Test responsive settings: Set desktop, tablet, mobile values and verify media queries
 - [ ] Verify no style duplication (check browser inspector)
 - [ ] Ensure content classes are preserved in exported HTML
+- [ ] Verify editor UI elements don't inherit component styles
+- [ ] Test hover states work correctly
 
 ## Reference Implementation
 
 See `app/builder/components/ui/Text.tsx` for the complete reference implementation.
+
+## Additional Resources
+
+- **Responsive Pattern Guide**: See `RESPONSIVE_PATTERN_GUIDE.md` for detailed responsive CSS generation patterns
+- **Responsive Export Explanation**: See `RESPONSIVE_EXPORT_EXPLANATION.md` for how responsive works in editor vs export
+- **Component Styles Utilities**: See `app/builder/lib/component-styles.ts` for helper functions
+- **CSS Responsive Functions**: See `app/builder/lib/style-system/css-responsive.ts` for all available generation functions
 

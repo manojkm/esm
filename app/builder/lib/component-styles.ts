@@ -230,9 +230,11 @@ export const COMPONENT_STYLE_PATTERN = {
  *    - Pattern: Each component uses a content class (e.g., `.text-content`, `.container-content`) to scope styles
    * 
    * 4. **Responsive Pattern**: 
-   *    - Base value applies to all breakpoints
-   *    - Media queries only for explicit overrides
-   *    - Use functions from `css-responsive.ts` for generation
+   *    - Desktop values are used as base CSS (if set in responsive object)
+   *    - Media queries only generated for mobile/tablet when they differ from desktop
+   *    - ALWAYS use functions from `css-responsive.ts` for generation (they handle pattern automatically)
+   *    - NEVER manually build responsive CSS - use the provided functions
+   *    - See `RESPONSIVE_PATTERN_GUIDE.md` for detailed guide
    * 
    * 5. **Wrapper Structure**:
    *    - Edit mode: No wrapper needed (inline styles)
