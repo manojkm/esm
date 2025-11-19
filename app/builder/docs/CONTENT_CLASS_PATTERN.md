@@ -38,19 +38,20 @@ Each component uses a **content class** (e.g., `.text-content`, `.container-cont
 ### Style Categories
 
 #### Layout Styles → Wrapper Div (`.${componentClassName}`)
-Apply to the wrapper div that wraps the entire component:
+Apply to the wrapper div that wraps the entire component. In preview mode, these are applied via CSS classes. In edit mode, they are applied as inline styles:
 - ✅ Padding
 - ✅ Margin
 - ✅ Background (color/image/gradient)
 - ✅ Border (color/width/radius)
 - ✅ Box Shadow
-- ✅ Position
+- ✅ Position (top, right, bottom, left)
 - ✅ Z-index
-- ✅ Width/Height
-- ✅ Display/Flex properties
+- ✅ Min-height
+- ✅ Width/Height/Max-width
+- ✅ Display/Flex properties (flex-direction, justify-content, align-items, flex-wrap, gap)
 
 #### Typography Styles → Content Class (`.${componentClassName} .${componentName}-content`)
-Apply to the content class within the wrapper:
+Apply to the content class within the wrapper. In preview mode, these are applied via CSS classes. In edit mode, they are applied as inline styles:
 - ✅ Font Family
 - ✅ Font Size
 - ✅ Font Weight
@@ -99,7 +100,15 @@ if (shouldGenerateMediaQueries) {
 ```typescript
 {isEditMode ? (
   <div className="button-content">
-    <button style={{ /* inline styles */ }}>
+    <button style={{ 
+      /* inline styles for layout and typography */
+      padding: paddingValue,
+      margin: marginValue,
+      backgroundColor: backgroundColor,
+      color: textColor,
+      fontSize: fontSize,
+      // ... etc
+    }}>
       {props.text}
     </button>
   </div>
@@ -107,6 +116,8 @@ if (shouldGenerateMediaQueries) {
   // Preview mode structure below
 )}
 ```
+
+**Note**: In edit mode, all styles (layout and typography) are applied as inline styles for immediate visual feedback.
 
 #### Preview Mode
 ```typescript
@@ -116,6 +127,8 @@ if (shouldGenerateMediaQueries) {
   </div>
 </div>
 ```
+
+**Note**: In preview mode, layout styles are applied via CSS classes to `.${componentClassName}`, and typography styles are applied via CSS classes to `.${componentClassName} .button-content`. No inline styles for layout/typography should be present in preview mode.
 
 ### 4. Using Helper Functions
 
@@ -176,33 +189,66 @@ responsiveCss += `.${componentClassName} .text-content { text-align: ${textAlign
 
 ### Example 2: Container Component
 
-**CSS Generation**:
+**CSS Generation (Preview Mode Only)**:
 ```typescript
-// Layout styles → wrapper
-responsiveCss += `.${componentClassName} { padding: ${padding}px; }\n`;
-responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
+// Layout styles → wrapper (only generated when !isEditMode)
+if (!isEditMode) {
+  responsiveCss += `.${componentClassName} { padding: ${padding}px; }\n`;
+  responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
+  responsiveCss += `.${componentClassName} { border: ${borderWidth}px solid ${borderColor}; }\n`;
+  responsiveCss += `.${componentClassName} { box-shadow: ${boxShadow}; }\n`;
+  responsiveCss += `.${componentClassName} { min-height: ${minHeight}px; }\n`;
+  // Flexbox properties
+  responsiveCss += `.${componentClassName} { flex-direction: ${flexDirection}; }\n`;
+  responsiveCss += `.${componentClassName} { justify-content: ${justifyContent}; }\n`;
+  // Position and z-index
+  responsiveCss += `.${componentClassName} { position: ${position}; }\n`;
+  responsiveCss += `.${componentClassName} { z-index: ${zIndex}; }\n`;
+  
+  // Typography styles → content class
+  responsiveCss += `.${componentClassName} .container-content { color: ${textColor}; }\n`;
+  responsiveCss += `.${componentClassName} .container-content { font-size: ${fontSize}px; }\n`;
+}
+```
 
-// Typography styles → content class
-responsiveCss += `.${componentClassName} .container-content { color: ${textColor}; }\n`;
-responsiveCss += `.${componentClassName} .container-content { font-size: ${fontSize}px; }\n`;
+**Inline Styles (Edit Mode Only)**:
+```typescript
+const containerStyle: React.CSSProperties = {
+  // Layout styles - only in edit mode
+  padding: isEditMode ? paddingValue : undefined,
+  margin: isEditMode ? marginValue : undefined,
+  ...(isEditMode ? backgroundStyles : {}),
+  ...(isEditMode ? borderStyles : {}),
+  boxShadow: isEditMode ? boxShadowStyle : undefined,
+  minHeight: isEditMode ? computedMinHeight : undefined,
+  flexDirection: isEditMode ? effectiveFlexDirection : undefined,
+  position: isEditMode && hasCustomPosition ? position : undefined,
+  zIndex: isEditMode && zIndex ? zIndex : undefined,
+  // Typography styles are applied to .container-content element in edit mode
+};
 ```
 
 **HTML Structure**:
 ```typescript
 // When needsContentWrapper is true (Full Width + Boxed Content)
-<div className={`${contentWrapperClassName} container-content`}>
-  {children}
+<div className={componentClassName} style={containerStyle}>
+  <div className={`${contentWrapperClassName} container-content`} style={contentWrapperStyle}>
+    {children}
+  </div>
 </div>
 
 // When needsContentWrapper is false
-<div className={componentClassName}>
+<div className={componentClassName} style={containerStyle}>
   <div className="container-content" style={{ display: "contents" }}>
     {children}
   </div>
 </div>
 ```
 
-**Why**: The `display: contents` wrapper doesn't interfere with flexbox layouts while still allowing CSS targeting.
+**Why**: 
+- In preview mode, layout styles are applied via CSS classes (no inline styles), ensuring eBay compatibility.
+- The `display: contents` wrapper doesn't interfere with flexbox layouts while still allowing CSS targeting.
+- In edit mode, inline styles provide immediate visual feedback based on the current canvas breakpoint.
 
 ## Special Cases
 
@@ -334,13 +380,16 @@ responsiveCss += `.${componentClassName} .button-content { color: #000; }\n`;
 
 - [ ] Generate unique component class name using `generateComponentClassName()`
 - [ ] Wrap actual content in `<div className="${componentName}-content">` (e.g., `text-content`, `button-content`)
-- [ ] Apply layout styles to wrapper div (`.${componentClassName}`)
-- [ ] Apply typography styles to content class (`.${componentClassName} .${componentName}-content`)
+- [ ] Generate CSS classes for layout styles targeting wrapper div (`.${componentClassName}`) in preview mode only (`!isEditMode`)
+- [ ] Generate CSS classes for typography styles targeting content class (`.${componentClassName} .${componentName}-content`) in preview mode only (`!isEditMode`)
+- [ ] Apply layout styles as inline styles in edit mode only (`isEditMode ? styles : undefined`)
+- [ ] Apply typography styles as inline styles in edit mode only (`isEditMode ? styles : undefined`)
 - [ ] Use `getContentSelector()` helper for CSS generation
 - [ ] Exclude editor UI elements from content styles (if applicable)
 - [ ] Use `display: contents` on content wrapper if flexbox interference is a concern
 - [ ] Test that editor UI elements don't inherit component styles
 - [ ] Verify content classes are preserved in exported HTML
+- [ ] Ensure no layout/typography inline styles are present in preview mode (they should be `undefined`)
 
 ## Reference Implementation
 

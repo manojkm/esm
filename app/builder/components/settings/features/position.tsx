@@ -170,8 +170,8 @@ export const PositionControls = <TProps extends PositionFeatureProps>({ props, a
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
-      <div className={INLINE_ROW_CLASS}>
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700" htmlFor={`${baseId}-select`}>
           Position
         </label>
         <select
@@ -182,7 +182,7 @@ export const PositionControls = <TProps extends PositionFeatureProps>({ props, a
               draft.position = event.target.value;
             })
           }
-          className={INLINE_FIELD_CLASS}
+          className="w-32 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="default">Default</option>
           <option value="static">Static</option>

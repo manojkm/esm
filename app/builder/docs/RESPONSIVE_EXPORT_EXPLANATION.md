@@ -158,19 +158,25 @@ const styleTagContent = mergeCssSegments(
 5. **No CSS media queries** generated
 
 ### In Exported HTML:
-1. Base inline style: `style="padding: 30px"` (desktop fallback)
+1. Base CSS rule in `<style>` tag: `.container-abc123 { padding: 30px; }` (desktop value as base)
 2. CSS media queries in `<style>` tag:
    ```css
+   /* Base CSS uses desktop value (30px) - applies to all breakpoints */
+   .container-abc123 { padding: 30px; }
+   
+   /* Media queries only for mobile/tablet (differ from desktop) */
    @media (max-width: 767px) {
-     .container-hover-abc123 { padding: 10px !important; }
+     .container-abc123 { padding: 10px !important; }
    }
    @media (min-width: 768px) and (max-width: 1023px) {
-     .container-hover-abc123 { padding: 20px !important; }
+     .container-abc123 { padding: 20px !important; }
    }
    ```
 3. When browser viewport < 768px → CSS applies `padding: 10px`
 4. When browser viewport 768-1023px → CSS applies `padding: 20px`
-5. When browser viewport ≥ 1024px → Uses base inline style `padding: 30px`
+5. When browser viewport ≥ 1024px → Uses base CSS rule `padding: 30px`
+
+**Note**: In exported HTML, all layout styles are applied via CSS classes (no inline styles), ensuring eBay compatibility. The desktop value is used as the base CSS, and media queries are only generated for mobile/tablet when they differ from desktop.
 
 ---
 

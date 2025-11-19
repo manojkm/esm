@@ -36,34 +36,33 @@ export const ColorInput: React.FC<ColorInputProps> = ({ label, value, onChange, 
     };
 
     return (
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="flex items-center text-sm font-medium text-gray-700">
-            {label}
-            <span className="ml-2 text-blue-600">
-              {currentBreakpoint === "desktop" && <Monitor size={12} />}
-              {currentBreakpoint === "tablet" && <Tablet size={12} />}
-              {currentBreakpoint === "mobile" && <Smartphone size={12} />}
-            </span>
-          </label>
+      <div className="flex items-center justify-between">
+        {/* Left side: Label + Responsive icon */}
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          {label}
+          <span className="text-blue-600">
+            {currentBreakpoint === "desktop" && <Monitor size={14} />}
+            {currentBreakpoint === "tablet" && <Tablet size={14} />}
+            {currentBreakpoint === "mobile" && <Smartphone size={14} />}
+          </span>
+        </label>
+
+        {/* Right side: Reset icon + Color picker */}
+        <div className="flex items-center gap-2">
           {hasCustomValue && (
-            <button onClick={handleReset} className="text-gray-400 hover:text-gray-600 transition-colors" title="Reset to default">
-              <RotateCcw size={14} />
+            <button
+              onClick={handleReset}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Reset to default"
+            >
+              <RotateCcw size={16} />
             </button>
           )}
-        </div>
-        <div className="flex gap-2">
           <ColorPicker
             color={responsiveValue}
             onChange={handleResponsiveChange}
             allowTransparent={true}
-          />
-          <input
-            type="text"
-            value={responsiveValue || ""}
-            onChange={(event) => handleResponsiveChange(event.target.value || null)}
-            className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder={placeholder}
+            size="small"
           />
         </div>
       </div>
@@ -73,22 +72,17 @@ export const ColorInput: React.FC<ColorInputProps> = ({ label, value, onChange, 
   const stringValue = (value as string | null) ?? "";
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-      <div className="flex gap-2">
-        <ColorPicker
-          color={stringValue}
-          onChange={(color) => onChange(color)}
-          allowTransparent={true}
-        />
-        <input
-          type="text"
-          value={stringValue}
-          onChange={(event) => onChange(event.target.value || null)}
-          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder={placeholder}
-        />
-      </div>
+    <div className="flex items-center justify-between">
+      {/* Left side: Label */}
+      <label className="text-sm font-medium text-gray-700">{label}</label>
+
+      {/* Right side: Color picker */}
+      <ColorPicker
+        color={stringValue}
+        onChange={(color) => onChange(color)}
+        allowTransparent={true}
+        size="small"
+      />
     </div>
   );
 };

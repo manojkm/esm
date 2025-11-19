@@ -30,8 +30,8 @@ export const OverflowSelect = <TProps extends OverflowFeatureProps>({ props, act
 
   return (
     <section id={baseId} data-component-id={baseId}>
-      <div className={INLINE_ROW_CLASS}>
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700" htmlFor={`${baseId}-select`}>
           Overflow
         </label>
         <select
@@ -42,7 +42,7 @@ export const OverflowSelect = <TProps extends OverflowFeatureProps>({ props, act
               draft.overflow = event.target.value;
             })
           }
-          className={INLINE_FIELD_CLASS}
+          className="w-32 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {OVERFLOW_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>

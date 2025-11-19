@@ -182,8 +182,8 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
       />
 
       {/* Font Family */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Font Family</label>
         <select
           value={props.fontFamily || ""}
           onChange={(e) =>
@@ -191,7 +191,7 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
               draft.fontFamily = e.target.value || null;
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-48 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Use Global Default</option>
           {POPULAR_GOOGLE_FONTS.map((font) => (
@@ -200,7 +200,6 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
             </option>
           ))}
         </select>
-        <p className="text-xs text-gray-500 mt-1">Leave empty to use global typography settings</p>
       </div>
 
       {/* Font Size */}
@@ -241,6 +240,7 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
         options={FONT_WEIGHT_OPTIONS}
         defaultValue={String(globalFontWeight ?? 400)}
         layout="select"
+        variant="inline"
       />
 
       {/* Font Style */}
@@ -259,6 +259,7 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
         options={FONT_STYLE_OPTIONS}
         defaultValue={globalFontStyle || "normal"}
         layout="select"
+        variant="inline"
       />
 
       {/* Text Transform */}
@@ -277,6 +278,7 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
         options={TEXT_TRANSFORM_OPTIONS}
         defaultValue="none"
         layout="select"
+        variant="inline"
       />
 
       {/* Text Decoration */}
@@ -295,6 +297,7 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
         options={TEXT_DECORATION_OPTIONS}
         defaultValue="none"
         layout="select"
+        variant="inline"
       />
 
       {/* Letter Spacing */}

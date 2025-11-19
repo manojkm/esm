@@ -10,8 +10,11 @@ The pattern ensures:
 - ✅ **Responsive Design**: Desktop values cascade, media queries only for overrides
 - ✅ **Edit/Preview Consistency**: Styles work correctly in both modes
 - ✅ **No Duplication**: Styles aren't applied twice (wrapper + element)
-- ✅ **eBay Compatibility**: Pure CSS, no JavaScript dependencies
+- ✅ **eBay Compatibility**: Pure CSS, no JavaScript dependencies - all layout/typography styles are CSS classes in preview/export mode
 - ✅ **Editor Isolation**: Editor UI elements (toolbars, wrappers) don't inherit component styles
+- ✅ **Mode Separation**: 
+  - **Edit Mode**: Inline styles for immediate visual feedback based on canvas breakpoint
+  - **Preview/Export Mode**: CSS classes only (no inline styles for layout/typography), ensuring eBay compatibility
 
 ## Pattern Structure
 
@@ -45,26 +48,35 @@ if (shouldGenerateMediaQueries) {
 
 ### 3. Inline Styles (Edit Mode Only)
 
-Build inline styles only for edit mode:
+Build inline styles only for edit mode. In preview mode, layout styles are applied via CSS classes:
 
 ```typescript
-import { buildEditModeStyles } from "@/app/builder/lib/component-styles";
-
-const elementStyle: React.CSSProperties = {
-  // Layout styles - only in edit mode
+const containerStyle: React.CSSProperties = {
+  // Layout styles - only in edit mode (in preview mode, applied via CSS to wrapper)
   padding: isEditMode ? paddingValue : undefined,
   margin: isEditMode ? marginValue : undefined,
   ...(isEditMode ? backgroundStyles : {}),
   ...(isEditMode ? borderStyles : {}),
   boxShadow: isEditMode ? boxShadowStyle : undefined,
+  minHeight: isEditMode ? computedMinHeight : undefined,
+  // Flexbox properties - only in edit mode (in preview mode, applied via CSS)
+  flexDirection: isEditMode ? effectiveFlexDirection : undefined,
+  justifyContent: isEditMode ? effectiveJustifyContent : undefined,
+  alignItems: isEditMode ? effectiveAlignItems : undefined,
+  // Positioning - only in edit mode (in preview mode, applied via CSS)
+  position: isEditMode && hasCustomPosition ? position : undefined,
+  top: isEditMode && hasCustomPosition ? positionTop : undefined,
+  zIndex: isEditMode && zIndex ? zIndex : undefined,
   
-  // Typography styles - only in edit mode
+  // Typography styles - only in edit mode (in preview mode, applied via CSS to content class)
   fontFamily: isEditMode ? effectiveFontFamily : undefined,
   fontSize: isEditMode ? effectiveFontSize : undefined,
   color: isEditMode ? effectiveTextColor : undefined,
   // ... etc
 };
 ```
+
+**Important**: In preview mode, layout styles (padding, margin, background, border, box-shadow, min-height, flexbox properties, sizing, position, z-index) should be set to `undefined` in the inline style object. They are applied via CSS classes generated in the `<style>` tag instead.
 
 ### 4. Render Structure
 
@@ -73,36 +85,45 @@ return (
   <>
     <style>{styleTagContent}</style>
     {isEditMode ? (
-      // Edit mode: No wrapper, inline styles on element
-      <button style={elementStyle} {...props}>
-        Content
-      </button>
-    ) : (
-      // Preview mode: Wrapper div with unique class, no inline styles
-      <div className={componentClassName}>
-        <button {...props}>
+      // Edit mode: Content wrapper with inline styles
+      <div className="button-content">
+        <button style={elementStyle} {...props}>
           Content
         </button>
+      </div>
+    ) : (
+      // Preview mode: Wrapper div with unique class, content wrapper inside
+      <div className={componentClassName}>
+        <div className="button-content">
+          <button {...props}>
+            Content
+          </button>
+        </div>
       </div>
     )}
   </>
 );
 ```
 
+**Note**: The content wrapper (`button-content`) is always present to ensure CSS targeting works correctly. In edit mode, it allows for proper style scoping. In preview mode, it ensures the content class pattern is followed.
+
 ## Style Categories
 
 ### Layout Styles (Wrapper Div)
-Apply to `.${componentClassName}`:
+Apply to `.${componentClassName}` in preview mode via CSS classes. In edit mode, apply as inline styles:
 - ✅ Padding
 - ✅ Margin
 - ✅ Background (color/image/gradient)
 - ✅ Border (color/width/radius)
 - ✅ Box Shadow
-- ✅ Position
+- ✅ Position (top, right, bottom, left)
 - ✅ Z-index
+- ✅ Min-height
+- ✅ Flexbox properties (flex-direction, justify-content, align-items, flex-wrap, gap)
+- ✅ Sizing (width, max-width, flex-basis)
 
 ### Typography Styles (Content Class)
-Apply to `.${componentClassName} .${componentName}-content` (e.g., `.text-content`, `.container-content`):
+Apply to `.${componentClassName} .${componentName}-content` (e.g., `.text-content`, `.container-content`) in preview mode via CSS classes. In edit mode, apply as inline styles:
 - ✅ Font Family
 - ✅ Font Size
 - ✅ Font Weight
@@ -112,7 +133,7 @@ Apply to `.${componentClassName} .${componentName}-content` (e.g., `.text-conten
 - ✅ Text Decoration
 - ✅ Letter Spacing
 - ✅ Line Height
-- ✅ Color
+- ✅ Color (text color)
 - ✅ Link Colors
 
 ## Responsive Pattern
@@ -334,9 +355,12 @@ export const Button: React.FC<ButtonProps> = (props) => {
 - [ ] Apply inline styles only in edit mode (`isEditMode ? styles : undefined`)
 
 ### Style Application
-- [ ] Apply layout styles to wrapper div (`.${componentClassName}`): padding, margin, background, border, box-shadow, position, z-index
-- [ ] Apply typography styles to content class (`.${componentClassName} .${componentName}-content`): font, color, text-align, etc.
+- [ ] Apply layout styles to wrapper div (`.${componentClassName}`) in preview mode via CSS classes: padding, margin, background, border, box-shadow, position, z-index, min-height, flexbox properties, sizing
+- [ ] Apply layout styles as inline styles in edit mode only (`isEditMode ? styles : undefined`)
+- [ ] Apply typography styles to content class (`.${componentClassName} .${componentName}-content`) in preview mode via CSS classes: font, color, text-align, etc.
+- [ ] Apply typography styles as inline styles in edit mode only (`isEditMode ? styles : undefined`)
 - [ ] Exclude editor UI elements (toolbars, wrappers) from content styles using CSS reset if needed
+- [ ] Ensure no layout styles are applied as inline styles in preview mode (they should be `undefined`)
 
 ### Responsive CSS Generation
 - [ ] **ALWAYS use responsive generation functions** from `css-responsive.ts` (they handle desktop-as-base automatically)
@@ -357,7 +381,18 @@ export const Button: React.FC<ButtonProps> = (props) => {
 
 ## Reference Implementation
 
-See `app/builder/components/ui/Text.tsx` for the complete reference implementation.
+Both `Text` and `Container` components fully adhere to this pattern:
+
+- **Text Component**: `app/builder/components/ui/Text.tsx`
+  - Layout styles (padding, margin, background, border, box-shadow) are applied via CSS classes in preview mode
+  - Typography styles are applied via CSS classes targeting `.text-content` in preview mode
+  - All styles are applied as inline styles in edit mode only
+
+- **Container Component**: `app/builder/components/ui/Container.tsx`
+  - Layout styles (padding, margin, background, border, box-shadow, min-height, flexbox properties, sizing, position, z-index) are applied via CSS classes in preview mode
+  - Typography styles are applied via CSS classes targeting `.container-content` in preview mode
+  - All styles are applied as inline styles in edit mode only
+  - Uses `display: contents` on content wrapper when flexbox interference is a concern
 
 ## Additional Resources
 

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { INLINE_FIELD_CLASS, INLINE_LABEL_CLASS, INLINE_ROW_CLASS } from "../shared/styles";
-import { ResponsiveSelectControl } from "../shared/controls";
+import { AlignmentIconControl } from "../shared/controls/AlignmentIconControl";
 import type { ComponentControlActions } from "../shared/types";
 import type { ResponsiveValue } from "@/app/builder/lib/style-system";
 import type { ResponsiveRecord } from "../shared/types/responsive";
@@ -31,12 +30,6 @@ const TAG_OPTIONS = [
   { value: "h6", label: "h6" },
 ];
 
-const ALIGN_OPTIONS = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
-  { value: "justify", label: "Justify" },
-];
 
 export const TextGeneralControls = <TProps extends TextGeneralFeatureProps>({
   props,
@@ -48,10 +41,8 @@ export const TextGeneralControls = <TProps extends TextGeneralFeatureProps>({
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
       {/* HTML Tag */}
-      <div className={INLINE_ROW_CLASS}>
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-tag`}>
-          Tag
-        </label>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700">Tag</label>
         <select
           id={`${baseId}-tag`}
           value={props.htmlTag || "p"}
@@ -60,7 +51,7 @@ export const TextGeneralControls = <TProps extends TextGeneralFeatureProps>({
               draft.htmlTag = event.target.value as "div" | "p" | "span" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
             })
           }
-          className={INLINE_FIELD_CLASS}
+          className="w-32 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {TAG_OPTIONS.map((tag) => (
             <option key={tag.value} value={tag.value}>
@@ -71,7 +62,7 @@ export const TextGeneralControls = <TProps extends TextGeneralFeatureProps>({
       </div>
 
       {/* Text Alignment */}
-      <ResponsiveSelectControl
+      <AlignmentIconControl
         controlId={`${baseId}-align`}
         label="Alignment"
         value={props.textAlignResponsive as ResponsiveRecord | undefined}
@@ -83,10 +74,7 @@ export const TextGeneralControls = <TProps extends TextGeneralFeatureProps>({
             draft.textAlign = fallback as "left" | "center" | "right" | "justify";
           })
         }
-        options={ALIGN_OPTIONS}
         defaultValue="left"
-        layout="grid"
-        gridCols={4}
       />
     </div>
   );

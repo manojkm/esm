@@ -62,7 +62,7 @@ export const DirectionControl: React.FC<DirectionControlProps> = ({ controlId, v
   ];
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Direction" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="row" layout="grid" gridCols={2} />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Direction" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="row" layout="select" variant="inline" />;
   }
 
   return (
@@ -101,16 +101,16 @@ export const JustifyContentControl: React.FC<JustifyContentControlProps> = ({ co
   };
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Justify Content" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="flex-start" />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Justify Content" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="flex-start" layout="select" variant="inline" />;
   }
 
   return (
     <section id={baseId}>
-      <div className={INLINE_ROW_CLASS}>
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700" htmlFor={`${baseId}-select`}>
           Justify Content
         </label>
-        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className={INLINE_FIELD_CLASS}>
+        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className="w-32 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
           {options.map((option) => (
             <option key={option} value={option}>
               {getLabel(option)}
@@ -142,16 +142,16 @@ export const AlignItemsControl: React.FC<AlignItemsControlProps> = ({ controlId,
   };
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Align Items" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="stretch" />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Align Items" value={responsiveValue} onChange={onResponsiveChange} options={options.map((opt) => ({ value: opt, label: getLabel(opt) }))} defaultValue="stretch" layout="select" variant="inline" />;
   }
 
   return (
     <section id={baseId}>
-      <div className={INLINE_ROW_CLASS}>
-        <label className={INLINE_LABEL_CLASS} htmlFor={`${baseId}-select`}>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700" htmlFor={`${baseId}-select`}>
           Align Items
         </label>
-        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className={INLINE_FIELD_CLASS}>
+        <select id={`${baseId}-select`} value={value} onChange={(event) => onChange(event.target.value)} className="w-32 px-2 py-2 text-xs border border-gray-300 rounded text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
           {options.map((option) => (
             <option key={option} value={option}>
               {getLabel(option)}
@@ -181,7 +181,7 @@ export const WrapControl: React.FC<WrapControlProps> = ({ controlId, value, onCh
   ];
 
   if (useResponsive && onResponsiveChange) {
-    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Wrap" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="nowrap" layout="grid" gridCols={3} />;
+    return <ResponsiveSelectControl controlId={`${controlId}-responsive`} label="Wrap" value={responsiveValue} onChange={onResponsiveChange} options={options} defaultValue="nowrap" layout="select" variant="inline" />;
   }
 
   return (

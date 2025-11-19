@@ -528,7 +528,8 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
   // Only generate CSS media queries for exported HTML, not for editor preview
   if (shouldGenerateMediaQueries) {
-    // Padding responsive CSS
+    // Padding responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
     if (paddingResponsive) {
       responsiveCss += generatePaddingCss(componentClassName, paddingResponsive, {
         top: paddingTop,
@@ -537,9 +538,18 @@ export const Container: React.FC<ContainerProps> = (props) => {
         left: paddingLeft,
         defaultValue: padding,
       }, paddingUnit);
+    } else if (padding !== null && padding !== undefined) {
+      // Generate base CSS for non-responsive padding only if explicitly set (including 0)
+      const top = paddingTop ?? padding;
+      const right = paddingRight ?? padding;
+      const bottom = paddingBottom ?? padding;
+      const left = paddingLeft ?? padding;
+      const paddingValue = `${top}${paddingUnit} ${right}${paddingUnit} ${bottom}${paddingUnit} ${left}${paddingUnit}`;
+      responsiveCss += `.${componentClassName} { padding: ${paddingValue}; }\n`;
     }
 
-    // Margin responsive CSS
+    // Margin responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
     if (marginResponsive) {
       responsiveCss += generateMarginCss(componentClassName, marginResponsive, {
         top: marginTop,
@@ -548,6 +558,14 @@ export const Container: React.FC<ContainerProps> = (props) => {
         left: marginLeft,
         defaultValue: margin,
       }, marginUnit);
+    } else if (margin !== null && margin !== undefined) {
+      // Generate base CSS for non-responsive margin if explicitly set
+      const top = marginTop ?? margin ?? 0;
+      const right = marginRight ?? margin ?? 0;
+      const bottom = marginBottom ?? margin ?? 0;
+      const left = marginLeft ?? margin ?? 0;
+      const marginValue = `${top}${marginUnit} ${right}${marginUnit} ${bottom}${marginUnit} ${left}${marginUnit}`;
+      responsiveCss += `.${componentClassName} { margin: ${marginValue}; }\n`;
     }
 
     // Gap responsive CSS (only applies to main container when no content wrapper)
@@ -649,17 +667,35 @@ export const Container: React.FC<ContainerProps> = (props) => {
       }
     }
 
-    // Background color responsive CSS
-    if (backgroundType === "color" && backgroundColorResponsive) {
-      responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? undefined);
+    // Background color responsive CSS - apply to wrapper div
+    if (backgroundType === "color") {
+      if (backgroundColorResponsive) {
+        responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? undefined);
+      } else if (backgroundColor) {
+        // Generate base CSS for non-responsive background color
+        responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
+      }
+    } else if (backgroundType === "gradient" && backgroundGradient) {
+      // Generate CSS for gradient background
+      responsiveCss += `.${componentClassName} { background-image: ${backgroundGradient}; }\n`;
+    } else if (backgroundType === "image" && backgroundImage) {
+      // Generate CSS for image background
+      responsiveCss += `.${componentClassName} { background-image: url(${backgroundImage}); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
     }
 
-    // Border color responsive CSS
-    if (borderStyle && borderStyle !== "none" && borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? undefined);
+    // Border color responsive CSS - apply to wrapper div
+    if (borderStyle && borderStyle !== "none") {
+      if (borderColorResponsive) {
+        responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? undefined);
+      } else if (borderColor) {
+        // Generate base CSS for non-responsive border color
+        responsiveCss += `.${componentClassName} { border-color: ${borderColor}; }\n`;
+      }
+      // Generate base CSS for border style
+      responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; }\n`;
     }
 
-    // Border radius responsive CSS
+    // Border radius responsive CSS - apply to wrapper div
     if (borderRadiusResponsive) {
       responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-radius", borderRadiusResponsive, {
         top: borderTopLeftRadius,
@@ -668,17 +704,35 @@ export const Container: React.FC<ContainerProps> = (props) => {
         left: borderBottomLeftRadius,
         defaultValue: borderRadius,
       }, borderRadiusUnit);
+    } else if (borderRadius !== null && borderRadius !== undefined && borderRadius !== 0) {
+      // Generate base CSS for non-responsive border radius
+      const topLeft = borderTopLeftRadius ?? borderRadius;
+      const topRight = borderTopRightRadius ?? borderRadius;
+      const bottomRight = borderBottomRightRadius ?? borderRadius;
+      const bottomLeft = borderBottomLeftRadius ?? borderRadius;
+      const borderRadiusValue = `${topLeft}${borderRadiusUnit} ${topRight}${borderRadiusUnit} ${bottomRight}${borderRadiusUnit} ${bottomLeft}${borderRadiusUnit}`;
+      responsiveCss += `.${componentClassName} { border-radius: ${borderRadiusValue}; }\n`;
     }
 
-    // Border width responsive CSS
-    if (borderWidthResponsive) {
-      responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-width", borderWidthResponsive, {
-        top: borderTopWidth,
-        right: borderRightWidth,
-        bottom: borderBottomWidth,
-        left: borderLeftWidth,
-        defaultValue: borderWidth,
-      }, "px");
+    // Border width responsive CSS - apply to wrapper div
+    if (borderStyle && borderStyle !== "none") {
+      if (borderWidthResponsive) {
+        responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-width", borderWidthResponsive, {
+          top: borderTopWidth,
+          right: borderRightWidth,
+          bottom: borderBottomWidth,
+          left: borderLeftWidth,
+          defaultValue: borderWidth,
+        }, "px");
+      } else if (borderWidth !== null && borderWidth !== undefined) {
+        // Generate base CSS for non-responsive border width
+        const top = borderTopWidth ?? borderWidth;
+        const right = borderRightWidth ?? borderWidth;
+        const bottom = borderBottomWidth ?? borderWidth;
+        const left = borderLeftWidth ?? borderWidth;
+        const borderWidthValue = `${top}px ${right}px ${bottom}px ${left}px`;
+        responsiveCss += `.${componentClassName} { border-width: ${borderWidthValue}; }\n`;
+      }
     }
 
     // Flex basis responsive CSS (for child containers)
@@ -695,9 +749,14 @@ export const Container: React.FC<ContainerProps> = (props) => {
       }
     }
 
-    // Min height responsive CSS
-    if (minHeightResponsive && enableMinHeight) {
-      responsiveCss += generateResponsiveCss(componentClassName, "min-height", minHeightResponsive, minHeight, minHeightUnit ?? "px");
+    // Min height responsive CSS - apply to wrapper div
+    if (enableMinHeight) {
+      if (minHeightResponsive) {
+        responsiveCss += generateResponsiveCss(componentClassName, "min-height", minHeightResponsive, minHeight, minHeightUnit ?? "px");
+      } else if (minHeight !== null && minHeight !== undefined) {
+        // Generate base CSS for non-responsive min-height
+        responsiveCss += `.${componentClassName} { min-height: ${minHeight}${minHeightUnit ?? "px"}; }\n`;
+      }
     }
 
     // Content box width responsive CSS (applies to content wrapper, not main container)
@@ -716,21 +775,28 @@ export const Container: React.FC<ContainerProps> = (props) => {
       responsiveCss += generateResponsiveCss(componentClassName, "max-width", customWidthResponsive, customWidth, customWidthUnit ?? "px");
     }
 
-    // Box shadow responsive CSS
-    if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
-      responsiveCss += generateBoxShadowCss(
-        componentClassName,
-        boxShadowHorizontalResponsive,
-        boxShadowVerticalResponsive,
-        boxShadowBlurResponsive,
-        boxShadowSpreadResponsive,
-        boxShadowHorizontal ?? 0,
-        boxShadowVertical ?? 0,
-        boxShadowBlur ?? 0,
-        boxShadowSpread ?? 0,
-        boxShadowColor ?? "rgba(0, 0, 0, 0.1)",
-        boxShadowPosition ?? "outset"
-      );
+    // Box shadow responsive CSS - apply to wrapper div
+    if (enableBoxShadow) {
+      if (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive) {
+        responsiveCss += generateBoxShadowCss(
+          componentClassName,
+          boxShadowHorizontalResponsive,
+          boxShadowVerticalResponsive,
+          boxShadowBlurResponsive,
+          boxShadowSpreadResponsive,
+          boxShadowHorizontal ?? 0,
+          boxShadowVertical ?? 0,
+          boxShadowBlur ?? 0,
+          boxShadowSpread ?? 0,
+          boxShadowColor ?? "rgba(0, 0, 0, 0.1)",
+          boxShadowPosition ?? "outset"
+        );
+      } else {
+        // Generate base CSS for non-responsive box shadow
+        const shadowValue = `${boxShadowHorizontal ?? 0}px ${boxShadowVertical ?? 0}px ${boxShadowBlur ?? 0}px ${boxShadowSpread ?? 0}px ${boxShadowColor ?? "rgba(0, 0, 0, 0.1)"}`;
+        const insetValue = boxShadowPosition === "inset" ? "inset " : "";
+        responsiveCss += `.${componentClassName} { box-shadow: ${insetValue}${shadowValue}; }\n`;
+      }
     }
 
     // Overlay CSS (for export - pure CSS using pseudo-element)
@@ -765,7 +831,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       }
     }
 
-    // Position responsive CSS (only when position is set and not default/static)
+    // Position responsive CSS (only when position is set and not default/static) - apply to wrapper div
     if (position && position !== "default" && position !== "static") {
       if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
         responsiveCss += generatePositionCss(
@@ -783,11 +849,31 @@ export const Container: React.FC<ContainerProps> = (props) => {
           positionBottomUnit,
           positionLeftUnit
         );
+      } else {
+        // Generate base CSS for non-responsive position
+        responsiveCss += `.${componentClassName} { position: ${position}; }\n`;
+        if (positionTop !== null && positionTop !== undefined) {
+          responsiveCss += `.${componentClassName} { top: ${positionTop}${positionTopUnit ?? "px"}; }\n`;
+        }
+        if (positionRight !== null && positionRight !== undefined) {
+          responsiveCss += `.${componentClassName} { right: ${positionRight}${positionRightUnit ?? "px"}; }\n`;
+        }
+        if (positionBottom !== null && positionBottom !== undefined) {
+          responsiveCss += `.${componentClassName} { bottom: ${positionBottom}${positionBottomUnit ?? "px"}; }\n`;
+        }
+        if (positionLeft !== null && positionLeft !== undefined) {
+          responsiveCss += `.${componentClassName} { left: ${positionLeft}${positionLeftUnit ?? "px"}; }\n`;
+        }
       }
 
-      // Z-index responsive CSS
-      if (zIndex !== null && zIndex !== undefined && zIndexResponsive) {
-        responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex);
+      // Z-index responsive CSS - apply to wrapper div
+      if (zIndex !== null && zIndex !== undefined) {
+        if (zIndexResponsive) {
+          responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex);
+        } else {
+          // Generate base CSS for non-responsive z-index
+          responsiveCss += `.${componentClassName} { z-index: ${zIndex}; }\n`;
+        }
       }
     }
   }
@@ -812,20 +898,27 @@ export const Container: React.FC<ContainerProps> = (props) => {
   const formatPositionValue = (value: number | null | undefined, unit: string) => (value !== null && value !== undefined ? `${value}${unit}` : undefined);
 
   // Assemble the final style object for the main container element from all the helper functions.
+  // In preview mode, layout styles (padding, margin, background, border, boxShadow) are applied via CSS classes.
+  // Only keep inline styles for properties that can't be CSS (like overlay position relative for pseudo-element).
   const containerStyle: React.CSSProperties = {
-    padding: paddingValue,
-    margin: marginValue,
-    ...backgroundStyles,
+    // Padding and margin only in edit mode (in preview mode, applied via CSS to wrapper)
+    padding: isEditMode ? paddingValue : undefined,
+    margin: isEditMode ? marginValue : undefined,
+    // Background styles only in edit mode (in preview mode, backgrounds are applied via CSS to wrapper)
+    ...(isEditMode ? backgroundStyles : {}),
+    // Overlay position relative is needed for pseudo-element in both modes
     ...overlayStylesResult.style, // Overlay position relative for pseudo-element
-    ...borderStyles,
-    ...boxShadowStyles,
-    ...colorStyles,
+    // Border styles only in edit mode (in preview mode, borders are applied via CSS to wrapper)
+    ...(isEditMode ? borderStyles : {}),
+    // Box shadow only in edit mode (in preview mode, applied via CSS to wrapper)
+    ...(isEditMode ? boxShadowStyles : {}),
+    // Text color styles are NOT included here - they're applied to .container-content via CSS
     ...(shouldShowHelperBorder
       ? {
           border: "1px dashed rgba(148, 163, 184, 0.9)",
         }
       : {}),
-    minHeight: computedMinHeight,
+    minHeight: isEditMode ? computedMinHeight : undefined, // In preview mode, min-height is applied via CSS
     // Flexbox properties are applied directly if no content wrapper is needed.
     // In edit mode, use inline styles (responsive via responsiveResolver).
     // In preview/export mode, use CSS classes (responsive via media queries).
@@ -848,13 +941,13 @@ export const Container: React.FC<ContainerProps> = (props) => {
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: overflow as React.CSSProperties["overflow"],
-    // Positioning properties (applied only in live mode, not editor)
-    position: isEditMode ? undefined : hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,
-    top: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionTop, positionTopUnit) : undefined,
-    right: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionRight, positionRightUnit) : undefined,
-    bottom: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionBottom, positionBottomUnit) : undefined,
-    left: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionLeft, positionLeftUnit) : undefined,
-    zIndex: isEditMode ? undefined : zIndex ? zIndex : undefined,
+    // Positioning properties only in edit mode (in preview mode, applied via CSS to wrapper)
+    position: isEditMode && hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,
+    top: isEditMode && hasCustomPosition ? formatPositionValue(positionTop, positionTopUnit) : undefined,
+    right: isEditMode && hasCustomPosition ? formatPositionValue(positionRight, positionRightUnit) : undefined,
+    bottom: isEditMode && hasCustomPosition ? formatPositionValue(positionBottom, positionBottomUnit) : undefined,
+    left: isEditMode && hasCustomPosition ? formatPositionValue(positionLeft, positionLeftUnit) : undefined,
+    zIndex: isEditMode && zIndex ? zIndex : undefined,
   };
 
   // Define the style object for the inner content wrapper (used for boxed layouts).

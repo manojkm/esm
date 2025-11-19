@@ -69,12 +69,9 @@ export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen
                 <p className="text-xs text-gray-500 mb-4">Define your brand colors. These will be available in all color pickers.</p>
                 <div className="space-y-4">
                   {colorKeys.map((key) => (
-                    <div key={key} className="flex items-center gap-4">
-                      <label className="w-24 text-sm font-medium text-gray-700 capitalize">{key}</label>
-                      <div className="flex-1 flex items-center gap-3">
-                        <ColorPicker color={settings.colorPalette[key] || undefined} onChange={(color) => updateColorPalette({ [key]: color || undefined })} allowTransparent={false} />
-                        <input type="text" value={settings.colorPalette[key] || ""} onChange={(e) => updateColorPalette({ [key]: e.target.value || undefined })} className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="#000000" />
-                      </div>
+                    <div key={key} className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700 capitalize">{key}</label>
+                      <ColorPicker color={settings.colorPalette[key] || undefined} onChange={(color) => updateColorPalette({ [key]: color || undefined })} allowTransparent={false} size="small" />
                     </div>
                   ))}
                 </div>
@@ -215,39 +212,23 @@ export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-4">Text Colors</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <label className="w-32 text-sm font-medium text-gray-700">Headings</label>
-                    <div className="flex-1 flex items-center gap-3">
-                      <ColorPicker
-                        color={settings.typography.textColor?.headings || undefined}
-                        onChange={(color) => updateTypography({ textColor: { headings: color || undefined } })}
-                        allowTransparent={false}
-                      />
-                      <input
-                        type="text"
-                        value={settings.typography.textColor?.headings || ""}
-                        onChange={(e) => updateTypography({ textColor: { headings: e.target.value || undefined } })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#1f2937"
-                      />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Headings</label>
+                    <ColorPicker
+                      color={settings.typography.textColor?.headings || undefined}
+                      onChange={(color) => updateTypography({ textColor: { headings: color || undefined } })}
+                      allowTransparent={false}
+                      size="small"
+                    />
                   </div>
-                  <div className="flex items-center gap-4">
-                    <label className="w-32 text-sm font-medium text-gray-700">Body</label>
-                    <div className="flex-1 flex items-center gap-3">
-                      <ColorPicker
-                        color={settings.typography.textColor?.body || undefined}
-                        onChange={(color) => updateTypography({ textColor: { body: color || undefined } })}
-                        allowTransparent={false}
-                      />
-                      <input
-                        type="text"
-                        value={settings.typography.textColor?.body || ""}
-                        onChange={(e) => updateTypography({ textColor: { body: e.target.value || undefined } })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="#1f2937"
-                      />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Body</label>
+                    <ColorPicker
+                      color={settings.typography.textColor?.body || undefined}
+                      onChange={(color) => updateTypography({ textColor: { body: color || undefined } })}
+                      allowTransparent={false}
+                      size="small"
+                    />
                   </div>
                 </div>
               </div>

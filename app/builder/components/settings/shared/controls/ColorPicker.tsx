@@ -108,12 +108,14 @@ interface ColorPickerProps {
   color: string | null | undefined;
   onChange: (color: string | null) => void;
   allowTransparent?: boolean;
+  size?: "default" | "small";
 }
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
   color,
   onChange,
   allowTransparent = true,
+  size = "default",
 }) => {
   const { settings } = useGlobalSettings();
   const [isOpen, setIsOpen] = useState(false);
@@ -134,6 +136,46 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   useEffect(() => {
     setPickerColor(parseColorForPicker(color));
   }, [color]);
+
+  // Calculate popover position synchronously before rendering
+  const getPopoverPosition = (): { top: string; left: string } => {
+    if (!buttonRef.current) {
+      return { top: "0", left: "0" };
+    }
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const popoverWidth = 220; // SketchPicker width + padding
+    const popoverHeight = 350; // Approximate height of popover
+    const spacing = 8;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Calculate initial position (below button, aligned to left)
+    let top = buttonRect.bottom + window.scrollY + spacing;
+    let left = buttonRect.left + window.scrollX;
+
+    // Check if popover would overflow right edge
+    if (left + popoverWidth > viewportWidth + window.scrollX) {
+      // Align to right edge of button instead
+      left = buttonRect.right + window.scrollX - popoverWidth;
+      // If still overflowing, align to viewport right edge
+      if (left < window.scrollX) {
+        left = window.scrollX + viewportWidth - popoverWidth - 8;
+      }
+    }
+
+    // Check if popover would overflow bottom edge
+    if (buttonRect.bottom + spacing + popoverHeight > viewportHeight + window.scrollY) {
+      // Position above button instead
+      top = buttonRect.top + window.scrollY - popoverHeight - spacing;
+      // If still overflowing, align to viewport top
+      if (top < window.scrollY) {
+        top = window.scrollY + 8;
+      }
+    }
+
+    return { top: `${top}px`, left: `${left}px` };
+  };
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -162,7 +204,19 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   const currentColor = color || null;
   const isTransparent = !currentColor || currentColor === "transparent";
+  
+  // Check if color has alpha transparency (rgba with alpha < 1)
+  const hasAlpha = currentColor && currentColor.startsWith("rgba") && currentColor.includes(",");
+  const alphaValue = hasAlpha ? parseFloat(currentColor.match(/,\s*([\d.]+)\)/)?.[1] || "1") : 1;
+  const isSemiTransparent = hasAlpha && alphaValue < 1;
+  
+  // Only show checkboard pattern for transparent or semi-transparent colors
+  const showCheckboard = isTransparent || isSemiTransparent;
   const displayColor = isTransparent ? "rgba(0, 0, 0, 0)" : currentColor;
+
+  const isSmall = size === "small";
+  const buttonSize = isSmall ? "w-6 h-6" : "w-10 h-10";
+  const borderRadius = isSmall ? "rounded-full" : "rounded";
 
   return (
     <div className="relative">
@@ -170,17 +224,18 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-10 h-10 shrink-0 border border-gray-300 rounded cursor-pointer relative overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+        className={`${buttonSize} shrink-0 border border-gray-300 ${borderRadius} cursor-pointer relative overflow-hidden shadow-sm hover:shadow-md transition-shadow`}
         style={{
-          // Use non-shorthand properties to avoid React warnings about mixing
-          // background and backgroundSize/backgroundPosition.
           backgroundColor: displayColor,
-          backgroundImage: `linear-gradient(45deg, #ccc 25%, transparent 25%),
-                            linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                            linear-gradient(45deg, transparent 75%, #ccc 75%),
-                            linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
-          backgroundSize: "8px 8px, 8px 8px, 8px 8px, 8px 8px",
-          backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
+          ...(showCheckboard && {
+            // Only apply checkboard pattern for transparent/semi-transparent colors
+            backgroundImage: `linear-gradient(45deg, #ccc 25%, transparent 25%),
+                              linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #ccc 75%),
+                              linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
+            backgroundSize: "8px 8px, 8px 8px, 8px 8px, 8px 8px",
+            backgroundPosition: "0 0, 0 4px, 4px -4px, -4px 0px",
+          }),
         }}
         title={isTransparent ? "Transparent" : (currentColor || "No color")}
       >
@@ -202,14 +257,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           <div
             ref={popoverRef}
             className="fixed z-50"
-            style={{
-              top: buttonRef.current
-                ? `${buttonRef.current.getBoundingClientRect().bottom + window.scrollY + 8}px`
-                : "100%",
-              left: buttonRef.current
-                ? `${buttonRef.current.getBoundingClientRect().left + window.scrollX}px`
-                : "0",
-            }}
+            style={getPopoverPosition()}
           >
             <div className="bg-white border border-gray-200 rounded shadow-sm">
               {/* Theme Colors */}
