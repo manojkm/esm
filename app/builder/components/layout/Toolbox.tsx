@@ -14,7 +14,7 @@ export const Toolbox = () => {
         <div
           ref={(ref) => {
             if (ref) {
-              connectors.create(ref, <Text text="New Text" />);
+              connectors.create(ref, <Text text="New Text" marginBottom={16} />);
             }
           }}
           className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
@@ -34,7 +34,7 @@ export const Toolbox = () => {
         <div
           ref={(ref) => {
             if (ref) {
-              connectors.create(ref, <Container showLayoutPicker={true} />);
+              connectors.create(ref, <Container showLayoutPicker={true} padding={10} />);
             }
           }}
           className="p-3 bg-white border rounded cursor-grab hover:shadow-md"

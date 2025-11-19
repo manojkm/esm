@@ -17,11 +17,16 @@ export interface ResponsiveSpacingControlProps {
   onChange: (value: ResponsiveRecord) => void;
   unitOptions?: string[];
   defaultValue?: number;
+  // Individual side defaults (for when non-responsive props are set)
+  defaultTop?: number | null;
+  defaultRight?: number | null;
+  defaultBottom?: number | null;
+  defaultLeft?: number | null;
 }
 
 const SIDES = ["top", "right", "bottom", "left"] as const;
 
-export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue }) => {
+export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> = ({ controlId = "responsive-spacing", label, value, onChange, unitOptions = ["px", "%"], defaultValue, defaultTop, defaultRight, defaultBottom, defaultLeft }) => {
   const { currentBreakpoint, getResponsiveValue, setResponsiveValue } = useResponsive();
   const { getSpacingScale } = useGlobalSettings();
   const spacingScale = getSpacingScale();
@@ -29,8 +34,33 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
 
   const getValue = (side: (typeof SIDES)[number]) => {
     const sideValues = value?.[side] || {};
-    const fallback = defaultValue !== undefined ? defaultValue : null;
-    return getResponsiveValue(sideValues, fallback);
+    // Get the value from responsive record (may be null if explicitly cleared)
+    const responsiveValue = getResponsiveValue(sideValues, undefined);
+
+    // If value is explicitly null (user cleared it), return null
+    if (responsiveValue === null) {
+      return null;
+    }
+
+    // If value exists (not undefined), return it
+    if (responsiveValue !== undefined) {
+      return responsiveValue;
+    }
+
+    // Otherwise, use default fallback
+    let fallback: number | null = null;
+    if (side === "top" && defaultTop !== undefined) {
+      fallback = defaultTop;
+    } else if (side === "right" && defaultRight !== undefined) {
+      fallback = defaultRight;
+    } else if (side === "bottom" && defaultBottom !== undefined) {
+      fallback = defaultBottom;
+    } else if (side === "left" && defaultLeft !== undefined) {
+      fallback = defaultLeft;
+    } else if (defaultValue !== undefined) {
+      fallback = defaultValue;
+    }
+    return fallback;
   };
 
   const getUnit = () => {
@@ -43,23 +73,20 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
     const currentSideValues = (value?.[side] as Record<string, number | null>) || {};
 
     if (trimmed === "") {
-      const nextSideValues = { ...currentSideValues };
-      delete nextSideValues[currentBreakpoint];
-      const nextState: ResponsiveRecord = { ...(value || {}) };
-      if (Object.keys(nextSideValues).length === 0) {
-        delete nextState[side];
-      } else {
-        nextState[side] = nextSideValues;
-      }
+      // User cleared the value - set it to null explicitly (not delete) so we know it was cleared
+      const updatedSideValues = setResponsiveValue(currentSideValues, currentBreakpoint, null);
+      const nextState: ResponsiveRecord = { ...(value || {}), [side]: updatedSideValues };
 
-      if (defaultValue === undefined) {
-        const hasAnySide = SIDES.some((key) => {
-          const sideRecord = nextState[key] as Record<string, unknown> | undefined;
-          return sideRecord && Object.keys(sideRecord).length > 0;
-        });
-        if (!hasAnySide) {
-          delete nextState.unit;
-        }
+      // Check if we should clean up unit if all sides are null/empty
+      const hasAnyNonDefaultSide = SIDES.some((key) => {
+        const sideRecord = nextState[key] as Record<string, unknown> | undefined;
+        if (!sideRecord) return false;
+        // Check if any breakpoint has a non-null value
+        return Object.values(sideRecord).some((val) => val !== null);
+      });
+
+      if (!hasAnyNonDefaultSide && nextState.unit) {
+        delete nextState.unit;
       }
 
       onChange(nextState);
@@ -82,18 +109,62 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
   };
 
   const hasCustomValues = SIDES.some((side) => {
-    const resolved = getValue(side);
-    if (defaultValue !== undefined) {
-      return resolved !== defaultValue;
+    const sideValues = value?.[side] || {};
+    const responsiveValue = getResponsiveValue(sideValues, undefined);
+
+    // Get the expected default for this side
+    let sideDefault: number | null | undefined = undefined;
+    if (side === "top" && defaultTop !== undefined) {
+      sideDefault = defaultTop;
+    } else if (side === "right" && defaultRight !== undefined) {
+      sideDefault = defaultRight;
+    } else if (side === "bottom" && defaultBottom !== undefined) {
+      sideDefault = defaultBottom;
+    } else if (side === "left" && defaultLeft !== undefined) {
+      sideDefault = defaultLeft;
+    } else if (defaultValue !== undefined) {
+      sideDefault = defaultValue;
     }
-    return resolved !== null && resolved !== undefined;
+
+    // If there's an explicit value in the responsive record for current breakpoint
+    if (responsiveValue !== undefined) {
+      // If value is explicitly null (user cleared it), it's custom only if default was not null
+      if (responsiveValue === null) {
+        return sideDefault !== null && sideDefault !== undefined;
+      }
+      // If value differs from default, it's custom
+      return responsiveValue !== sideDefault;
+    }
+
+    // No explicit value in responsive record for current breakpoint
+    // Check if there are values for OTHER breakpoints (responsive overrides)
+    const hasOtherBreakpoints = sideValues && Object.keys(sideValues).some((bp) => bp !== currentBreakpoint && (sideValues as Record<string, unknown>)[bp] !== undefined);
+
+    // If there are responsive overrides for other breakpoints, it's custom
+    // Otherwise, if we're just showing the default value, it's NOT custom
+    return hasOtherBreakpoints;
   });
 
   const handleReset = () => {
     const resetValues: Record<string, unknown> = { ...(value || {}) };
     SIDES.forEach((side) => {
       const currentSideValues = (value?.[side] as Record<string, number | null>) || {};
-      if (defaultValue === undefined) {
+      // Get the default value for this side
+      let sideDefault: number | null | undefined = undefined;
+      if (side === "top" && defaultTop !== undefined) {
+        sideDefault = defaultTop;
+      } else if (side === "right" && defaultRight !== undefined) {
+        sideDefault = defaultRight;
+      } else if (side === "bottom" && defaultBottom !== undefined) {
+        sideDefault = defaultBottom;
+      } else if (side === "left" && defaultLeft !== undefined) {
+        sideDefault = defaultLeft;
+      } else if (defaultValue !== undefined) {
+        sideDefault = defaultValue;
+      }
+
+      if (sideDefault === undefined) {
+        // No default - clear the value
         const nextSideValues = { ...currentSideValues };
         delete nextSideValues[currentBreakpoint];
         if (Object.keys(nextSideValues).length === 0) {
@@ -102,11 +173,14 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
           resetValues[side] = nextSideValues;
         }
       } else {
-        resetValues[side] = setResponsiveValue(currentSideValues, currentBreakpoint, defaultValue);
+        // Reset to default value
+        resetValues[side] = setResponsiveValue(currentSideValues, currentBreakpoint, sideDefault);
       }
     });
 
-    if (defaultValue === undefined && resetValues.unit) {
+    // Check if all sides are cleared (no defaults)
+    const hasAnyDefault = defaultValue !== undefined || defaultTop !== undefined || defaultRight !== undefined || defaultBottom !== undefined || defaultLeft !== undefined;
+    if (!hasAnyDefault && resetValues.unit) {
       const nextUnits = { ...(resetValues.unit as Record<string, string>) };
       delete nextUnits[currentBreakpoint];
       if (Object.keys(nextUnits).length === 0) {
@@ -152,15 +226,11 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
           </select>
         </div>
       </div>
-      
+
       {/* Quick Select Spacing Scale */}
       {spacingScale.values.length > 0 && getUnit() === (spacingScale.unit || "px") && (
         <div className="mb-2">
-          <button
-            type="button"
-            onClick={() => setShowQuickSelect(!showQuickSelect)}
-            className="text-xs text-blue-600 hover:text-blue-800 underline"
-          >
+          <button type="button" onClick={() => setShowQuickSelect(!showQuickSelect)} className="text-xs text-blue-600 hover:text-blue-800 underline">
             {showQuickSelect ? "Hide" : "Show"} Quick Select
           </button>
           {showQuickSelect && (
@@ -199,15 +269,7 @@ export const ResponsiveSpacingControl: React.FC<ResponsiveSpacingControlProps> =
             <label className="block text-xs text-gray-500 mb-1 capitalize" htmlFor={`${baseId}-${side}`}>
               {side}
             </label>
-            <input
-              id={`${baseId}-${side}`}
-              type="text"
-              inputMode="numeric"
-              pattern="-?\\d*"
-              value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""}
-              onChange={(event) => setValue(side, event.target.value)}
-              className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white"
-            />
+            <input id={`${baseId}-${side}`} type="text" inputMode="numeric" pattern="-?\\d*" value={getValue(side) !== null && getValue(side) !== undefined ? String(getValue(side)) : ""} onChange={(event) => setValue(side, event.target.value)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded text-gray-900 bg-white" />
           </div>
         ))}
       </div>

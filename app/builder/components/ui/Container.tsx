@@ -23,7 +23,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // craft.js updates the corresponding prop, and this component re-renders with the new value.
   const {
     children,
-    padding,
+    padding = 10, // Default padding for containers (user can clear if needed)
     margin,
     paddingTop = null,
     paddingRight = null,
@@ -172,9 +172,10 @@ export const Container: React.FC<ContainerProps> = (props) => {
     zIndexResponsive,
   } = props;
 
-  // Apply global defaults if props are undefined
-  const finalPadding = padding ?? containerDefaults.padding?.default ?? 10;
-  const finalMargin = margin ?? containerDefaults.margin?.default ?? 0;
+  // Apply global defaults if props are undefined (but not if explicitly null - user cleared it)
+  // For padding: default to 10px for containers (can be cleared to null)
+  const finalPadding = padding !== undefined ? padding : (containerDefaults.padding?.default ?? 10);
+  const finalMargin = margin !== undefined ? margin : (containerDefaults.margin?.default ?? 0);
   // Content box width is for content wrappers (Full Width + Content Width = Boxed), NOT for Container Width = Boxed
   const finalContentBoxWidth = contentBoxWidth ?? 1200;
   const finalCustomWidth = customWidth ?? containerDefaults.maxWidth?.custom ?? 100;
@@ -281,7 +282,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
     if (transformedLayout.cols.length > 1) {
       transformedLayout.cols.forEach((col) => {
         // Create a new container element configured as a flex column.
-        const newNodeTree = query.parseReactElement(<Element is={Container} flexBasis={col.width} flexBasisUnit="%" layout="flex" flexDirection="column" justifyContent="center" alignItems="center" flexWrap="nowrap" canvas />).toNodeTree();
+        const newNodeTree = query.parseReactElement(<Element is={Container} flexBasis={col.width} flexBasisUnit="%" layout="flex" flexDirection="column" justifyContent="center" alignItems="center" flexWrap="nowrap" padding={10} canvas />).toNodeTree();
         // Use the global `editorActions` to add the new column to this container.
         editorActions.addNodeTree(newNodeTree, id);
       });
@@ -374,9 +375,9 @@ export const Container: React.FC<ContainerProps> = (props) => {
     resolver: responsiveResolver,
   });
 
-  // Generate a unique, stable class name for this component instance to apply hover styles.
+  // Generate a unique, stable class name for this component instance to apply all styles.
   // This must be defined before buildOverlayStyles since it needs className.
-  const hoverClassName = `container-hover-${id}`;
+  const componentClassName = `container-${id}`;
 
   // Build overlay styles for editor preview and export CSS
   const overlayStylesResult = buildOverlayStyles({
@@ -398,7 +399,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
     overlayOpacity,
     overlayOpacityResponsive,
     resolver: responsiveResolver,
-    className: hoverClassName,
+    className: componentClassName,
   });
 
   const borderStyles = buildBorderStyles({
@@ -487,13 +488,13 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Link color CSS for editor mode (non-responsive, uses static values)
   // In export mode, responsive link color CSS is generated in responsiveCss
   const linkCss = isEditMode ? buildLinkColorCss({
-    baseSelector: `.${hoverClassName}`,
+    baseSelector: `.${componentClassName}`,
     linkColor,
     linkColorHover,
   }) : "";
 
   const responsiveVisibilityCss = buildVisibilityCss({
-    hoverClassName,
+    componentClassName,
     isEditMode,
     hideOnDesktop,
     hideOnTablet,
@@ -516,12 +517,12 @@ export const Container: React.FC<ContainerProps> = (props) => {
   if (shouldGenerateMediaQueries) {
     // Hover background color responsive CSS
     if (enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover && backgroundColorHoverResponsive) {
-      responsiveHoverCss += generateHoverBackgroundColorCss(hoverClassName, backgroundColorHoverResponsive, backgroundColorHover);
+      responsiveHoverCss += generateHoverBackgroundColorCss(componentClassName, backgroundColorHoverResponsive, backgroundColorHover);
     }
 
     // Hover border color responsive CSS
     if (borderStyle && borderStyle !== "none" && borderColorHover && borderColorHoverResponsive) {
-      responsiveHoverCss += generateHoverBorderColorCss(hoverClassName, borderColorHoverResponsive, borderColorHover);
+      responsiveHoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, borderColorHover);
     }
   }
 
@@ -529,7 +530,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
   if (shouldGenerateMediaQueries) {
     // Padding responsive CSS
     if (paddingResponsive) {
-      responsiveCss += generatePaddingCss(hoverClassName, paddingResponsive, {
+      responsiveCss += generatePaddingCss(componentClassName, paddingResponsive, {
         top: paddingTop,
         right: paddingRight,
         bottom: paddingBottom,
@@ -540,7 +541,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
     // Margin responsive CSS
     if (marginResponsive) {
-      responsiveCss += generateMarginCss(hoverClassName, marginResponsive, {
+      responsiveCss += generateMarginCss(componentClassName, marginResponsive, {
         top: marginTop,
         right: marginRight,
         bottom: marginBottom,
@@ -553,16 +554,16 @@ export const Container: React.FC<ContainerProps> = (props) => {
     if (!needsContentWrapper && effectiveLayout === "flex") {
       // Generate CSS for row-gap (with or without responsive)
       if (rowGapResponsive) {
-        responsiveCss += generateResponsiveCss(hoverClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
+        responsiveCss += generateResponsiveCss(componentClassName, "row-gap", rowGapResponsive, rowGap, rowGapUnit);
       } else if (rowGap !== null && rowGap !== undefined) {
-        responsiveCss += `.${hoverClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
+        responsiveCss += `.${componentClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
       }
       
       // Generate CSS for column-gap (with or without responsive)
       if (columnGapResponsive) {
-        responsiveCss += generateResponsiveCss(hoverClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
+        responsiveCss += generateResponsiveCss(componentClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
       } else if (columnGap !== null && columnGap !== undefined) {
-        responsiveCss += `.${hoverClassName} { column-gap: ${columnGap}${columnGapUnit}; }\n`;
+        responsiveCss += `.${componentClassName} { column-gap: ${columnGap}${columnGapUnit}; }\n`;
       }
     }
 
@@ -571,33 +572,33 @@ export const Container: React.FC<ContainerProps> = (props) => {
       // Generate CSS for flex-direction (with or without responsive)
       const flexDirFallback = flexDirection ?? (isChildContainer ? "column" : "row");
       if (flexDirectionResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-direction", flexDirectionResponsive, flexDirFallback);
+        responsiveCss += generateResponsiveFlexCss(componentClassName, "flex-direction", flexDirectionResponsive, flexDirFallback);
       } else if (flexDirFallback) {
-        responsiveCss += `.${hoverClassName} { flex-direction: ${flexDirFallback}; }\n`;
+        responsiveCss += `.${componentClassName} { flex-direction: ${flexDirFallback}; }\n`;
       }
       
       // Generate CSS for justify-content (with or without responsive)
       const justifyContentFallback = justifyContent ?? (isChildContainer ? "center" : "flex-start");
       if (justifyContentResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "justify-content", justifyContentResponsive, justifyContentFallback);
+        responsiveCss += generateResponsiveFlexCss(componentClassName, "justify-content", justifyContentResponsive, justifyContentFallback);
       } else if (justifyContentFallback) {
-        responsiveCss += `.${hoverClassName} { justify-content: ${justifyContentFallback}; }\n`;
+        responsiveCss += `.${componentClassName} { justify-content: ${justifyContentFallback}; }\n`;
       }
       
       // Generate CSS for align-items (with or without responsive)
       const alignItemsFallback = alignItems ?? (isChildContainer ? "center" : "stretch");
       if (alignItemsResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "align-items", alignItemsResponsive, alignItemsFallback);
+        responsiveCss += generateResponsiveFlexCss(componentClassName, "align-items", alignItemsResponsive, alignItemsFallback);
       } else if (alignItemsFallback) {
-        responsiveCss += `.${hoverClassName} { align-items: ${alignItemsFallback}; }\n`;
+        responsiveCss += `.${componentClassName} { align-items: ${alignItemsFallback}; }\n`;
       }
       
       // Generate CSS for flex-wrap (with or without responsive)
       const flexWrapFallback = flexWrap ?? "nowrap";
       if (flexWrapResponsive) {
-        responsiveCss += generateResponsiveFlexCss(hoverClassName, "flex-wrap", flexWrapResponsive, flexWrapFallback);
+        responsiveCss += generateResponsiveFlexCss(componentClassName, "flex-wrap", flexWrapResponsive, flexWrapFallback);
       } else if (flexWrapFallback) {
-        responsiveCss += `.${hoverClassName} { flex-wrap: ${flexWrapFallback}; }\n`;
+        responsiveCss += `.${componentClassName} { flex-wrap: ${flexWrapFallback}; }\n`;
       }
     }
 
@@ -650,17 +651,17 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
     // Background color responsive CSS
     if (backgroundType === "color" && backgroundColorResponsive) {
-      responsiveCss += generateBackgroundColorCss(hoverClassName, backgroundColorResponsive, backgroundColor ?? undefined);
+      responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? undefined);
     }
 
     // Border color responsive CSS
     if (borderStyle && borderStyle !== "none" && borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(hoverClassName, borderColorResponsive, borderColor ?? undefined);
+      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? undefined);
     }
 
     // Border radius responsive CSS
     if (borderRadiusResponsive) {
-      responsiveCss += generateResponsiveFourSideCss(hoverClassName, "border-radius", borderRadiusResponsive, {
+      responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-radius", borderRadiusResponsive, {
         top: borderTopLeftRadius,
         right: borderTopRightRadius,
         bottom: borderBottomRightRadius,
@@ -671,7 +672,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
     // Border width responsive CSS
     if (borderWidthResponsive) {
-      responsiveCss += generateResponsiveFourSideCss(hoverClassName, "border-width", borderWidthResponsive, {
+      responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-width", borderWidthResponsive, {
         top: borderTopWidth,
         right: borderRightWidth,
         bottom: borderBottomWidth,
@@ -684,19 +685,19 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Generate CSS for width/flex-basis even if no responsive prop exists
     if (isChildContainer) {
       if (flexBasisResponsive) {
-        responsiveCss += generateResponsiveCss(hoverClassName, "flex-basis", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+        responsiveCss += generateResponsiveCss(componentClassName, "flex-basis", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
         // Also set width to ensure it works in preview mode
-        responsiveCss += generateResponsiveCss(hoverClassName, "width", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
+        responsiveCss += generateResponsiveCss(componentClassName, "width", flexBasisResponsive, flexBasis, flexBasisUnit ?? "%");
       } else if (flexBasis !== null && flexBasis !== undefined) {
         // Generate base CSS even without responsive prop
         const baseValue = `${flexBasis}${flexBasisUnit ?? "%"}`;
-        responsiveCss += `.${hoverClassName} { flex-basis: ${baseValue}; width: ${baseValue}; }\n`;
+        responsiveCss += `.${componentClassName} { flex-basis: ${baseValue}; width: ${baseValue}; }\n`;
       }
     }
 
     // Min height responsive CSS
     if (minHeightResponsive && enableMinHeight) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "min-height", minHeightResponsive, minHeight, minHeightUnit ?? "px");
+      responsiveCss += generateResponsiveCss(componentClassName, "min-height", minHeightResponsive, minHeight, minHeightUnit ?? "px");
     }
 
     // Content box width responsive CSS (applies to content wrapper, not main container)
@@ -707,18 +708,18 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Boxed width CSS (applies to main container when containerWidth is "boxed")
     if (containerWidth === "boxed" && !isChildContainer) {
       const boxedMaxWidth = containerDefaults.maxWidth?.boxed ?? 1200;
-      responsiveCss += `.${hoverClassName} { max-width: ${boxedMaxWidth}px; margin-left: auto; margin-right: auto; }\n`;
+      responsiveCss += `.${componentClassName} { max-width: ${boxedMaxWidth}px; margin-left: auto; margin-right: auto; }\n`;
     }
 
     // Custom width responsive CSS (applies to main container)
     if (customWidthResponsive && containerWidth === "custom") {
-      responsiveCss += generateResponsiveCss(hoverClassName, "max-width", customWidthResponsive, customWidth, customWidthUnit ?? "px");
+      responsiveCss += generateResponsiveCss(componentClassName, "max-width", customWidthResponsive, customWidth, customWidthUnit ?? "px");
     }
 
     // Box shadow responsive CSS
     if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
       responsiveCss += generateBoxShadowCss(
-        hoverClassName,
+        componentClassName,
         boxShadowHorizontalResponsive,
         boxShadowVerticalResponsive,
         boxShadowBlurResponsive,
@@ -737,27 +738,38 @@ export const Container: React.FC<ContainerProps> = (props) => {
       responsiveCss += overlayStylesResult.css;
     }
 
-    // Text color responsive CSS
+    // Text color responsive CSS - target content class
     if (textColor && textColorResponsive) {
-      responsiveCss += generateTextColorCss(hoverClassName, textColorResponsive, textColor);
+      responsiveCss += generateTextColorCss(`${componentClassName} .container-content`, textColorResponsive, textColor);
+    } else if (textColor) {
+      // Non-responsive text color
+      responsiveCss += `.${componentClassName} .container-content { color: ${textColor}; }\n`;
     }
 
-    // Link color responsive CSS
+    // Link color responsive CSS - target content class
     if ((linkColor || linkColorHover) && (linkColorResponsive || linkColorHoverResponsive)) {
       responsiveCss += generateLinkColorCss(
-        hoverClassName,
+        `${componentClassName} .container-content`,
         linkColorResponsive,
         linkColor ?? undefined,
         linkColorHoverResponsive,
         linkColorHover ?? undefined
       );
+    } else if (linkColor || linkColorHover) {
+      // Non-responsive link colors
+      if (linkColor) {
+        responsiveCss += `.${componentClassName} .container-content a { color: ${linkColor}; }\n`;
+      }
+      if (linkColorHover) {
+        responsiveCss += `.${componentClassName} .container-content a:hover { color: ${linkColorHover}; }\n`;
+      }
     }
 
     // Position responsive CSS (only when position is set and not default/static)
     if (position && position !== "default" && position !== "static") {
       if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
         responsiveCss += generatePositionCss(
-          hoverClassName,
+          componentClassName,
           positionTopResponsive,
           positionRightResponsive,
           positionBottomResponsive,
@@ -775,7 +787,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
       // Z-index responsive CSS
       if (zIndex !== null && zIndex !== undefined && zIndexResponsive) {
-        responsiveCss += generateZIndexCss(hoverClassName, zIndexResponsive, zIndex);
+        responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex);
       }
     }
   }
@@ -783,7 +795,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
   const styleTagContent = mergeCssSegments(
     // In editor mode, use buildHoverRule with resolved values
     // In export mode, use responsiveHoverCss which has base + media queries
-    isEditMode ? buildHoverRule(hoverClassName, hoverRules) : responsiveHoverCss,
+    isEditMode ? buildHoverRule(componentClassName, hoverRules) : responsiveHoverCss,
     linkCss,
     responsiveVisibilityCss,
     responsiveCss
@@ -890,7 +902,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       relative
       ${isEditMode && selected ? "ring-2 ring-blue-500 ring-offset-0" : isEditMode ? "hover:ring-1 hover:ring-blue-300" : ""}
       transition-all duration-200
-      ${hoverClassName}
+      ${componentClassName}
       ${className}
     `,
     style: containerStyle,
@@ -987,15 +999,29 @@ export const Container: React.FC<ContainerProps> = (props) => {
               </>
             );
 
-            // If a content wrapper is needed, wrap the content in it; otherwise, render directly.
-            return needsContentWrapper ? (
-              <div 
-                className={contentWrapperClassName}
-                style={contentWrapperStyle}
-              >
-                {content}
-              </div>
-            ) : content;
+            // Always wrap content in container-content div for CSS targeting
+            // When needsContentWrapper is true, combine both classes on the same element
+            // When needsContentWrapper is false, use a simple wrapper that doesn't interfere with flexbox
+            if (needsContentWrapper) {
+              // Use existing wrapper with both classes
+              return (
+                <div 
+                  className={`${contentWrapperClassName} container-content`}
+                  style={contentWrapperStyle}
+                >
+                  {content}
+                </div>
+              );
+            } else {
+              // Simple wrapper that doesn't interfere with flexbox layout
+              // Use display: contents so the wrapper doesn't create a new layout context
+              // This allows children to remain direct flex items when parent is flex
+              return (
+                <div className="container-content" style={{ display: "contents" }}>
+                  {content}
+                </div>
+              );
+            }
           })()}
 
           {/* Render the layout picker modal if it should be visible. */}

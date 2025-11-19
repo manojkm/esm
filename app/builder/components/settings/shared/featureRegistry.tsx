@@ -33,6 +33,8 @@ export const containerFeatureRegistry: Partial<FeatureRegistry<ContainerProps>> 
       actions={actions}
       controlId={`${controlId}-spacing`}
       showGaps={meta?.showGaps !== false}
+      defaultPadding={meta?.defaultPadding as number | null | undefined}
+      defaultMargin={meta?.defaultMargin as number | null | undefined}
     />
   ),
   background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
@@ -62,6 +64,8 @@ export const textFeatureRegistry: Partial<FeatureRegistry<TextProps>> = createFe
       actions={actions}
       controlId={`${controlId}-spacing`}
       showGaps={meta?.showGaps !== false}
+      defaultPadding={meta?.defaultPadding as number | null | undefined}
+      defaultMargin={meta?.defaultMargin as number | null | undefined}
     />
   ),
   background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,

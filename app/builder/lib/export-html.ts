@@ -163,6 +163,58 @@ export const exportRenderedHTML = (customCSS: string = ""): string => {
   // Remove editor tooltips and helper text
   const helperTextRegex = /<div[^>]*>Drop components here<\/div>/gi;
   htmlContent = htmlContent.replace(helperTextRegex, "");
+  
+  // Remove Lexical editor classes
+  htmlContent = htmlContent.replace(/\s*class="editor-[^"]*"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="outline-none"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="text-gray-400"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="pointer-events-none select-none"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="text-default-hover"/gi, ""); // Remove editor-only class
+  htmlContent = htmlContent.replace(/\s*class=""/gi, "");
+  
+  // Remove unnecessary wrapper divs (relative, text-default-hover)
+  htmlContent = htmlContent.replace(/<div[^>]*class="[^"]*relative[^"]*"[^>]*>/gi, "");
+  htmlContent = htmlContent.replace(/<div[^>]*class="[^"]*text-default-hover[^"]*"[^>]*>/gi, "");
+  htmlContent = htmlContent.replace(/<\/div>\s*<\/div>/gi, "</div>");
+  
+  // Remove draggable attributes
+  htmlContent = htmlContent.replace(/\s*draggable="false"/gi, "");
+  
+  // Remove white-space pre-wrap styles
+  htmlContent = htmlContent.replace(/\s*style="white-space:\s*pre-wrap;?"/gi, "");
+  htmlContent = htmlContent.replace(/\s*style=""/gi, "");
+  
+  // Remove empty spans
+  htmlContent = htmlContent.replace(/<span[^>]*>\s*<\/span>/gi, "");
+  
+  // Remove redundant formatting tags: <b><strong> -> <strong>, <i><em> -> <em>
+  // Handle both orders: <b><strong> and <strong><b>
+  htmlContent = htmlContent.replace(/<b[^>]*>(<strong[^>]*>.*?<\/strong>)<\/b>/gi, "$1");
+  htmlContent = htmlContent.replace(/<strong[^>]*>(<b[^>]*>.*?<\/b>)<\/strong>/gi, "$1");
+  htmlContent = htmlContent.replace(/<i[^>]*>(<em[^>]*>.*?<\/em>)<\/i>/gi, "$1");
+  htmlContent = htmlContent.replace(/<em[^>]*>(<i[^>]*>.*?<\/i>)<\/em>/gi, "$1");
+  
+  // Fix nested <p> tags - unwrap inner <p> if outer is also <p>
+  htmlContent = htmlContent.replace(/<p([^>]*)><p([^>]*)>(.*?)<\/p><\/p>/gi, "<p$1>$3</p>");
+  
+  // Fix invalid nesting: unwrap <p> tags inside heading tags (h1-h6)
+  htmlContent = htmlContent.replace(/<(h[1-6])([^>]*)><p([^>]*)>(.*?)<\/p><\/\1>/gi, "<$1$2>$4</$1>");
+  
+  // Fix invalid nesting: unwrap <p> tags inside span tags
+  htmlContent = htmlContent.replace(/<span([^>]*)><p([^>]*)>(.*?)<\/p><\/span>/gi, "<span$1>$3</span>");
+  
+  // Remove unnecessary <span> wrappers that only contain text (no meaningful attributes)
+  // This handles cases like <span>text</span> -> text
+  // But preserves spans with style attributes like <span style="color: red;">text</span>
+  htmlContent = htmlContent.replace(/<span(?![^>]*\s(style|class|id|data-|aria-)[^>]*)>(.*?)<\/span>/gi, "$2");
+  
+  // Remove spans that only have empty class attribute or no meaningful attributes
+  htmlContent = htmlContent.replace(/<span[^>]*class="[^"]*"[^>]*>(.*?)<\/span>/gi, (match, content) => {
+    // Check if span has style, id, data-*, or aria- attributes
+    const hasMeaningfulAttrs = match.match(/\s(style|id|data-|aria-)/i);
+    // If no meaningful attributes, unwrap the span
+    return hasMeaningfulAttrs ? match : content;
+  });
 
   // Process images
   const { html: processedHTML, images } = processImages(htmlContent);
@@ -170,8 +222,26 @@ export const exportRenderedHTML = (customCSS: string = ""): string => {
   // Consolidate all styles
   const consolidatedStyles = Array.from(allStyles).join("\n\n");
 
+  // Add default list styles for eBay compatibility (since editor classes are removed)
+  const defaultListStyles = `
+/* Default list styles for eBay compatibility */
+ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+li {
+  margin: 0.25em 0;
+}
+`;
+
   // Combine component styles with custom CSS
-  const allCSS = [consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
+  const allCSS = [defaultListStyles, consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
 
   // Generate the complete HTML document
   const fullHTML = `<!DOCTYPE html>
@@ -245,10 +315,81 @@ export const exportRenderedHTMLWithFonts = (customCSS: string = "", googleFonts?
   
   const helperTextRegex = /<div[^>]*>Drop components here<\/div>/gi;
   htmlContent = htmlContent.replace(helperTextRegex, "");
+  
+  // Remove Lexical editor classes
+  htmlContent = htmlContent.replace(/\s*class="editor-[^"]*"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="outline-none"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="text-gray-400"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="pointer-events-none select-none"/gi, "");
+  htmlContent = htmlContent.replace(/\s*class="text-default-hover"/gi, ""); // Remove editor-only class
+  htmlContent = htmlContent.replace(/\s*class=""/gi, "");
+  
+  // Remove unnecessary wrapper divs (relative, text-default-hover)
+  htmlContent = htmlContent.replace(/<div[^>]*class="[^"]*relative[^"]*"[^>]*>/gi, "");
+  htmlContent = htmlContent.replace(/<div[^>]*class="[^"]*text-default-hover[^"]*"[^>]*>/gi, "");
+  htmlContent = htmlContent.replace(/<\/div>\s*<\/div>/gi, "</div>");
+  
+  // Remove draggable attributes
+  htmlContent = htmlContent.replace(/\s*draggable="false"/gi, "");
+  
+  // Remove white-space pre-wrap styles
+  htmlContent = htmlContent.replace(/\s*style="white-space:\s*pre-wrap;?"/gi, "");
+  htmlContent = htmlContent.replace(/\s*style=""/gi, "");
+  
+  // Remove empty spans
+  htmlContent = htmlContent.replace(/<span[^>]*>\s*<\/span>/gi, "");
+  
+  // Remove redundant formatting tags: <b><strong> -> <strong>, <i><em> -> <em>
+  // Handle both orders: <b><strong> and <strong><b>
+  htmlContent = htmlContent.replace(/<b[^>]*>(<strong[^>]*>.*?<\/strong>)<\/b>/gi, "$1");
+  htmlContent = htmlContent.replace(/<strong[^>]*>(<b[^>]*>.*?<\/b>)<\/strong>/gi, "$1");
+  htmlContent = htmlContent.replace(/<i[^>]*>(<em[^>]*>.*?<\/em>)<\/i>/gi, "$1");
+  htmlContent = htmlContent.replace(/<em[^>]*>(<i[^>]*>.*?<\/i>)<\/em>/gi, "$1");
+  
+  // Fix nested <p> tags - unwrap inner <p> if outer is also <p>
+  htmlContent = htmlContent.replace(/<p([^>]*)><p([^>]*)>(.*?)<\/p><\/p>/gi, "<p$1>$3</p>");
+  
+  // Fix invalid nesting: unwrap <p> tags inside heading tags (h1-h6)
+  htmlContent = htmlContent.replace(/<(h[1-6])([^>]*)><p([^>]*)>(.*?)<\/p><\/\1>/gi, "<$1$2>$4</$1>");
+  
+  // Fix invalid nesting: unwrap <p> tags inside span tags
+  htmlContent = htmlContent.replace(/<span([^>]*)><p([^>]*)>(.*?)<\/p><\/span>/gi, "<span$1>$3</span>");
+  
+  // Remove unnecessary <span> wrappers that only contain text (no meaningful attributes)
+  // This handles cases like <span>text</span> -> text
+  // But preserves spans with style attributes like <span style="color: red;">text</span>
+  htmlContent = htmlContent.replace(/<span(?![^>]*\s(style|class|id|data-|aria-)[^>]*)>(.*?)<\/span>/gi, "$2");
+  
+  // Remove spans that only have empty class attribute or no meaningful attributes
+  htmlContent = htmlContent.replace(/<span[^>]*class="[^"]*"[^>]*>(.*?)<\/span>/gi, (match, content) => {
+    // Check if span has style, id, data-*, or aria- attributes
+    const hasMeaningfulAttrs = match.match(/\s(style|id|data-|aria-)/i);
+    // If no meaningful attributes, unwrap the span
+    return hasMeaningfulAttrs ? match : content;
+  });
 
   const { html: processedHTML } = processImages(htmlContent);
   const consolidatedStyles = Array.from(allStyles).join("\n\n");
-  const allCSS = [consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
+  
+  // Add default list styles for eBay compatibility (since editor classes are removed)
+  const defaultListStyles = `
+/* Default list styles for eBay compatibility */
+ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+li {
+  margin: 0.25em 0;
+}
+`;
+
+  const allCSS = [defaultListStyles, consolidatedStyles, customCSS].filter(Boolean).join("\n\n");
 
   // Generate Google Fonts links if provided
   let fontLinks = "";

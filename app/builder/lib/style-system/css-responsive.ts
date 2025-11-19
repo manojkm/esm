@@ -46,19 +46,23 @@ export const generateResponsiveCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
   
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  const baseUnit = (responsive.unit && responsive.unit.desktop) || fallbackUnit;
-  const baseValue = typeof fallbackValue === "number" ? `${fallbackValue}${baseUnit}` : fallbackValue;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const desktopUnit = (responsive.unit && responsive.unit.desktop) || fallbackUnit;
+  const baseValue = desktopValue !== undefined && desktopValue !== null
+    ? (typeof desktopValue === "number" ? `${desktopValue}${desktopUnit}` : desktopValue)
+    : (typeof fallbackValue === "number" ? `${fallbackValue}${desktopUnit}` : fallbackValue);
   css += `.${className} { ${property}: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
       const unit = (responsive.unit && responsive.unit[bp]) || fallbackUnit;
       const cssValue = typeof value === "number" ? `${value}${unit}` : value;
       
-      // Only generate media query if value differs from fallback
+      // Only generate media query if value differs from base (not just fallback)
       if (cssValue !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className} { ${property}: ${cssValue} !important; } }\n`;
       }
@@ -92,11 +96,17 @@ export const generateResponsiveFourSideCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback values (applies to all breakpoints)
-  const baseTop = fallback.top ?? fallback.defaultValue;
-  const baseRight = fallback.right ?? fallback.defaultValue;
-  const baseBottom = fallback.bottom ?? fallback.defaultValue;
-  const baseLeft = fallback.left ?? fallback.defaultValue;
+  // Generate base CSS rule with desktop values from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopTop = (responsive.top as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopRight = (responsive.right as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopBottom = (responsive.bottom as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopLeft = (responsive.left as ResponsiveMap<number> | undefined)?.desktop;
+  
+  const baseTop = desktopTop ?? fallback.top ?? fallback.defaultValue;
+  const baseRight = desktopRight ?? fallback.right ?? fallback.defaultValue;
+  const baseBottom = desktopBottom ?? fallback.bottom ?? fallback.defaultValue;
+  const baseLeft = desktopLeft ?? fallback.left ?? fallback.defaultValue;
   const baseUnit = (responsive.unit as ResponsiveMap<string> | undefined)?.desktop || defaultUnit;
   css += `.${className} { ${property}: ${baseTop}${baseUnit} ${baseRight}${baseUnit} ${baseBottom}${baseUnit} ${baseLeft}${baseUnit}; }\n`;
 
@@ -191,12 +201,17 @@ export const generateResponsiveFlexCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className} { ${property}: ${fallback}; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className} { ${property}: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
-    if (responsive[bp] !== undefined && responsive[bp] !== null && responsive[bp] !== fallback) {
+    if (responsive[bp] !== undefined && responsive[bp] !== null && responsive[bp] !== baseValue) {
       css += `${getMediaQuery(bp)} { .${className} { ${property}: ${responsive[bp]} !important; } }\n`;
     }
   }
@@ -220,14 +235,19 @@ export const generateBackgroundColorCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className} { background-color: ${fallback}; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className} { background-color: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "string" && value !== fallback) {
+      if (typeof value === "string" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className} { background-color: ${value} !important; } }\n`;
       }
     }
@@ -252,14 +272,19 @@ export const generateBorderColorCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className} { border-color: ${fallback}; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className} { border-color: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "string" && value !== fallback) {
+      if (typeof value === "string" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className} { border-color: ${value} !important; } }\n`;
       }
     }
@@ -285,14 +310,19 @@ export const generateHoverBackgroundColorCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className}:hover { background-color: ${fallback} !important; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className}:hover { background-color: ${baseValue} !important; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "string" && value !== fallback) {
+      if (typeof value === "string" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className}:hover { background-color: ${value} !important; } }\n`;
       }
     }
@@ -318,14 +348,19 @@ export const generateHoverBorderColorCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className}:hover { border-color: ${fallback} !important; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className}:hover { border-color: ${baseValue} !important; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "string" && value !== fallback) {
+      if (typeof value === "string" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className}:hover { border-color: ${value} !important; } }\n`;
       }
     }
@@ -366,9 +401,20 @@ export const generateBoxShadowCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback values (applies to all breakpoints)
+  // Generate base CSS rule with desktop values from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
   const inset = position === "inset" ? "inset " : "";
-  const baseBoxShadowValue = `${inset}${horizontalFallback}px ${verticalFallback}px ${blurFallback}px ${spreadFallback}px ${color}`;
+  const desktopHorizontal = (horizontalResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopVertical = (verticalResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopBlur = (blurResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopSpread = (spreadResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  
+  const baseHorizontal = desktopHorizontal ?? horizontalFallback;
+  const baseVertical = desktopVertical ?? verticalFallback;
+  const baseBlur = desktopBlur ?? blurFallback;
+  const baseSpread = desktopSpread ?? spreadFallback;
+  
+  const baseBoxShadowValue = `${inset}${baseHorizontal}px ${baseVertical}px ${baseBlur}px ${baseSpread}px ${color}`;
   css += `.${className} { box-shadow: ${baseBoxShadowValue}; }\n`;
 
   // Generate media queries only for breakpoints that have explicit overrides
@@ -387,10 +433,10 @@ export const generateBoxShadowCss = (
 
     // Only generate CSS if there's at least one custom value for this breakpoint
     if (hasHorizontal || hasVertical || hasBlur || hasSpread) {
-      const h = hasHorizontal ? hVal : horizontalFallback;
-      const v = hasVertical ? vVal : verticalFallback;
-      const b = hasBlur ? bVal : blurFallback;
-      const s = hasSpread ? sVal : spreadFallback;
+      const h = hasHorizontal ? hVal : baseHorizontal;
+      const v = hasVertical ? vVal : baseVertical;
+      const b = hasBlur ? bVal : baseBlur;
+      const s = hasSpread ? sVal : baseSpread;
 
       const boxShadowValue = `${inset}${h}px ${v}px ${b}px ${s}px ${color}`;
       
@@ -420,14 +466,19 @@ export const generateTextColorCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className} { color: ${fallback}; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string"
+    ? desktopValue
+    : fallback;
+  css += `.${className} { color: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "string" && value !== fallback) {
+      if (typeof value === "string" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className} { color: ${value} !important; } }\n`;
       }
     }
@@ -454,14 +505,19 @@ export const generateLinkColorCss = (
   if (linkColorResponsive && linkColor) {
     const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
     
-    // Generate base CSS rule with fallback value (applies to all breakpoints)
-    css += `.${className} a { color: ${linkColor} !important; }\n`;
+    // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+    // Desktop values are used as the base since they apply to all breakpoints by default
+    const desktopLinkColor = linkColorResponsive.desktop;
+    const baseLinkColor = desktopLinkColor !== undefined && desktopLinkColor !== null && typeof desktopLinkColor === "string"
+      ? desktopLinkColor
+      : linkColor;
+    css += `.${className} a { color: ${baseLinkColor} !important; }\n`;
 
-    // Generate media queries only for breakpoints that have explicit overrides
+    // Generate media queries only for breakpoints that have explicit overrides (different from base)
     for (const bp of breakpoints) {
       if (linkColorResponsive[bp] !== undefined && linkColorResponsive[bp] !== null) {
         const value = linkColorResponsive[bp];
-        if (typeof value === "string" && value !== linkColor) {
+        if (typeof value === "string" && value !== baseLinkColor) {
           css += `${getMediaQuery(bp)} { .${className} a { color: ${value} !important; } }\n`;
         }
       }
@@ -472,14 +528,19 @@ export const generateLinkColorCss = (
   if (linkColorHoverResponsive && linkColorHover) {
     const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
     
-    // Generate base CSS rule with fallback value (applies to all breakpoints)
-    css += `.${className} a:hover { color: ${linkColorHover} !important; }\n`;
+    // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+    // Desktop values are used as the base since they apply to all breakpoints by default
+    const desktopLinkColorHover = linkColorHoverResponsive.desktop;
+    const baseLinkColorHover = desktopLinkColorHover !== undefined && desktopLinkColorHover !== null && typeof desktopLinkColorHover === "string"
+      ? desktopLinkColorHover
+      : linkColorHover;
+    css += `.${className} a:hover { color: ${baseLinkColorHover} !important; }\n`;
 
-    // Generate media queries only for breakpoints that have explicit overrides
+    // Generate media queries only for breakpoints that have explicit overrides (different from base)
     for (const bp of breakpoints) {
       if (linkColorHoverResponsive[bp] !== undefined && linkColorHoverResponsive[bp] !== null) {
         const value = linkColorHoverResponsive[bp];
-        if (typeof value === "string" && value !== linkColorHover) {
+        if (typeof value === "string" && value !== baseLinkColorHover) {
           css += `${getMediaQuery(bp)} { .${className} a:hover { color: ${value} !important; } }\n`;
         }
       }
@@ -522,23 +583,42 @@ export const generatePositionCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback values (applies to all breakpoints)
-  const baseTop = positionTop !== null && positionTop !== undefined ? `${positionTop}${positionTopUnit}` : "auto";
-  const baseRight = positionRight !== null && positionRight !== undefined ? `${positionRight}${positionRightUnit}` : "auto";
-  const baseBottom = positionBottom !== null && positionBottom !== undefined ? `${positionBottom}${positionBottomUnit}` : "auto";
-  const baseLeft = positionLeft !== null && positionLeft !== undefined ? `${positionLeft}${positionLeftUnit}` : "auto";
+  // Generate base CSS rule with desktop values from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopTop = (positionTopResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopRight = (positionRightResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopBottom = (positionBottomResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  const desktopLeft = (positionLeftResponsive as ResponsiveMap<number> | undefined)?.desktop;
+  
+  const desktopTopUnit = (positionTopResponsive?.unit as ResponsiveMap<string> | undefined)?.desktop || positionTopUnit;
+  const desktopRightUnit = (positionRightResponsive?.unit as ResponsiveMap<string> | undefined)?.desktop || positionRightUnit;
+  const desktopBottomUnit = (positionBottomResponsive?.unit as ResponsiveMap<string> | undefined)?.desktop || positionBottomUnit;
+  const desktopLeftUnit = (positionLeftResponsive?.unit as ResponsiveMap<string> | undefined)?.desktop || positionLeftUnit;
+  
+  const baseTop = desktopTop !== undefined && desktopTop !== null
+    ? `${desktopTop}${desktopTopUnit}`
+    : (positionTop !== null && positionTop !== undefined ? `${positionTop}${positionTopUnit}` : "auto");
+  const baseRight = desktopRight !== undefined && desktopRight !== null
+    ? `${desktopRight}${desktopRightUnit}`
+    : (positionRight !== null && positionRight !== undefined ? `${positionRight}${positionRightUnit}` : "auto");
+  const baseBottom = desktopBottom !== undefined && desktopBottom !== null
+    ? `${desktopBottom}${desktopBottomUnit}`
+    : (positionBottom !== null && positionBottom !== undefined ? `${positionBottom}${positionBottomUnit}` : "auto");
+  const baseLeft = desktopLeft !== undefined && desktopLeft !== null
+    ? `${desktopLeft}${desktopLeftUnit}`
+    : (positionLeft !== null && positionLeft !== undefined ? `${positionLeft}${positionLeftUnit}` : "auto");
 
   // Only generate base CSS if at least one position value is set
-  if (positionTop !== null && positionTop !== undefined) {
+  if (positionTop !== null && positionTop !== undefined || desktopTop !== undefined && desktopTop !== null) {
     css += `.${className} { top: ${baseTop}; }\n`;
   }
-  if (positionRight !== null && positionRight !== undefined) {
+  if (positionRight !== null && positionRight !== undefined || desktopRight !== undefined && desktopRight !== null) {
     css += `.${className} { right: ${baseRight}; }\n`;
   }
-  if (positionBottom !== null && positionBottom !== undefined) {
+  if (positionBottom !== null && positionBottom !== undefined || desktopBottom !== undefined && desktopBottom !== null) {
     css += `.${className} { bottom: ${baseBottom}; }\n`;
   }
-  if (positionLeft !== null && positionLeft !== undefined) {
+  if (positionLeft !== null && positionLeft !== undefined || desktopLeft !== undefined && desktopLeft !== null) {
     css += `.${className} { left: ${baseLeft}; }\n`;
   }
 
@@ -607,14 +687,19 @@ export const generateZIndexCss = (
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
 
-  // Generate base CSS rule with fallback value (applies to all breakpoints)
-  css += `.${className} { z-index: ${fallback}; }\n`;
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "number"
+    ? desktopValue
+    : fallback;
+  css += `.${className} { z-index: ${baseValue}; }\n`;
 
-  // Generate media queries only for breakpoints that have explicit overrides (different from fallback)
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
     if (responsive[bp] !== undefined && responsive[bp] !== null) {
       const value = responsive[bp];
-      if (typeof value === "number" && value !== fallback) {
+      if (typeof value === "number" && value !== baseValue) {
         css += `${getMediaQuery(bp)} { .${className} { z-index: ${value} !important; } }\n`;
       }
     }

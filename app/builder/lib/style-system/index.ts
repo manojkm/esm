@@ -9,4 +9,5 @@ export * from "./color";
 export * from "./hover";
 export * from "./dataAttributes";
 export * from "./css-responsive";
+export * from "../component-styles";
 

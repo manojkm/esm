@@ -1,0 +1,28 @@
+Example 1 with its css copied from css file:
+
+<div class="eb-text-wrapper eb-text-ud5zf" data-id="eb-text-ud5zf" bis_skin_checked="1"><p class="eb-text">111</p></div>
+
+.eb-text-wrapper.eb-text-ud5zf .eb-text {
+    text-align: left;
+    color: var(--eb-global-text-color);
+    column-rule-color: var(--eb-global-text-color);
+    column-rule-style: default;
+    column-count: 1;
+    column-gap: 15px;
+}
+
+
+
+Example 2  with its css copied from css file:
+
+<div class="eb-text-wrapper eb-text-xfdq7" data-id="eb-text-xfdq7" bis_skin_checked="1"><h3 class="eb-text">333</h3></div>
+
+
+.eb-text-wrapper.eb-text-xfdq7 .eb-text {
+    text-align: left;
+    color: var(--eb-global-link-color);
+    column-rule-color: var(--eb-global-text-color);
+    column-rule-style: default;
+    column-count: 1;
+    column-gap: 15px;
+}

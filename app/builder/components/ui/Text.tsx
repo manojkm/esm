@@ -8,43 +8,8 @@ import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
 import { getTypographyCSS } from "@/app/builder/lib/typography-utils";
 import { getGoogleFontFamilyCSS } from "@/app/builder/lib/google-fonts";
-import {
-  buildBackgroundHoverCss,
-  buildBackgroundStyles,
-  buildBorderHoverCss,
-  buildBorderStyles,
-  buildBoxShadowHoverCss,
-  buildBoxShadowStyle,
-  buildHoverRule,
-  buildLinkColorCss,
-  buildOverlayStyles,
-  buildResponsiveFourSideValue,
-  buildResponsiveValueWithUnit,
-  buildTextColorStyles,
-  buildVisibilityCss,
-  mergeCssSegments,
-  parseDataAttributes,
-  resolveResponsiveValue,
-  type ResponsiveMap,
-  type ResponsiveResolver,
-} from "@/app/builder/lib/style-system";
-import {
-  generatePaddingCss,
-  generateMarginCss,
-  generateResponsiveCss,
-  generateBackgroundColorCss,
-  generateBorderColorCss,
-  generateResponsiveFourSideCss,
-  generateBoxShadowCss,
-  generateHoverBackgroundColorCss,
-  generateHoverBorderColorCss,
-  generateTextColorCss,
-  generateLinkColorCss,
-  generatePositionCss,
-  generateZIndexCss,
-  getMediaQuery,
-  type BreakpointKey,
-} from "@/app/builder/lib/style-system/css-responsive";
+import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildOverlayStyles, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss, generateHoverBackgroundColorCss, generateHoverBorderColorCss, generateTextColorCss, generateLinkColorCss, generatePositionCss, generateZIndexCss, getMediaQuery, type BreakpointKey } from "@/app/builder/lib/style-system/css-responsive";
 import type { TextProps } from "./text/types";
 
 export const Text: React.FC<TextProps> = (props) => {
@@ -86,7 +51,7 @@ export const Text: React.FC<TextProps> = (props) => {
     lineHeightResponsive,
     lineHeightUnit = "normal",
     // Spacing
-    padding,
+    padding, // Default null for text (user can set if needed)
     margin,
     paddingTop = null,
     paddingRight = null,
@@ -95,7 +60,7 @@ export const Text: React.FC<TextProps> = (props) => {
     paddingUnit = "px",
     marginTop = null,
     marginRight = null,
-    marginBottom = null,
+    marginBottom = 16, // Default margin-bottom for text (user can clear if needed)
     marginLeft = null,
     marginUnit = "px",
     paddingResponsive,
@@ -210,9 +175,7 @@ export const Text: React.FC<TextProps> = (props) => {
   const typographyType = isHeading ? "headings" : "body";
 
   // Apply global typography defaults
-  const globalFontFamily = isHeading
-    ? typographyDefaults.googleFonts?.headings || typographyDefaults.fontFamily?.headings
-    : typographyDefaults.googleFonts?.body || typographyDefaults.fontFamily?.body;
+  const globalFontFamily = isHeading ? typographyDefaults.googleFonts?.headings || typographyDefaults.fontFamily?.headings : typographyDefaults.googleFonts?.body || typographyDefaults.fontFamily?.body;
   const globalFontSize = typographyDefaults.fontSize?.desktop?.[typographyElement];
   const globalFontWeight = typographyDefaults.fontWeight?.[typographyType];
   const globalFontStyle = typographyDefaults.fontStyle?.[typographyType];
@@ -224,13 +187,12 @@ export const Text: React.FC<TextProps> = (props) => {
     connectors: { connect, drag },
     selected,
     actions: { setProp },
+    id: nodeId,
   } = useNode((state) => ({
     selected: state.events.selected,
   }));
 
-  const {
-    enabled,
-  } = useEditor((state) => ({
+  const { enabled } = useEditor((state) => ({
     enabled: state.options.enabled,
   }));
   const isEditMode = enabled;
@@ -248,11 +210,10 @@ export const Text: React.FC<TextProps> = (props) => {
       }
       return getResponsiveValue(values ?? {}, fallback);
     },
-    [isEditMode, getResponsiveValue, actualBreakpoint]
+    [isEditMode, getResponsiveValue, actualBreakpoint],
   );
 
-  const responsiveResolver: ResponsiveResolver = (values, fallback) =>
-    getEditorResponsiveValue(values, fallback);
+  const responsiveResolver: ResponsiveResolver = (values, fallback) => getEditorResponsiveValue(values, fallback);
 
   const [editable, setEditable] = useState(false);
   const [currentText, setCurrentText] = useState(text || "");
@@ -288,17 +249,10 @@ export const Text: React.FC<TextProps> = (props) => {
   };
 
   // Check if text is empty for placeholder
-  const isEmpty = !currentText || 
-    currentText.trim() === "" || 
-    currentText === "<p><br></p>" ||
-    currentText === "<p></p>" ||
-    currentText.replace(/<[^>]*>/g, "").trim() === "";
-
+  const isEmpty = !currentText || currentText.trim() === "" || currentText === "<p><br></p>" || currentText === "<p></p>" || currentText.replace(/<[^>]*>/g, "").trim() === "";
 
   // Resolve responsive values
-  const effectiveTextAlign = textAlignResponsive
-    ? responsiveResolver(textAlignResponsive, textAlign || "left")
-    : textAlign || "left";
+  const effectiveTextAlign = textAlignResponsive ? responsiveResolver(textAlignResponsive, textAlign || "left") : textAlign || "left";
 
   const effectiveFontSize = fontSizeResponsive
     ? buildResponsiveValueWithUnit({
@@ -309,21 +263,13 @@ export const Text: React.FC<TextProps> = (props) => {
       })
     : `${fontSize ?? globalFontSize ?? 16}${fontSizeUnit}`;
 
-  const effectiveFontWeight = fontWeightResponsive
-    ? responsiveResolver(fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400)
-    : fontWeight ?? globalFontWeight ?? 400;
+  const effectiveFontWeight = fontWeightResponsive ? responsiveResolver(fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400) : fontWeight ?? globalFontWeight ?? 400;
 
-  const effectiveFontStyle = fontStyleResponsive
-    ? responsiveResolver(fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal")
-    : fontStyle ?? globalFontStyle ?? "normal";
+  const effectiveFontStyle = fontStyleResponsive ? responsiveResolver(fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal") : fontStyle ?? globalFontStyle ?? "normal";
 
-  const effectiveTextTransform = textTransformResponsive
-    ? responsiveResolver(textTransformResponsive, textTransform ?? "none")
-    : textTransform ?? "none";
+  const effectiveTextTransform = textTransformResponsive ? responsiveResolver(textTransformResponsive, textTransform ?? "none") : textTransform ?? "none";
 
-  const effectiveTextDecoration = textDecorationResponsive
-    ? responsiveResolver(textDecorationResponsive, textDecoration ?? "none")
-    : textDecoration ?? "none";
+  const effectiveTextDecoration = textDecorationResponsive ? responsiveResolver(textDecorationResponsive, textDecoration ?? "none") : textDecoration ?? "none";
 
   const effectiveLetterSpacing = letterSpacingResponsive
     ? buildResponsiveValueWithUnit({
@@ -353,9 +299,7 @@ export const Text: React.FC<TextProps> = (props) => {
     }
     if (globalFontFamily) {
       // Check if it's a Google Font
-      const googleFont = isHeading
-        ? typographyDefaults.googleFonts?.headings
-        : typographyDefaults.googleFonts?.body;
+      const googleFont = isHeading ? typographyDefaults.googleFonts?.headings : typographyDefaults.googleFonts?.body;
       if (googleFont) {
         return getGoogleFontFamilyCSS(googleFont, globalFontFamily);
       }
@@ -367,9 +311,7 @@ export const Text: React.FC<TextProps> = (props) => {
   const effectiveFontFamily = getEffectiveFontFamily();
 
   // Text color resolution
-  const effectiveTextColor = textColorResponsive
-    ? responsiveResolver(textColorResponsive, textColor ?? globalTextColor ?? "#1f2937")
-    : textColor ?? globalTextColor ?? "#1f2937";
+  const effectiveTextColor = textColorResponsive ? responsiveResolver(textColorResponsive, textColor ?? globalTextColor ?? "#1f2937") : textColor ?? globalTextColor ?? "#1f2937";
 
   // Build styles
   const paddingValue = buildResponsiveFourSideValue({
@@ -399,203 +341,399 @@ export const Text: React.FC<TextProps> = (props) => {
   });
 
   // Generate CSS for preview/export mode
-  const textClassName = `text-${cssId || "default"}`;
-  const hoverClassName = `${textClassName}-hover`;
+  // Use node ID to ensure each Text component instance has unique CSS classes
+  const textClassName = `text-${cssId || nodeId}`;
+  const componentClassName = textClassName; // Unique class for this component instance
 
   let responsiveCss = "";
+  let hoverCss = "";
   const shouldGenerateMediaQueries = !isEditMode;
 
-  if (shouldGenerateMediaQueries) {
-    // Padding responsive CSS
-    if (paddingResponsive) {
-      responsiveCss += generatePaddingCss(hoverClassName, paddingResponsive, {
-        top: paddingTop,
-        right: paddingRight,
-        bottom: paddingBottom,
-        left: paddingLeft,
-        defaultValue: padding,
-      }, paddingUnit);
-    }
-
-    // Margin responsive CSS
-    if (marginResponsive) {
-      responsiveCss += generateMarginCss(hoverClassName, marginResponsive, {
-        top: marginTop,
-        right: marginRight,
-        bottom: marginBottom,
-        left: marginLeft,
-        defaultValue: margin,
-      }, marginUnit);
-    }
-
-    // Text align responsive CSS
-    if (textAlignResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "text-align", textAlignResponsive, textAlign || "left", "");
-    }
-
-    // Font size responsive CSS
-    if (fontSizeResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "font-size", fontSizeResponsive, fontSize ?? globalFontSize ?? 16, fontSizeUnit);
-    }
-
-    // Font weight responsive CSS
-    if (fontWeightResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "font-weight", fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400, "");
-    }
-
-    // Font style responsive CSS
-    if (fontStyleResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "font-style", fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal", "");
-    }
-
-    // Text transform responsive CSS
-    if (textTransformResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "text-transform", textTransformResponsive, textTransform ?? "none", "");
-    }
-
-    // Text decoration responsive CSS
-    if (textDecorationResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "text-decoration", textDecorationResponsive, textDecoration ?? "none", "");
-    }
-
-    // Letter spacing responsive CSS
-    if (letterSpacingResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "letter-spacing", letterSpacingResponsive, letterSpacing ?? globalLetterSpacing ?? 0, letterSpacingUnit);
-    }
-
-    // Line height responsive CSS
-    if (lineHeightResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "line-height", lineHeightResponsive, lineHeight ?? globalLineHeight ?? 1.6, lineHeightUnit === "normal" ? "" : lineHeightUnit);
-    }
-
-    // Font family responsive CSS
-    if (fontFamilyResponsive) {
-      responsiveCss += generateResponsiveCss(hoverClassName, "font-family", fontFamilyResponsive, effectiveFontFamily, "");
-    }
-
-    // Text color responsive CSS
-    if (textColorResponsive) {
-      responsiveCss += generateTextColorCss(hoverClassName, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
-    }
-
-    // Link color responsive CSS
-    if (linkColorResponsive || linkColorHoverResponsive) {
-      responsiveCss += generateLinkColorCss(hoverClassName, linkColorResponsive, linkColor ?? undefined, linkColorHoverResponsive, linkColorHover ?? undefined);
-    }
-
-    // Background responsive CSS
-    if (backgroundColorResponsive) {
-      responsiveCss += generateBackgroundColorCss(hoverClassName, backgroundColorResponsive, backgroundColor ?? "#ffffff");
-    }
-
-    // Border responsive CSS
-    if (borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(hoverClassName, borderColorResponsive, borderColor ?? "#000000");
-    }
-
-    // Box shadow responsive CSS
-    if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
-      responsiveCss += generateBoxShadowCss(
-        hoverClassName,
-        boxShadowHorizontalResponsive,
-        boxShadowVerticalResponsive,
-        boxShadowBlurResponsive,
-        boxShadowSpreadResponsive,
-        boxShadowHorizontal ?? 0,
-        boxShadowVertical ?? 0,
-        boxShadowBlur ?? 0,
-        boxShadowSpread ?? 0,
-        boxShadowColor
-      );
-    }
-
-    // Position responsive CSS
-    if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
-      responsiveCss += generatePositionCss(
-        hoverClassName,
-        positionTopResponsive,
-        positionRightResponsive,
-        positionBottomResponsive,
-        positionLeftResponsive,
-        positionTop,
-        positionRight,
-        positionBottom,
-        positionLeft,
-        positionTopUnit,
-        positionRightUnit,
-        positionBottomUnit,
-        positionLeftUnit
-      );
-    }
-
-    // Z-index responsive CSS
-    if (zIndexResponsive) {
-      responsiveCss += generateZIndexCss(hoverClassName, zIndexResponsive, zIndex ?? 0);
-    }
-  }
-
-  // Generate hover CSS
-  let hoverCss = "";
-  if (shouldGenerateMediaQueries) {
-    // Text color hover
-    if (textColorHover && textColorHoverResponsive) {
+  // Generate hover CSS for both edit and preview modes
+  // Text color hover - target content class within wrapper div
+  if (textColorHover) {
+    if (shouldGenerateMediaQueries && textColorHoverResponsive) {
+      // Preview mode: Generate responsive hover CSS
       const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
-      hoverCss += `.${hoverClassName}:hover { color: ${textColorHover} !important; }\n`;
+      hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
       for (const bp of breakpoints) {
         if (textColorHoverResponsive[bp] !== undefined && textColorHoverResponsive[bp] !== null) {
           const value = textColorHoverResponsive[bp];
           if (typeof value === "string" && value !== textColorHover) {
-            hoverCss += `${getMediaQuery(bp)} { .${hoverClassName}:hover { color: ${value} !important; } }\n`;
+            hoverCss += `${getMediaQuery(bp)} { .${componentClassName}:hover .text-content { color: ${value} !important; } }\n`;
           }
         }
       }
-    } else if (textColorHover) {
-      hoverCss += `.${hoverClassName}:hover { color: ${textColorHover} !important; } `;
+    } else {
+      // Edit mode or non-responsive: Use static value
+      hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
     }
+  }
 
-    // Background hover
-    if (enableBackgroundColorHover && backgroundColorHover && backgroundColorHoverResponsive) {
-      hoverCss += generateHoverBackgroundColorCss(hoverClassName, backgroundColorHoverResponsive, backgroundColorHover);
-    } else if (enableBackgroundColorHover && backgroundColorHover) {
-      hoverCss += `.${hoverClassName}:hover { background-color: ${backgroundColorHover} !important; } `;
+  // Background hover
+  if (enableBackgroundColorHover && backgroundColorHover) {
+    if (shouldGenerateMediaQueries) {
+      // Preview mode: Generate responsive hover CSS
+      if (backgroundColorHoverResponsive) {
+        hoverCss += generateHoverBackgroundColorCss(componentClassName, backgroundColorHoverResponsive, backgroundColorHover);
+      } else {
+        hoverCss += `.${componentClassName}:hover { background-color: ${backgroundColorHover} !important; } `;
+      }
+    } else {
+      // Edit mode: Use resolver to get current breakpoint value
+      if (backgroundType === "color") {
+        const hoverBackgroundCss = buildBackgroundHoverCss({
+          type: backgroundType,
+          colorHover: backgroundColorHover,
+          colorHoverResponsive: backgroundColorHoverResponsive,
+          resolver: responsiveResolver,
+        });
+        if (hoverBackgroundCss) {
+          hoverCss += `.${componentClassName}:hover { ${hoverBackgroundCss} } `;
+        }
+      }
     }
+  }
 
-    // Border hover
-    if (borderColorHover && borderColorHoverResponsive) {
-      hoverCss += generateHoverBorderColorCss(hoverClassName, borderColorHoverResponsive, borderColorHover);
-    } else if (borderColorHover) {
-      hoverCss += `.${hoverClassName}:hover { border-color: ${borderColorHover} !important; } `;
+  // Border hover
+  if (borderColorHover) {
+    if (shouldGenerateMediaQueries) {
+      // Preview mode: Generate responsive hover CSS
+      if (borderColorHoverResponsive) {
+        hoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, borderColorHover);
+      } else {
+        hoverCss += `.${componentClassName}:hover { border-color: ${borderColorHover} !important; } `;
+      }
+    } else {
+      // Edit mode: Use resolver to get current breakpoint value
+      const hoverBorderCss = buildBorderHoverCss({
+        style: borderStyle === "none" ? undefined : borderStyle,
+        colorHover: borderColorHover,
+        colorHoverResponsive: borderColorHoverResponsive,
+        resolver: responsiveResolver,
+      });
+      if (hoverBorderCss) {
+        hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+      }
     }
+  }
 
-    // Box shadow hover
-    if (enableBoxShadowHover && (boxShadowHorizontalHoverResponsive || boxShadowVerticalHoverResponsive || boxShadowBlurHoverResponsive || boxShadowSpreadHoverResponsive)) {
-      hoverCss += generateBoxShadowCss(
-        hoverClassName,
-        boxShadowHorizontalHoverResponsive,
-        boxShadowVerticalHoverResponsive,
-        boxShadowBlurHoverResponsive,
-        boxShadowSpreadHoverResponsive,
-        boxShadowHorizontalHover ?? 0,
-        boxShadowVerticalHover ?? 0,
-        boxShadowBlurHover ?? 0,
-        boxShadowSpreadHover ?? 0,
-        boxShadowColorHover
+  // Box shadow hover
+  if (enableBoxShadowHover) {
+    if (shouldGenerateMediaQueries) {
+      // Preview mode: Generate responsive hover CSS
+      if (boxShadowHorizontalHoverResponsive || boxShadowVerticalHoverResponsive || boxShadowBlurHoverResponsive || boxShadowSpreadHoverResponsive) {
+        hoverCss += generateBoxShadowCss(componentClassName, boxShadowHorizontalHoverResponsive, boxShadowVerticalHoverResponsive, boxShadowBlurHoverResponsive, boxShadowSpreadHoverResponsive, boxShadowHorizontalHover ?? 0, boxShadowVerticalHover ?? 0, boxShadowBlurHover ?? 0, boxShadowSpreadHover ?? 0, boxShadowColorHover);
+        hoverCss = hoverCss.replace(/\./g, ".:hover");
+      } else {
+        const shadowValue = `${boxShadowHorizontalHover ?? 0}px ${boxShadowVerticalHover ?? 0}px ${boxShadowBlurHover ?? 0}px ${boxShadowSpreadHover ?? 0}px ${boxShadowColorHover}`;
+        hoverCss += `.${componentClassName}:hover { box-shadow: ${shadowValue} !important; } `;
+      }
+    } else {
+      // Edit mode: Use resolver to get current breakpoint value
+      const hoverBoxShadowCss = buildBoxShadowHoverCss({
+        enableHover: enableBoxShadowHover,
+        preset: boxShadowPreset,
+        hoverPosition: boxShadowPositionHover,
+        colorHover: boxShadowColorHover,
+        color: boxShadowColor,
+        horizontal: boxShadowHorizontalHover,
+        vertical: boxShadowVerticalHover,
+        blur: boxShadowBlurHover,
+        spread: boxShadowSpreadHover,
+        horizontalResponsive: boxShadowHorizontalHoverResponsive,
+        verticalResponsive: boxShadowVerticalHoverResponsive,
+        blurResponsive: boxShadowBlurHoverResponsive,
+        spreadResponsive: boxShadowSpreadHoverResponsive,
+        resolver: responsiveResolver,
+      });
+      if (hoverBoxShadowCss) {
+        hoverCss += `.${componentClassName}:hover { ${hoverBoxShadowCss} } `;
+      }
+    }
+  }
+
+  if (shouldGenerateMediaQueries) {
+    // Padding responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    // Only generate CSS if padding is explicitly set (including 0), not if it's null/undefined
+    if (paddingResponsive) {
+      // If responsive is set, use padding value or 0 as fallback
+      responsiveCss += generatePaddingCss(
+        componentClassName,
+        paddingResponsive,
+        {
+          top: paddingTop,
+          right: paddingRight,
+          bottom: paddingBottom,
+          left: paddingLeft,
+          defaultValue: padding ?? 0,
+        },
+        paddingUnit,
       );
-      hoverCss = hoverCss.replace(/\./g, ".:hover");
-    } else if (enableBoxShadowHover) {
-      const shadowValue = `${boxShadowHorizontalHover ?? 0}px ${boxShadowVerticalHover ?? 0}px ${boxShadowBlurHover ?? 0}px ${boxShadowSpreadHover ?? 0}px ${boxShadowColorHover}`;
-      hoverCss += `.${hoverClassName}:hover { box-shadow: ${shadowValue} !important; } `;
+    } else if (padding !== null && padding !== undefined) {
+      // Generate base CSS for non-responsive padding only if explicitly set (including 0)
+      // In preview mode, build static CSS directly without resolver
+      const top = paddingTop ?? padding;
+      const right = paddingRight ?? padding;
+      const bottom = paddingBottom ?? padding;
+      const left = paddingLeft ?? padding;
+      const paddingValue = `${top}${paddingUnit} ${right}${paddingUnit} ${bottom}${paddingUnit} ${left}${paddingUnit}`;
+      responsiveCss += `.${componentClassName} { padding: ${paddingValue}; }\n`;
+    }
+
+    // Margin responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    // Generate CSS if margin is explicitly set OR if any individual side is set (e.g., marginBottom = 16)
+    const hasMarginValue = margin !== null && margin !== undefined;
+    const hasIndividualMargin = marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null;
+
+    if (marginResponsive) {
+      // If responsive is set, use margin value or 0 as fallback
+      responsiveCss += generateMarginCss(
+        componentClassName,
+        marginResponsive,
+        {
+          top: marginTop,
+          right: marginRight,
+          bottom: marginBottom,
+          left: marginLeft,
+          defaultValue: margin ?? 0,
+        },
+        marginUnit,
+      );
+    } else if (hasMarginValue || hasIndividualMargin) {
+      // Generate base CSS for non-responsive margin if explicitly set OR if any individual side is set
+      // In preview mode, build static CSS directly without resolver
+      const top = marginTop ?? margin ?? 0;
+      const right = marginRight ?? margin ?? 0;
+      const bottom = marginBottom ?? margin ?? 0;
+      const left = marginLeft ?? margin ?? 0;
+      const marginValue = `${top}${marginUnit} ${right}${marginUnit} ${bottom}${marginUnit} ${left}${marginUnit}`;
+      responsiveCss += `.${componentClassName} { margin: ${marginValue}; }\n`;
+    }
+
+    // Text align - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Target content class within wrapper div
+    if (textAlignResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-align", textAlignResponsive, textAlign || "left", "");
+    } else {
+      // Always generate base CSS for text-align in preview mode (applies to all breakpoints)
+      const alignValue = textAlign || "left";
+      responsiveCss += `.${componentClassName} .text-content { text-align: ${alignValue}; }\n`;
+    }
+
+    // Font size - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (fontSizeResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-size", fontSizeResponsive, fontSize ?? globalFontSize ?? 16, fontSizeUnit);
+    } else {
+      // Always generate base CSS for font-size in preview mode (applies to all breakpoints)
+      const sizeValue = fontSize ?? globalFontSize ?? 16;
+      responsiveCss += `.${componentClassName} .text-content { font-size: ${sizeValue}${fontSizeUnit}; }\n`;
+    }
+
+    // Font weight - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (fontWeightResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-weight", fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400, "");
+    } else {
+      // Always generate base CSS for font-weight in preview mode (applies to all breakpoints)
+      const weightValue = fontWeight ?? globalFontWeight ?? 400;
+      responsiveCss += `.${componentClassName} .text-content { font-weight: ${weightValue}; }\n`;
+    }
+
+    // Font style - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (fontStyleResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-style", fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal", "");
+    } else {
+      // Always generate base CSS for font-style in preview mode (applies to all breakpoints)
+      const styleValue = fontStyle ?? globalFontStyle ?? "normal";
+      responsiveCss += `.${componentClassName} .text-content { font-style: ${styleValue}; }\n`;
+    }
+
+    // Text transform - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (textTransformResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-transform", textTransformResponsive, textTransform ?? "none", "");
+    } else if (textTransform) {
+      // Generate base CSS for non-responsive text-transform (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} .text-content { text-transform: ${textTransform}; }\n`;
+    }
+
+    // Text decoration - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (textDecorationResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-decoration", textDecorationResponsive, textDecoration ?? "none", "");
+    } else if (textDecoration) {
+      // Generate base CSS for non-responsive text-decoration (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} .text-content { text-decoration: ${textDecoration}; }\n`;
+    }
+
+    // Letter spacing - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (letterSpacingResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "letter-spacing", letterSpacingResponsive, letterSpacing ?? globalLetterSpacing ?? 0, letterSpacingUnit);
+    } else {
+      // Always generate base CSS for letter-spacing in preview mode (applies to all breakpoints)
+      const spacingValue = letterSpacing ?? globalLetterSpacing ?? 0;
+      responsiveCss += `.${componentClassName} .text-content { letter-spacing: ${spacingValue}${letterSpacingUnit}; }\n`;
+    }
+
+    // Line height - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (lineHeightResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "line-height", lineHeightResponsive, lineHeight ?? globalLineHeight ?? 1.6, lineHeightUnit === "normal" ? "" : lineHeightUnit);
+    } else {
+      // Always generate base CSS for line-height in preview mode (applies to all breakpoints)
+      const heightValue = lineHeight ?? globalLineHeight ?? 1.6;
+      const lineHeightValue = lineHeightUnit === "normal" ? "normal" : `${heightValue}${lineHeightUnit}`;
+      responsiveCss += `.${componentClassName} .text-content { line-height: ${lineHeightValue}; }\n`;
+    }
+
+    // Font family - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (fontFamilyResponsive) {
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-family", fontFamilyResponsive, effectiveFontFamily, "");
+    } else if (effectiveFontFamily) {
+      // Always generate base CSS for font-family in preview mode (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} .text-content { font-family: ${effectiveFontFamily}; }\n`;
+    }
+
+    // Text color - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (textColorResponsive) {
+      responsiveCss += generateTextColorCss(`${componentClassName} .text-content`, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
+    } else {
+      // Always generate base CSS for text-color in preview mode (applies to all breakpoints)
+      const colorValue = effectiveTextColor || globalTextColor || "#1f2937";
+      responsiveCss += `.${componentClassName} .text-content { color: ${colorValue}; }\n`;
+    }
+
+    // Link color - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (linkColorResponsive || linkColorHoverResponsive) {
+      responsiveCss += generateLinkColorCss(`${componentClassName} .text-content`, linkColorResponsive, linkColor ?? undefined, linkColorHoverResponsive, linkColorHover ?? undefined);
+    } else if (linkColor || linkColorHover) {
+      // Generate base CSS for non-responsive link colors (applies to all breakpoints)
+      if (linkColor) {
+        responsiveCss += `.${componentClassName} .text-content a { color: ${linkColor}; }\n`;
+      }
+      if (linkColorHover) {
+        responsiveCss += `.${componentClassName} .text-content a:hover { color: ${linkColorHover}; }\n`;
+      }
+    }
+
+    // Background color - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    if (backgroundColorResponsive) {
+      responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? "#ffffff");
+    } else if (backgroundColor && backgroundType === "color") {
+      // Generate base CSS for non-responsive background-color (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
+    }
+
+    // Background image/gradient - base CSS (applies to all breakpoints)
+    if (backgroundType === "image" && backgroundImage) {
+      responsiveCss += `.${componentClassName} { background-image: url("${backgroundImage}"); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
+    } else if (backgroundType === "gradient" && backgroundGradient) {
+      responsiveCss += `.${componentClassName} { background: ${backgroundGradient}; }\n`;
+    }
+
+    // Border color - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    if (borderColorResponsive) {
+      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? "#000000");
+    } else if (borderStyle && borderStyle !== "none" && borderColor) {
+      // Generate base CSS for non-responsive border-color (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} { border-color: ${borderColor}; }\n`;
+    }
+
+    // Border width - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    if (borderStyle && borderStyle !== "none") {
+      if (borderWidthResponsive) {
+        responsiveCss += generateResponsiveFourSideCss(
+          componentClassName,
+          "border-width",
+          borderWidthResponsive,
+          {
+            top: borderTopWidth,
+            right: borderRightWidth,
+            bottom: borderBottomWidth,
+            left: borderLeftWidth,
+            defaultValue: borderWidth ?? 1,
+          },
+          "px",
+        );
+        responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; }\n`;
+      } else {
+        // Generate base CSS for non-responsive border-width (applies to all breakpoints)
+        const borderWidthValue = borderWidth ?? 1;
+        if (borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null) {
+          const top = borderTopWidth ?? borderWidthValue;
+          const right = borderRightWidth ?? borderWidthValue;
+          const bottom = borderBottomWidth ?? borderWidthValue;
+          const left = borderLeftWidth ?? borderWidthValue;
+          responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; border-width: ${top}px ${right}px ${bottom}px ${left}px; }\n`;
+        } else {
+          responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; border-width: ${borderWidthValue}px; }\n`;
+        }
+      }
+    }
+
+    // Border radius - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    if (borderRadiusResponsive) {
+      responsiveCss += generateResponsiveFourSideCss(
+        componentClassName,
+        "border-radius",
+        borderRadiusResponsive,
+        {
+          top: borderTopLeftRadius,
+          right: borderTopRightRadius,
+          bottom: borderBottomRightRadius,
+          left: borderBottomLeftRadius,
+          defaultValue: borderRadius ?? 0,
+        },
+        borderRadiusUnit,
+      );
+    } else if (borderRadius !== null && borderRadius !== undefined && borderRadius > 0) {
+      // Generate base CSS for non-responsive border-radius (applies to all breakpoints)
+      if (borderTopLeftRadius !== null || borderTopRightRadius !== null || borderBottomRightRadius !== null || borderBottomLeftRadius !== null) {
+        const topLeft = borderTopLeftRadius ?? borderRadius;
+        const topRight = borderTopRightRadius ?? borderRadius;
+        const bottomRight = borderBottomRightRadius ?? borderRadius;
+        const bottomLeft = borderBottomLeftRadius ?? borderRadius;
+        responsiveCss += `.${componentClassName} { border-radius: ${topLeft}${borderRadiusUnit} ${topRight}${borderRadiusUnit} ${bottomRight}${borderRadiusUnit} ${bottomLeft}${borderRadiusUnit}; }\n`;
+      } else {
+        responsiveCss += `.${componentClassName} { border-radius: ${borderRadius}${borderRadiusUnit}; }\n`;
+      }
+    }
+
+    // Box shadow - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    // Apply to wrapper div
+    if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
+      responsiveCss += generateBoxShadowCss(componentClassName, boxShadowHorizontalResponsive, boxShadowVerticalResponsive, boxShadowBlurResponsive, boxShadowSpreadResponsive, boxShadowHorizontal ?? 0, boxShadowVertical ?? 0, boxShadowBlur ?? 0, boxShadowSpread ?? 0, boxShadowColor);
+    } else if (enableBoxShadow && boxShadowHorizontal !== null && boxShadowHorizontal !== undefined && boxShadowVertical !== null && boxShadowVertical !== undefined && boxShadowBlur !== null && boxShadowBlur !== undefined && boxShadowSpread !== null && boxShadowSpread !== undefined) {
+      // Generate base CSS for non-responsive box-shadow (applies to all breakpoints)
+      const shadowValue = `${boxShadowHorizontal ?? 0}px ${boxShadowVertical ?? 0}px ${boxShadowBlur ?? 0}px ${boxShadowSpread ?? 0}px ${boxShadowColor}`;
+      responsiveCss += `.${componentClassName} { box-shadow: ${shadowValue}; }\n`;
+    }
+
+    // Position - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
+      responsiveCss += generatePositionCss(componentClassName, positionTopResponsive, positionRightResponsive, positionBottomResponsive, positionLeftResponsive, positionTop, positionRight, positionBottom, positionLeft, positionTopUnit, positionRightUnit, positionBottomUnit, positionLeftUnit);
+    }
+
+    // Z-index - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    if (zIndexResponsive) {
+      responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex ?? 0);
+    } else if (zIndex !== null && zIndex !== undefined) {
+      // Generate base CSS for non-responsive z-index (applies to all breakpoints)
+      responsiveCss += `.${componentClassName} { z-index: ${zIndex}; }\n`;
     }
   }
 
   // Build background styles
   const backgroundStyles = buildBackgroundStyles({
-    backgroundColor: backgroundColor ?? "#ffffff",
-    backgroundType,
-    backgroundGradient,
-    backgroundImage,
+    type: backgroundType,
+    color: backgroundColor ?? "#ffffff",
+    colorResponsive: backgroundColorResponsive,
+    gradient: backgroundGradient,
+    image: backgroundImage,
     resolver: responsiveResolver,
-    responsive: backgroundColorResponsive,
   });
 
   // Build border styles
@@ -647,7 +785,7 @@ export const Text: React.FC<TextProps> = (props) => {
 
   // Build link color CSS
   const linkColorCss = buildLinkColorCss({
-    baseSelector: `.${hoverClassName}`,
+    baseSelector: `.${componentClassName}`,
     linkColor: linkColor ?? undefined,
     linkColorHover: linkColorHover ?? undefined,
   });
@@ -689,14 +827,42 @@ export const Text: React.FC<TextProps> = (props) => {
     return `${value}${unit}`;
   };
 
+  // Add default list styles for preview/export mode (since editor classes are removed)
+  // Scope to content class to avoid affecting other lists on the page
+  const listStyles = `
+    .${componentClassName} .text-content ul {
+      list-style-type: disc;
+      padding-left: 1.5em;
+      margin: 0.5em 0;
+    }
+    .${componentClassName} .text-content ol {
+      list-style-type: decimal;
+      padding-left: 1.5em;
+      margin: 0.5em 0;
+    }
+    .${componentClassName} .text-content li {
+      margin: 0.25em 0;
+    }
+  `;
+
+  // Exclude toolbar from text-content styles to prevent font inheritance
+  const toolbarResetStyles = `
+    .${componentClassName} .text-content .lexical-floating-toolbar,
+    .${componentClassName} .text-content .lexical-floating-toolbar * {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+      font-size: 14px !important;
+      font-weight: 400 !important;
+      font-style: normal !important;
+      text-transform: none !important;
+      text-decoration: none !important;
+      letter-spacing: normal !important;
+      line-height: 1.5 !important;
+      color: #1f2937 !important;
+    }
+  `;
+
   // Combine all CSS
-  const styleTagContent = mergeCssSegments([
-    responsiveCss,
-    hoverCss,
-    linkColorCss,
-    overlayStyles.css,
-    visibilityCss,
-  ]);
+  const styleTagContent = mergeCssSegments(listStyles, toolbarResetStyles, responsiveCss, hoverCss, linkColorCss, overlayStyles.css, visibilityCss);
 
   // Build inline styles (for edit mode)
   const textStyle: React.CSSProperties = {
@@ -712,8 +878,10 @@ export const Text: React.FC<TextProps> = (props) => {
     textAlign: isEditMode ? effectiveTextAlign : undefined,
     padding: isEditMode ? paddingValue : undefined,
     margin: isEditMode ? marginValue : undefined,
-    ...backgroundStyles,
-    ...borderStyles,
+    // Background styles only in edit mode (in preview mode, backgrounds are applied via CSS to wrapper)
+    ...(isEditMode ? backgroundStyles : {}),
+    // Border styles only in edit mode (in preview mode, borders are applied via CSS to wrapper)
+    ...(isEditMode ? borderStyles : {}),
     boxShadow: isEditMode ? boxShadowStyle : undefined,
     position: isEditMode ? undefined : hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,
     top: isEditMode ? undefined : hasCustomPosition ? formatPositionValue(positionTop, positionTopUnit) : undefined,
@@ -738,111 +906,182 @@ export const Text: React.FC<TextProps> = (props) => {
     "aria-label": ariaLabel || undefined,
     ...parseDataAttributes(dataAttributes),
     className: `
-      ${hoverClassName}
+      ${componentClassName}
       ${className}
     `.trim(),
     style: textStyle,
     onClick: handleClick,
   };
 
+  // Clean HTML content for preview mode (remove editor classes, fix nested tags)
+  const cleanHTMLForPreview = (html: string): string => {
+    if (!html) return "";
+
+    // Remove Lexical editor classes
+    let cleaned = html.replace(/\s*class="editor-[^"]*"/gi, "");
+    cleaned = cleaned.replace(/\s*class=""/gi, "");
+
+    // Remove white-space pre-wrap styles (not needed)
+    cleaned = cleaned.replace(/\s*style="white-space:\s*pre-wrap;?"/gi, "");
+    cleaned = cleaned.replace(/\s*style=""/gi, "");
+
+    // Remove empty spans
+    cleaned = cleaned.replace(/<span[^>]*>\s*<\/span>/gi, "");
+
+    // Handle nested tags based on htmlTag
+    if (htmlTag === "p") {
+      // If htmlTag is "p" and content starts with <p>, unwrap the inner <p> tag
+      const pMatch = cleaned.match(/^<p[^>]*>(.*?)<\/p>$/s);
+      if (pMatch && pMatch[1]) {
+        cleaned = pMatch[1];
+      }
+    } else if (htmlTag === "span") {
+      // If htmlTag is "span", unwrap any block-level tags like <p>
+      const pMatch = cleaned.match(/^<p[^>]*>(.*?)<\/p>$/s);
+      if (pMatch && pMatch[1]) {
+        cleaned = pMatch[1];
+      }
+    } else if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(htmlTag)) {
+      // If htmlTag is a heading, unwrap any <p> tags and extract text content
+      // Headings cannot contain block-level elements like <p>
+      const pMatch = cleaned.match(/^<p[^>]*>(.*?)<\/p>$/s);
+      if (pMatch && pMatch[1]) {
+        cleaned = pMatch[1];
+      }
+      // Also unwrap any nested heading tags (shouldn't happen, but just in case)
+      const headingMatch = cleaned.match(/^<h[1-6][^>]*>(.*?)<\/h[1-6]>$/s);
+      if (headingMatch && headingMatch[1]) {
+        cleaned = headingMatch[1];
+      }
+    } else if (htmlTag === "div") {
+      // For div tags, we can keep <p> tags as they're valid block elements
+      // But still clean up any nested divs if needed
+      cleaned = cleaned.replace(/^<div[^>]*>(.*?)<\/div>$/s, "$1");
+    }
+
+    // Remove unnecessary <span> wrappers that only contain text (no attributes or styling)
+    // This handles cases like <span>text</span> -> text
+    // But preserves spans with attributes like <span style="...">text</span>
+    cleaned = cleaned.replace(/<span(?![^>]*\s(style|class|id|data-)[^>]*)>(.*?)<\/span>/gi, "$2");
+
+    // Also remove spans that only have empty or whitespace-only attributes
+    cleaned = cleaned.replace(/<span[^>]*class="[^"]*"[^>]*>(.*?)<\/span>/gi, (match, content) => {
+      // If the span only has class attribute and no other meaningful attributes, unwrap it
+      const hasOtherAttrs = match.match(/\s(style|id|data-|aria-)/i);
+      return hasOtherAttrs ? match : content;
+    });
+
+    return cleaned.trim();
+  };
+
   return (
     <>
-      <style>{styleTagContent}</style>
-      <div
-        ref={wrapperRef}
-        className={`relative ${isEditMode ? (selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer") : ""}`}
-      >
-        {/* Lexical Editor handles HTML structure properly */}
-        {htmlTag === "p" || htmlTag === "span" ? (
-          // For p/span tags, wrap in a div to avoid nesting issues
-          <div
-            ref={(ref: HTMLDivElement | null) => {
-              if (!ref) return;
-              if (isEditMode) {
-                connect(drag(ref));
-              } else {
-                connect(ref);
-              }
-            }}
-            {...textProps}
-            className={`${textProps.className} ${isEditMode ? (selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer") : ""}`}
-          >
-            {isEditMode && editable ? (
-              <LexicalEditor
-                value={currentText || ""}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Type your text here"
+      {styleTagContent && <style>{styleTagContent}</style>}
+      {isEditMode ? (
+        // Edit mode: Keep wrapper for drag/drop functionality
+        <div ref={wrapperRef} className={`relative ${selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}>
+          {htmlTag === "p" || htmlTag === "span" ? (
+            // For p/span tags, wrap in a div when editable (LexicalEditor may output divs, which can't be inside p tags)
+            // When not editable, render TextTag directly without wrapper
+            editable ? (
+              <div
+                ref={(ref: HTMLDivElement | null) => {
+                  if (!ref) return;
+                  connect(drag(ref));
+                }}
+                id={textProps.id}
+                aria-label={textProps["aria-label"]}
+                {...parseDataAttributes(dataAttributes)}
+                className={textProps.className}
                 style={textStyle}
-                readOnly={false}
-              />
+              >
+                <div className="text-content">
+                  <LexicalEditor value={currentText || ""} onChange={handleChange} onBlur={handleBlur} placeholder="Type your text here" style={{}} readOnly={false} />
+                </div>
+              </div>
             ) : (
-              React.createElement(
-                TextTag,
-                {
-                  className: `outline-none ${isEmpty ? "text-gray-400" : ""}`,
-                  style: textStyle,
-                  onClick: handleClick,
-                  ...(isEmpty 
-                    ? { children: (
-                        <span 
-                          className="pointer-events-none select-none" 
-                          style={{ color: "#9ca3af" }}
-                        >
+              React.createElement(TextTag, {
+                ref: (ref: HTMLElement | null) => {
+                  if (!ref) return;
+                  connect(drag(ref));
+                },
+                id: textProps.id,
+                "aria-label": textProps["aria-label"],
+                ...parseDataAttributes(dataAttributes),
+                className: textProps.className,
+                style: textStyle,
+                onClick: handleClick,
+                ...(isEmpty
+                  ? {
+                      children: (
+                        <span className="pointer-events-none select-none" style={{ color: "#9ca3af" }}>
                           Type your text here
                         </span>
-                      ) }
-                    : { dangerouslySetInnerHTML: { __html: currentText || "" } }
-                  ),
-                }
-              )
-            )}
-          </div>
-        ) : (
-          // For div/h1-h6 tags, we can use them directly
-          React.createElement(
-            TextTag,
-            {
-              ...textProps,
+                      ),
+                    }
+                  : { dangerouslySetInnerHTML: { __html: currentText || "" } }),
+              })
+            )
+          ) : (
+            // For div/h1-h6 tags, use them directly
+            React.createElement(
+              TextTag,
+              {
+                ...textProps,
+                ref: (ref: HTMLElement | null) => {
+                  if (!ref) return;
+                  connect(drag(ref));
+                },
+                onClick: handleClick,
+                ...(editable
+                  ? {}
+                  : isEmpty
+                  ? {
+                      children: (
+                        <span className="pointer-events-none select-none" style={{ color: "#9ca3af" }}>
+                          Type your text here
+                        </span>
+                      ),
+                    }
+                  : { dangerouslySetInnerHTML: { __html: currentText || "" } }),
+              },
+              editable ? (
+                <div className="text-content">
+                  <LexicalEditor value={currentText || ""} onChange={handleChange} onBlur={handleBlur} placeholder="Type your text here" style={{}} readOnly={false} />
+                </div>
+              ) : null,
+            )
+          )}
+        </div>
+      ) : (
+        // Preview mode: Wrap in div with unique class for CSS isolation (like Spectra builder)
+        <div className={componentClassName}>
+          <style>{styleTagContent}</style>
+          <div className="text-content">
+            {React.createElement(TextTag, {
               ref: (ref: HTMLElement | null) => {
                 if (!ref) return;
-                if (isEditMode) {
-                  connect(drag(ref));
-                } else {
-                  connect(ref);
-                }
+                connect(ref);
               },
-            },
-            isEditMode && editable ? (
-              <LexicalEditor
-                value={currentText || ""}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Type your text here"
-                style={textStyle}
-                readOnly={false}
-              />
-            ) : (
-              <div
-                className={`outline-none ${isEmpty ? "text-gray-400" : ""}`}
-                style={textStyle}
-                onClick={handleClick}
-                {...(isEmpty 
-                  ? { children: (
-                      <span 
-                        className="pointer-events-none select-none" 
-                        style={{ color: "#9ca3af" }}
-                      >
+              id: cssId || undefined,
+              "aria-label": ariaLabel || undefined,
+              ...parseDataAttributes(dataAttributes),
+              className: className.trim() || undefined,
+              style: textStyle,
+              onClick: handleClick,
+              ...(isEmpty
+                ? {
+                    children: (
+                      <span className="pointer-events-none select-none" style={{ color: "#9ca3af" }}>
                         Type your text here
                       </span>
-                    ) }
-                  : { dangerouslySetInnerHTML: { __html: currentText || "" } }
-                )}
-              />
-            )
-          )
-        )}
-      </div>
+                    ),
+                  }
+                : { dangerouslySetInnerHTML: { __html: cleanHTMLForPreview(currentText || "") } }),
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 };

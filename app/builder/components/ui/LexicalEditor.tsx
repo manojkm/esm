@@ -14,7 +14,7 @@ import { ListItemNode, ListNode } from "@lexical/list";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
 import { $getRoot, $createParagraphNode } from "lexical";
-import { LexicalToolbar } from "./LexicalToolbar";
+import { FloatingToolbarPlugin } from "./LexicalToolbar";
 
 interface LexicalEditorProps {
   value: string;
@@ -32,7 +32,23 @@ function OnChangeHTMLPlugin({ onChange }: { onChange: (html: string) => void }) 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
-        const htmlString = $generateHtmlFromNodes(editor, null);
+        let htmlString = $generateHtmlFromNodes(editor, null);
+        
+        // Clean up Lexical-specific classes and attributes for cleaner HTML
+        htmlString = htmlString.replace(/\s*class="editor-[^"]*"/gi, "");
+        htmlString = htmlString.replace(/\s*class=""/gi, "");
+        htmlString = htmlString.replace(/\s*style="white-space:\s*pre-wrap;?"/gi, "");
+        htmlString = htmlString.replace(/\s*style=""/gi, "");
+        
+        // Remove redundant formatting tags: <b><strong> -> <strong>, <i><em> -> <em>
+        htmlString = htmlString.replace(/<b[^>]*>(<strong[^>]*>.*?<\/strong>)<\/b>/gi, "$1");
+        htmlString = htmlString.replace(/<strong[^>]*>(<b[^>]*>.*?<\/b>)<\/strong>/gi, "$1");
+        htmlString = htmlString.replace(/<i[^>]*>(<em[^>]*>.*?<\/em>)<\/i>/gi, "$1");
+        htmlString = htmlString.replace(/<em[^>]*>(<i[^>]*>.*?<\/i>)<\/em>/gi, "$1");
+        
+        // Remove empty spans
+        htmlString = htmlString.replace(/<span[^>]*>\s*<\/span>/gi, "");
+        
         onChange(htmlString);
       });
     });
@@ -136,8 +152,7 @@ export const LexicalEditor: React.FC<LexicalEditorProps> = ({
     <div className="lexical-editor-wrapper" style={{ position: "relative", ...style }}>
       <LexicalComposer initialConfig={initialConfig}>
         <div className="editor-container" style={{ position: "relative" }}>
-          <div className="editor-inner" style={{ position: "relative" }}>
-            {!readOnly && <LexicalToolbar />}
+          <div className="editor-inner text-content" style={{ position: "relative" }}>
             <RichTextPlugin
               contentEditable={
                 <ContentEditable
@@ -159,6 +174,7 @@ export const LexicalEditor: React.FC<LexicalEditorProps> = ({
             <HistoryPlugin />
             <LinkPlugin />
             <ListPlugin />
+            <FloatingToolbarPlugin />
             <OnChangeHTMLPlugin onChange={onChange} />
             {value && <InitialHTMLPlugin html={value} />}
           </div>

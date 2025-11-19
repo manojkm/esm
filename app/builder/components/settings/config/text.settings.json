@@ -4,7 +4,7 @@
   ],
   "style": [
     { "id": "typography", "title": "Typography", "features": ["textTypography"] },
-    { "id": "spacing", "title": "Spacing", "features": [{ "feature": "spacing", "meta": { "showGaps": false } }] },
+    { "id": "spacing", "title": "Spacing", "features": [{ "feature": "spacing", "meta": { "showGaps": false, "defaultPadding": null, "defaultMargin": null } }] },
     { "id": "background", "title": "Background", "features": ["background"] },
     { "id": "border", "title": "Border", "features": ["border"] },
     { "id": "boxShadow", "title": "Box Shadow", "features": ["boxShadow"] }
