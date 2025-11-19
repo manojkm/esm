@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNode, useEditor } from "@craftjs/core";
 import { ContainerGeneralSettings } from "./container/ContainerGeneralSettings";
 import { ContainerStyleSettings } from "./container/ContainerStyleSettings";
@@ -8,6 +8,7 @@ import { ContainerAdvancedSettings } from "./container/ContainerAdvancedSettings
 import type { ContainerProps } from "../ui/container/types";
 import type { ContainerControlActions } from "./shared/types";
 import type { ResponsiveValue } from "@/app/builder/lib/style-system";
+import { usePersistedTabState } from "../../hooks/usePersistedTabState";
 
 const TABS = [
   { id: "general", label: "General" },
@@ -27,7 +28,7 @@ export const ContainerSettings = () => {
   const containerProps = props as ContainerProps;
   const containerActions = actions as ContainerControlActions;
 
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("general");
+  const [activeTab, setActiveTab] = usePersistedTabState<(typeof TABS)[number]["id"]>("Container", "general");
 
   // Initialize flexDirectionResponsive for parent containers with mobile default to "column"
   // This runs whenever a container is selected, regardless of which tab/accordion is open

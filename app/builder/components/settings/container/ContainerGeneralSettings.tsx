@@ -16,6 +16,6 @@ interface ContainerGeneralSettingsProps {
  * Container-specific wrapper that renders general tab sections via the feature system.
  */
 export const ContainerGeneralSettings: React.FC<ContainerGeneralSettingsProps> = ({ props, actions }) => (
-  <FeatureSettingsAccordion sections={containerGeneralSettingsConfig} registry={containerFeatureRegistry} props={props} actions={actions} initialOpenSection="containerType" />
+  <FeatureSettingsAccordion sections={containerGeneralSettingsConfig} registry={containerFeatureRegistry} props={props} actions={actions} initialOpenSection="containerType" componentType="Container-General" />
 );
 

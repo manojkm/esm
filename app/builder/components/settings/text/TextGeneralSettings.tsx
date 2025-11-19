@@ -16,6 +16,6 @@ interface TextGeneralSettingsProps {
  * Text-specific wrapper that renders general tab sections via the feature system.
  */
 export const TextGeneralSettings: React.FC<TextGeneralSettingsProps> = ({ props, actions }) => (
-  <FeatureSettingsAccordion sections={textGeneralSettingsConfig} registry={textFeatureRegistry} props={props} actions={actions} initialOpenSection="general" />
+  <FeatureSettingsAccordion sections={textGeneralSettingsConfig} registry={textFeatureRegistry} props={props} actions={actions} initialOpenSection="general" componentType="Text-General" />
 );
 

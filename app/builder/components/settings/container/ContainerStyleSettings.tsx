@@ -20,6 +20,7 @@ export const ContainerStyleSettings: React.FC<ContainerStyleSettingsProps> = ({ 
     props={props}
     actions={actions}
     initialOpenSection="spacing"
+    componentType="Container-Style"
   />
 );
 

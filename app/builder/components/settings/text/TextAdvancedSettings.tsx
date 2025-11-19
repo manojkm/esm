@@ -22,6 +22,7 @@ export const TextAdvancedSettings: React.FC<TextAdvancedSettingsProps> = ({ prop
     props={props}
     actions={actions}
     initialOpenSection="css"
+    componentType="Text-Advanced"
   />
 );
 

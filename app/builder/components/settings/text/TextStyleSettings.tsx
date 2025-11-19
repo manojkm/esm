@@ -22,6 +22,7 @@ export const TextStyleSettings: React.FC<TextStyleSettingsProps> = ({ props, act
     props={props}
     actions={actions}
     initialOpenSection="typography"
+    componentType="Text-Style"
   />
 );
 

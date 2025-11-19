@@ -20,5 +20,6 @@ export const ContainerAdvancedSettings: React.FC<ContainerAdvancedSettingsProps>
     props={props}
     actions={actions}
     initialOpenSection="css"
+    componentType="Container-Advanced"
   />
 );

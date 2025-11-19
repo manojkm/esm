@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import type { FeatureKey, FeatureRegistry } from "./featureRegistry";
 import type { ComponentControlActions } from "./types";
+import { usePersistedAccordionState } from "../../../hooks/usePersistedAccordionState";
 
 export interface FeatureConfigEntry {
   feature: FeatureKey;
@@ -21,6 +22,7 @@ interface FeatureSettingsProps<TProps> {
   actions: ComponentControlActions<TProps>;
   initialOpenSection?: string;
   featureMeta?: Partial<Record<FeatureKey, Record<string, unknown>>>;
+  componentType?: string; // Component type for persistence (e.g., "Text", "Container")
 }
 
 /**
@@ -34,12 +36,13 @@ export const FeatureSettingsAccordion = <TProps,>({
   actions,
   initialOpenSection,
   featureMeta,
+  componentType = "Component", // Default component type if not provided
 }: FeatureSettingsProps<TProps>) => {
   const defaultSection = initialOpenSection ?? sections[0]?.id ?? "";
-  const [openSection, setOpenSection] = useState<string>(defaultSection);
+  const [openSection, setOpenSection] = usePersistedAccordionState(`${componentType}-Accordion`, defaultSection);
 
   const toggleSection = (id: string) => {
-    setOpenSection((prev) => (prev === id ? "" : id));
+    setOpenSection(openSection === id ? "" : id);
   };
 
   return (

@@ -352,21 +352,40 @@ export const Text: React.FC<TextProps> = (props) => {
   // Generate hover CSS for both edit and preview modes
   // Text color hover - target content class within wrapper div
   if (textColorHover) {
-    if (shouldGenerateMediaQueries && textColorHoverResponsive) {
+    if (shouldGenerateMediaQueries) {
       // Preview mode: Generate responsive hover CSS
-      const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
-      hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
-      for (const bp of breakpoints) {
-        if (textColorHoverResponsive[bp] !== undefined && textColorHoverResponsive[bp] !== null) {
-          const value = textColorHoverResponsive[bp];
-          if (typeof value === "string" && value !== textColorHover) {
-            hoverCss += `${getMediaQuery(bp)} { .${componentClassName}:hover .text-content { color: ${value} !important; } }\n`;
+      if (textColorHoverResponsive) {
+        const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
+        hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
+        for (const bp of breakpoints) {
+          if (textColorHoverResponsive[bp] !== undefined && textColorHoverResponsive[bp] !== null) {
+            const value = textColorHoverResponsive[bp];
+            if (typeof value === "string" && value !== textColorHover) {
+              hoverCss += `${getMediaQuery(bp)} { .${componentClassName}:hover .text-content { color: ${value} !important; } }\n`;
+            }
           }
         }
+      } else {
+        // Non-responsive: Use static value
+        hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
       }
     } else {
-      // Edit mode or non-responsive: Use static value
-      hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
+      // Edit mode: Use resolver to get current breakpoint value
+      const resolvedTextColorHover = resolveResponsiveValue<string>({
+        resolver: responsiveResolver,
+        responsive: textColorHoverResponsive as ResponsiveMap<string> | undefined,
+        fallback: textColorHover,
+      });
+      if (resolvedTextColorHover) {
+        // In edit mode, componentClassName is on the inner div
+        // We need to target hover on both the componentClassName element and its parent wrapper
+        hoverCss += `.${componentClassName}:hover .text-content { color: ${resolvedTextColorHover} !important; }\n`;
+        // Target the wrapper that contains componentClassName (using class-based approach for eBay compatibility)
+        // Extract the unique ID from componentClassName (e.g., "text-abc123" -> "abc123")
+        // Note: We target .${componentClassName} directly (not .text-content) so color inherits to children
+        const uniqueId = componentClassName.replace(/^text-/, "");
+        hoverCss += `.text-wrapper-${uniqueId}:hover .${componentClassName} { color: ${resolvedTextColorHover} !important; }\n`;
+      }
     }
   }
 
@@ -865,8 +884,8 @@ export const Text: React.FC<TextProps> = (props) => {
   const styleTagContent = mergeCssSegments(listStyles, toolbarResetStyles, responsiveCss, hoverCss, linkColorCss, overlayStyles.css, visibilityCss);
 
   // Build inline styles (for edit mode)
+  // Note: Text color is NOT included here - it's only applied to .text-content elements
   const textStyle: React.CSSProperties = {
-    ...textColorStyles,
     fontFamily: isEditMode ? effectiveFontFamily : undefined,
     fontSize: isEditMode ? effectiveFontSize : undefined,
     fontWeight: isEditMode ? effectiveFontWeight : undefined,
@@ -979,7 +998,8 @@ export const Text: React.FC<TextProps> = (props) => {
       {styleTagContent && <style>{styleTagContent}</style>}
       {isEditMode ? (
         // Edit mode: Keep wrapper for drag/drop functionality
-        <div ref={wrapperRef} className={`relative ${selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}>
+        // Add wrapper class for hover targeting (eBay-compatible, no data attributes)
+        <div ref={wrapperRef} className={`text-wrapper-${componentClassName.replace(/^text-/, "")} relative ${selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}>
           {htmlTag === "p" || htmlTag === "span" ? (
             // For p/span tags, wrap in a div when editable (LexicalEditor may output divs, which can't be inside p tags)
             // When not editable, render TextTag directly without wrapper
@@ -995,7 +1015,7 @@ export const Text: React.FC<TextProps> = (props) => {
                 className={textProps.className}
                 style={textStyle}
               >
-                <div className="text-content">
+                <div className="text-content" style={textColorStyles}>
                   <LexicalEditor value={currentText || ""} onChange={handleChange} onBlur={handleBlur} placeholder="Type your text here" style={{}} readOnly={false} />
                 </div>
               </div>
@@ -1009,7 +1029,7 @@ export const Text: React.FC<TextProps> = (props) => {
                 "aria-label": textProps["aria-label"],
                 ...parseDataAttributes(dataAttributes),
                 className: textProps.className,
-                style: textStyle,
+                style: { ...textStyle, ...textColorStyles },
                 onClick: handleClick,
                 ...(isEmpty
                   ? {
@@ -1033,6 +1053,7 @@ export const Text: React.FC<TextProps> = (props) => {
                   connect(drag(ref));
                 },
                 onClick: handleClick,
+                style: editable ? textStyle : { ...textStyle, ...textColorStyles }, // When not editable, TextTag is the content, so add text color
                 ...(editable
                   ? {}
                   : isEmpty
@@ -1046,7 +1067,7 @@ export const Text: React.FC<TextProps> = (props) => {
                   : { dangerouslySetInnerHTML: { __html: currentText || "" } }),
               },
               editable ? (
-                <div className="text-content">
+                <div className="text-content" style={textColorStyles}>
                   <LexicalEditor value={currentText || ""} onChange={handleChange} onBlur={handleBlur} placeholder="Type your text here" style={{}} readOnly={false} />
                 </div>
               ) : null,

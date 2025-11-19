@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useNode } from "@craftjs/core";
 import { TextGeneralSettings } from "./text/TextGeneralSettings";
 import { TextStyleSettings } from "./text/TextStyleSettings";
 import { TextAdvancedSettings } from "./text/TextAdvancedSettings";
 import type { TextProps } from "../ui/text/types";
 import type { ComponentControlActions } from "./shared/types";
+import { usePersistedTabState } from "../../hooks/usePersistedTabState";
 
 const TABS = [
   { id: "general", label: "General" },
@@ -22,7 +23,7 @@ export const TextSettings = () => {
   const textProps = props as TextProps;
   const textActions = actions as ComponentControlActions<TextProps>;
 
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("general");
+  const [activeTab, setActiveTab] = usePersistedTabState<(typeof TABS)[number]["id"]>("Text", "general");
 
   return (
     <div className="space-y-4">

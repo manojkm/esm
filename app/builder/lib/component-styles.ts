@@ -110,8 +110,15 @@ export const getWrapperSelector = (componentClassName: string): string => {
 /**
  * Build CSS selector for content element (typography styles)
  * Use: `.${componentClassName} .${componentName}-content { ... }`
- * Pattern: Each component has a content class (e.g., `.text-content`, `.container-content`)
- * This ensures styles only target actual content, not editor UI elements
+ * 
+ * **Content Class Pattern**: Each component has a content class (e.g., `.text-content`, `.container-content`)
+ * to scope typography and content-specific styles. This ensures styles only target actual content and not
+ * editor UI elements (toolbars, wrappers, etc.).
+ * 
+ * - Layout styles (padding, margin, background, border) → wrapper div (`.${componentClassName}`)
+ * - Typography styles (font, color, text-align) → content class (`.${componentClassName} .${componentName}-content`)
+ * 
+ * See `app/builder/docs/CONTENT_CLASS_PATTERN.md` for detailed guide.
  */
 export const getContentSelector = (componentClassName: string, componentName: string): string => {
   return `.${componentClassName} .${componentName}-content`;

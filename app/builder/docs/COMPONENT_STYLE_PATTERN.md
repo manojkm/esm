@@ -361,6 +361,7 @@ See `app/builder/components/ui/Text.tsx` for the complete reference implementati
 
 ## Additional Resources
 
+- **Content Class Pattern**: See `CONTENT_CLASS_PATTERN.md` for detailed guide on using content classes for CSS isolation
 - **Responsive Pattern Guide**: See `RESPONSIVE_PATTERN_GUIDE.md` for detailed responsive CSS generation patterns
 - **Responsive Export Explanation**: See `RESPONSIVE_EXPORT_EXPLANATION.md` for how responsive works in editor vs export
 - **Component Styles Utilities**: See `app/builder/lib/component-styles.ts` for helper functions
