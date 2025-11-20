@@ -10,6 +10,7 @@ import { getTypographyCSS } from "@/app/builder/lib/typography-utils";
 import { getGoogleFontFamilyCSS } from "@/app/builder/lib/google-fonts";
 import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildHoverRule, buildLinkColorCss, buildOverlayStyles, buildResponsiveFourSideValue, buildResponsiveValueWithUnit, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
 import { generatePaddingCss, generateMarginCss, generateResponsiveCss, generateBackgroundColorCss, generateBorderColorCss, generateResponsiveFourSideCss, generateBoxShadowCss, generateHoverBackgroundColorCss, generateHoverBorderColorCss, generateTextColorCss, generateLinkColorCss, generatePositionCss, generateZIndexCss, getMediaQuery, type BreakpointKey } from "@/app/builder/lib/style-system/css-responsive";
+import { sanitizeHTML, sanitizeHTMLForPreview } from "@/app/builder/lib/html-sanitizer";
 import type { TextProps } from "./text/types";
 
 export const Text: React.FC<TextProps> = (props) => {
@@ -544,12 +545,14 @@ export const Text: React.FC<TextProps> = (props) => {
 
     // Text align - follows pattern: base value applies to all breakpoints, media queries only for overrides
     // Target content class within wrapper div
+    // Use !important to override any inline styles from pasted content
     if (textAlignResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-align", textAlignResponsive, textAlign || "left", "");
+      responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-align", textAlignResponsive, textAlign || "left", "", true);
     } else {
       // Always generate base CSS for text-align in preview mode (applies to all breakpoints)
+      // Use !important to override any inline styles from pasted content
       const alignValue = textAlign || "left";
-      responsiveCss += `.${componentClassName} .text-content { text-align: ${alignValue}; }\n`;
+      responsiveCss += `.${componentClassName} .text-content { text-align: ${alignValue} !important; }\n`;
     }
 
     // Font size - follows pattern: base value applies to all breakpoints, media queries only for overrides
@@ -952,12 +955,15 @@ export const Text: React.FC<TextProps> = (props) => {
     onClick: handleClick,
   };
 
-  // Clean HTML content for preview mode (remove editor classes, fix nested tags)
+  // Clean HTML content for preview mode (remove editor classes, fix nested tags, sanitize for XSS)
   const cleanHTMLForPreview = (html: string): string => {
     if (!html) return "";
 
+    // First, sanitize HTML to prevent XSS attacks
+    let cleaned = sanitizeHTMLForPreview(html);
+
     // Remove Lexical editor classes
-    let cleaned = html.replace(/\s*class="editor-[^"]*"/gi, "");
+    cleaned = cleaned.replace(/\s*class="editor-[^"]*"/gi, "");
     cleaned = cleaned.replace(/\s*class=""/gi, "");
 
     // Remove white-space pre-wrap styles (not needed)
@@ -1059,7 +1065,7 @@ export const Text: React.FC<TextProps> = (props) => {
                         </span>
                       ),
                     }
-                  : { dangerouslySetInnerHTML: { __html: currentText || "" } }),
+                  : { dangerouslySetInnerHTML: { __html: sanitizeHTML(currentText || "") } }),
               })
             )
           ) : (
@@ -1084,7 +1090,7 @@ export const Text: React.FC<TextProps> = (props) => {
                         </span>
                       ),
                     }
-                  : { dangerouslySetInnerHTML: { __html: currentText || "" } }),
+                  : { dangerouslySetInnerHTML: { __html: sanitizeHTML(currentText || "") } }),
               },
               editable ? (
                 <div className="text-content" style={textColorStyles}>

@@ -1,5 +1,6 @@
 import type { Editor } from "@craftjs/core";
 import { generateGoogleFontsLinkTag } from "./google-fonts";
+import { sanitizeHTMLForExport } from "./html-sanitizer";
 
 /**
  * Extracts all CSS styles from style tags in the rendered HTML
@@ -216,8 +217,11 @@ export const exportRenderedHTML = (customCSS: string = ""): string => {
     return hasMeaningfulAttrs ? match : content;
   });
 
+  // CRITICAL SECURITY: Sanitize HTML before export to prevent XSS attacks
+  const sanitizedHTML = sanitizeHTMLForExport(htmlContent);
+  
   // Process images
-  const { html: processedHTML, images } = processImages(htmlContent);
+  const { html: processedHTML, images } = processImages(sanitizedHTML);
 
   // Consolidate all styles
   const consolidatedStyles = Array.from(allStyles).join("\n\n");
@@ -306,6 +310,10 @@ export const exportRenderedHTMLWithFonts = (customCSS: string = "", googleFonts?
   });
 
   let htmlContent = clonedFrame.innerHTML;
+  
+  // CRITICAL SECURITY: Sanitize HTML before export to prevent XSS attacks
+  htmlContent = sanitizeHTMLForExport(htmlContent);
+  
   htmlContent = htmlContent.replace(/\s*data-craftjs[^=]*="[^"]*"/gi, "");
   htmlContent = htmlContent.replace(/\s*data-cy="[^"]*"/gi, "");
   htmlContent = htmlContent.replace(/\s*ring-[^"]*/gi, "");

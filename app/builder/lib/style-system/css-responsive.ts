@@ -37,7 +37,7 @@ export const getMediaQuery = (breakpoint: BreakpointKey): string => {
  *
  * See `app/builder/docs/RESPONSIVE_PATTERN_GUIDE.md` for detailed usage guide.
  */
-export const generateResponsiveCss = (className: string, property: string, responsive?: ResponsiveValue, fallbackValue?: string | number, fallbackUnit: string = ""): string => {
+export const generateResponsiveCss = (className: string, property: string, responsive?: ResponsiveValue, fallbackValue?: string | number, fallbackUnit: string = "", important: boolean = false): string => {
   if (!responsive || fallbackValue === undefined) {
     // No responsive values or no fallback, return empty string (use inline style for base)
     return "";
@@ -45,13 +45,14 @@ export const generateResponsiveCss = (className: string, property: string, respo
 
   let css = "";
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
+  const importantSuffix = important ? " !important" : "";
 
   // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
   // Desktop values are used as the base since they apply to all breakpoints by default
   const desktopValue = responsive.desktop;
   const desktopUnit = (responsive.unit && responsive.unit.desktop) || fallbackUnit;
   const baseValue = desktopValue !== undefined && desktopValue !== null ? (typeof desktopValue === "number" ? `${desktopValue}${desktopUnit}` : desktopValue) : typeof fallbackValue === "number" ? `${fallbackValue}${desktopUnit}` : fallbackValue;
-  css += `.${className} { ${property}: ${baseValue}; }\n`;
+  css += `.${className} { ${property}: ${baseValue}${importantSuffix}; }\n`;
 
   // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
@@ -62,7 +63,7 @@ export const generateResponsiveCss = (className: string, property: string, respo
 
       // Only generate media query if value differs from base (not just fallback)
       if (cssValue !== baseValue) {
-        css += `${getMediaQuery(bp)} { .${className} { ${property}: ${cssValue} !important; } }\n`;
+        css += `${getMediaQuery(bp)} { .${className} { ${property}: ${cssValue}${importantSuffix}; } }\n`;
       }
     }
   }

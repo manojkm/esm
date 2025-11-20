@@ -14,6 +14,8 @@ import { ListItemNode, ListNode } from "@lexical/list";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
 import { $getRoot, $createParagraphNode } from "lexical";
+import { COMMAND_PRIORITY_HIGH, PASTE_COMMAND } from "lexical";
+import { sanitizeHTMLForPaste, sanitizeHTML } from "@/app/builder/lib/html-sanitizer";
 import { FloatingToolbarPlugin } from "./LexicalToolbar";
 
 interface LexicalEditorProps {
@@ -23,6 +25,61 @@ interface LexicalEditorProps {
   placeholder?: string;
   style?: React.CSSProperties;
   readOnly?: boolean;
+}
+
+// Plugin to strip inline text-align styles from pasted content
+function PasteSanitizePlugin() {
+  const [editor] = useLexicalComposerContext();
+
+  useEffect(() => {
+    return editor.registerCommand(
+      PASTE_COMMAND,
+      (event: ClipboardEvent) => {
+        const clipboardData = event.clipboardData;
+        if (!clipboardData) return false;
+
+        const htmlData = clipboardData.getData("text/html");
+        if (htmlData) {
+          // CRITICAL SECURITY: Sanitize pasted HTML to prevent XSS attacks
+          let sanitizedHtml = sanitizeHTMLForPaste(htmlData);
+          
+          // Strip inline text-align styles from pasted HTML (after sanitization)
+          sanitizedHtml = sanitizedHtml.replace(/text-align\s*:\s*[^;]+;?/gi, "");
+          
+          // Clean up empty style attributes
+          sanitizedHtml = sanitizedHtml.replace(/\s*style="\s*;?\s*"/gi, "");
+          sanitizedHtml = sanitizedHtml.replace(/\s*style="\s*;\s*"/gi, ' style=""');
+          
+          // Remove text-align from align attribute (deprecated but sometimes used)
+          sanitizedHtml = sanitizedHtml.replace(/\s*align\s*=\s*["'](left|center|right|justify)["']/gi, "");
+          
+          // Create a new clipboard event with sanitized HTML
+          const newEvent = new ClipboardEvent("paste", {
+            clipboardData: new DataTransfer(),
+          });
+          
+          // Set sanitized HTML
+          newEvent.clipboardData?.setData("text/html", sanitizedHtml);
+          
+          // Also set plain text as fallback
+          const textData = clipboardData.getData("text/plain");
+          if (textData) {
+            newEvent.clipboardData?.setData("text/plain", textData);
+          }
+          
+          // Let Lexical handle the sanitized paste
+          // We'll let the default handler process it, but we've already sanitized the HTML
+          // So we return false to let the default handler continue
+          return false;
+        }
+        
+        return false;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+  }, [editor]);
+
+  return null;
 }
 
 // Custom plugin to handle HTML serialization
@@ -38,6 +95,16 @@ function OnChangeHTMLPlugin({ onChange }: { onChange: (html: string) => void }) 
         htmlString = htmlString.replace(/\s*class="editor-[^"]*"/gi, "");
         htmlString = htmlString.replace(/\s*class=""/gi, "");
         htmlString = htmlString.replace(/\s*style="white-space:\s*pre-wrap;?"/gi, "");
+        
+        // CRITICAL SECURITY: Sanitize HTML output to prevent XSS
+        htmlString = sanitizeHTML(htmlString);
+        
+        // Remove inline text-align styles from output HTML (after sanitization)
+        htmlString = htmlString.replace(/text-align\s*:\s*[^;]+;?/gi, "");
+        
+        // Clean up empty style attributes
+        htmlString = htmlString.replace(/\s*style="\s*;?\s*"/gi, "");
+        htmlString = htmlString.replace(/\s*style="\s*;\s*"/gi, ' style=""');
         htmlString = htmlString.replace(/\s*style=""/gi, "");
         
         // Remove redundant formatting tags: <b><strong> -> <strong>, <i><em> -> <em>
@@ -73,8 +140,18 @@ function InitialHTMLPlugin({ html }: { html: string }) {
         
         // Only initialize if editor is empty
         if (isEmpty) {
+          // CRITICAL SECURITY: Sanitize HTML before parsing to prevent XSS attacks
+          let sanitizedHtml = sanitizeHTMLForPaste(html);
+          
+          // Strip inline text-align styles before parsing
+          sanitizedHtml = sanitizedHtml.replace(/text-align\s*:\s*[^;]+;?/gi, "");
+          sanitizedHtml = sanitizedHtml.replace(/\s*style="\s*;?\s*"/gi, "");
+          sanitizedHtml = sanitizedHtml.replace(/\s*style="\s*;\s*"/gi, ' style=""');
+          sanitizedHtml = sanitizedHtml.replace(/\s*style=""/gi, "");
+          sanitizedHtml = sanitizedHtml.replace(/\s*align\s*=\s*["'](left|center|right|justify)["']/gi, "");
+          
           const parser = new DOMParser();
-          const dom = parser.parseFromString(html, "text/html");
+          const dom = parser.parseFromString(sanitizedHtml, "text/html");
           const nodes = $generateNodesFromDOM(editor, dom);
           root.clear();
           
@@ -175,6 +252,7 @@ export const LexicalEditor: React.FC<LexicalEditorProps> = ({
             <LinkPlugin />
             <ListPlugin />
             <FloatingToolbarPlugin />
+            <PasteSanitizePlugin />
             <OnChangeHTMLPlugin onChange={onChange} />
             {value && <InitialHTMLPlugin html={value} />}
           </div>

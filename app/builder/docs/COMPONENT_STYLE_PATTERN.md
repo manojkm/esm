@@ -15,6 +15,7 @@ The pattern ensures:
 - ✅ **Mode Separation**: 
   - **Edit Mode**: Inline styles for immediate visual feedback based on canvas breakpoint
   - **Preview/Export Mode**: CSS classes only (no inline styles for layout/typography), ensuring eBay compatibility
+- ✅ **Security**: All HTML content is sanitized to prevent XSS attacks (see SECURITY.md)
 
 ## Pattern Structure
 
