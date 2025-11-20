@@ -94,6 +94,17 @@ const colorResultToCss = (color: ColorResult, allowTransparent: boolean = true):
     return null;
   }
 
+  // If allowTransparent is false and alpha is 0, force alpha to 1 (fully opaque)
+  if (!allowTransparent && color.rgb.a === 0) {
+    const { r, g, b } = color.rgb;
+    // Convert to hex format
+    const toHex = (n: number) => {
+      const hex = n.toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    };
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+
   // If fully opaque, return hex
   if (color.rgb.a === 1) {
     return color.hex;
@@ -294,7 +305,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 <SketchPicker
                   color={pickerColor}
                   onChange={handleColorChange}
-                  disableAlpha={false}
+                  disableAlpha={!allowTransparent}
                   width={220}
                 />
               </div>

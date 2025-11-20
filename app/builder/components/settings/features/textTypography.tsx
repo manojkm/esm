@@ -157,8 +157,20 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
           actions.setProp((draft) => {
             draft.linkColorResponsive = value as ResponsiveValue;
             const record = value as ResponsiveRecord;
-            const fallback = (record.desktop as string | undefined) ?? (record.tablet as string | undefined) ?? (record.mobile as string | undefined) ?? draft.linkColor;
-            draft.linkColor = fallback as string | null;
+            // Check if all responsive values are null/undefined (effectively cleared)
+            const desktopValue = record.desktop as string | null | undefined;
+            const tabletValue = record.tablet as string | null | undefined;
+            const mobileValue = record.mobile as string | null | undefined;
+            const hasAnyValue = desktopValue != null || tabletValue != null || mobileValue != null;
+            
+            if (!hasAnyValue) {
+              // If all responsive values are cleared (null/undefined), also clear the base linkColor to fall back to global defaults
+              draft.linkColor = null;
+            } else {
+              // Otherwise, calculate fallback from responsive values or keep existing linkColor
+              const fallback = desktopValue ?? tabletValue ?? mobileValue ?? draft.linkColor;
+              draft.linkColor = fallback as string | null;
+            }
           })
         }
         placeholder="#0066cc"
@@ -173,8 +185,20 @@ export const TextTypographyControls = <TProps extends TextTypographyFeatureProps
           actions.setProp((draft) => {
             draft.linkColorHoverResponsive = value as ResponsiveValue;
             const record = value as ResponsiveRecord;
-            const fallback = (record.desktop as string | undefined) ?? (record.tablet as string | undefined) ?? (record.mobile as string | undefined) ?? draft.linkColorHover;
-            draft.linkColorHover = fallback as string | null;
+            // Check if all responsive values are null/undefined (effectively cleared)
+            const desktopValue = record.desktop as string | null | undefined;
+            const tabletValue = record.tablet as string | null | undefined;
+            const mobileValue = record.mobile as string | null | undefined;
+            const hasAnyValue = desktopValue != null || tabletValue != null || mobileValue != null;
+            
+            if (!hasAnyValue) {
+              // If all responsive values are cleared (null/undefined), also clear the base linkColorHover to fall back to global defaults
+              draft.linkColorHover = null;
+            } else {
+              // Otherwise, calculate fallback from responsive values or keep existing linkColorHover
+              const fallback = desktopValue ?? tabletValue ?? mobileValue ?? draft.linkColorHover;
+              draft.linkColorHover = fallback as string | null;
+            }
           })
         }
         placeholder="#004499"

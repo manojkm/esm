@@ -18,7 +18,13 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Get global settings for defaults (reactive to changes)
   const { settings } = useGlobalSettings();
   const containerDefaults = settings.containerDefaults;
-  
+  const typographyDefaults = settings.typography;
+  const borderDefaults = settings.borderDefaults;
+  const globalLinkColor = typographyDefaults.linkColor;
+  const globalLinkColorHover = typographyDefaults.linkColorHover;
+  const globalBorderColor = borderDefaults.borderColor;
+  const globalBorderColorHover = borderDefaults.borderColorHover;
+
   // Props are destructured here. When a user changes a setting in the SettingsPanel,
   // craft.js updates the corresponding prop, and this component re-renders with the new value.
   const {
@@ -43,7 +49,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
     marginResponsive,
     rowGapResponsive,
     columnGapResponsive,
-    backgroundColor = "#ffffff",
+    backgroundColor,
     enableBackgroundColorHover = false,
     backgroundColorHover = null,
     backgroundColorResponsive,
@@ -84,8 +90,9 @@ export const Container: React.FC<ContainerProps> = (props) => {
     borderRightWidth = null,
     borderBottomWidth = null,
     borderLeftWidth = null,
-    borderColor = "#000000",
-    borderColorHover = "#333333",
+    borderColor,
+    enableBorderColorHover = false,
+    borderColorHover,
     borderColorResponsive,
     borderColorHoverResponsive,
     boxShadowColor = "rgba(0, 0, 0, 0.1)",
@@ -174,8 +181,8 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
   // Apply global defaults if props are undefined (but not if explicitly null - user cleared it)
   // For padding: default to 10px for containers (can be cleared to null)
-  const finalPadding = padding !== undefined ? padding : (containerDefaults.padding?.default ?? 10);
-  const finalMargin = margin !== undefined ? margin : (containerDefaults.margin?.default ?? 0);
+  const finalPadding = padding !== undefined ? padding : containerDefaults.padding?.default ?? 10;
+  const finalMargin = margin !== undefined ? margin : containerDefaults.margin?.default ?? 0;
   // Content box width is for content wrappers (Full Width + Content Width = Boxed), NOT for Container Width = Boxed
   const finalContentBoxWidth = contentBoxWidth ?? 1200;
   const finalCustomWidth = customWidth ?? containerDefaults.maxWidth?.custom ?? 100;
@@ -204,30 +211,29 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Custom hook to get the correct style value based on the current viewport (desktop, tablet, mobile).
   const { currentBreakpoint, getResponsiveValue } = useResponsive();
   const { actualBreakpoint } = useCanvasWidth();
-  
+
   // In editor mode, use actual canvas breakpoint for responsive simulation
   // This makes responsive styles work based on canvas width, not browser window width
   // Memoized to prevent unnecessary recalculations
-  const getEditorResponsiveValue = React.useCallback(<T,>(
-    values: ResponsiveMap<T> | undefined,
-    fallback: T
-  ): T => {
-    if (!isEditMode || !values) {
+  const getEditorResponsiveValue = React.useCallback(
+    <T,>(values: ResponsiveMap<T> | undefined, fallback: T): T => {
+      if (!isEditMode || !values) {
+        return getResponsiveValue(values ?? {}, fallback);
+      }
+
+      // Use actual canvas breakpoint from CanvasWidthContext
+      // This is updated by ResizeObserver in CanvasArea, causing re-renders
+      if (actualBreakpoint && values[actualBreakpoint] !== undefined) {
+        return values[actualBreakpoint];
+      }
+
+      // Fallback to current breakpoint from context
       return getResponsiveValue(values ?? {}, fallback);
-    }
+    },
+    [isEditMode, getResponsiveValue, actualBreakpoint, currentBreakpoint],
+  );
 
-    // Use actual canvas breakpoint from CanvasWidthContext
-    // This is updated by ResizeObserver in CanvasArea, causing re-renders
-    if (actualBreakpoint && values[actualBreakpoint] !== undefined) {
-      return values[actualBreakpoint];
-    }
-
-    // Fallback to current breakpoint from context
-    return getResponsiveValue(values ?? {}, fallback);
-  }, [isEditMode, getResponsiveValue, actualBreakpoint, currentBreakpoint]);
-
-  const responsiveResolver: ResponsiveResolver = (values, fallback) => 
-    getEditorResponsiveValue(values, fallback);
+  const responsiveResolver: ResponsiveResolver = (values, fallback) => getEditorResponsiveValue(values, fallback);
 
   // State to control the visibility of the layout picker modal.
   // The picker is shown for new containers that don't have children or a pre-defined layout.
@@ -243,18 +249,10 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Determine effective layout properties, falling back to defaults if not specified.
   const effectiveLayout = layout ?? (isChildContainer ? "flex" : "block");
 
-  const effectiveFlexDirection = flexDirectionResponsive 
-    ? responsiveResolver(flexDirectionResponsive, isChildContainer ? "column" : "row")
-    : (flexDirection ?? (isChildContainer ? "column" : "row"));
-  const effectiveJustifyContent = justifyContentResponsive
-    ? responsiveResolver(justifyContentResponsive, isChildContainer ? "center" : "flex-start")
-    : (justifyContent ?? (isChildContainer ? "center" : "flex-start"));
-  const effectiveAlignItems = alignItemsResponsive
-    ? responsiveResolver(alignItemsResponsive, isChildContainer ? "center" : "stretch")
-    : (alignItems ?? (isChildContainer ? "center" : "stretch"));
-  const effectiveFlexWrap = flexWrapResponsive
-    ? responsiveResolver(flexWrapResponsive, "nowrap")
-    : (flexWrap ?? "nowrap");
+  const effectiveFlexDirection = flexDirectionResponsive ? responsiveResolver(flexDirectionResponsive, isChildContainer ? "column" : "row") : flexDirection ?? (isChildContainer ? "column" : "row");
+  const effectiveJustifyContent = justifyContentResponsive ? responsiveResolver(justifyContentResponsive, isChildContainer ? "center" : "flex-start") : justifyContent ?? (isChildContainer ? "center" : "flex-start");
+  const effectiveAlignItems = alignItemsResponsive ? responsiveResolver(alignItemsResponsive, isChildContainer ? "center" : "stretch") : alignItems ?? (isChildContainer ? "center" : "stretch");
+  const effectiveFlexWrap = flexWrapResponsive ? responsiveResolver(flexWrapResponsive, "nowrap") : flexWrap ?? "nowrap";
   const effectiveAlignContent = alignContent ?? "stretch";
 
   // Check if the container has any children.
@@ -348,14 +346,15 @@ export const Container: React.FC<ContainerProps> = (props) => {
     resolver: responsiveResolver,
   });
 
-  const flexBasisValue = flexBasis !== null && flexBasis !== undefined
-    ? buildResponsiveValueWithUnit({
-        responsive: flexBasisResponsive,
-        fallbackValue: flexBasis,
-        fallbackUnit: flexBasisUnit ?? "%",
-        resolver: responsiveResolver,
-      })
-    : undefined;
+  const flexBasisValue =
+    flexBasis !== null && flexBasis !== undefined
+      ? buildResponsiveValueWithUnit({
+          responsive: flexBasisResponsive,
+          fallbackValue: flexBasis,
+          fallbackUnit: flexBasisUnit ?? "%",
+          resolver: responsiveResolver,
+        })
+      : undefined;
 
   const minHeightValue = enableMinHeight
     ? buildResponsiveValueWithUnit({
@@ -368,7 +367,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
   const backgroundStyles = buildBackgroundStyles({
     type: backgroundType,
-    color: backgroundColor,
+    color: backgroundColor ?? null,
     colorResponsive: backgroundColorResponsive,
     gradient: backgroundGradient,
     image: backgroundImage,
@@ -402,9 +401,11 @@ export const Container: React.FC<ContainerProps> = (props) => {
     className: componentClassName,
   });
 
+  // Use global defaults if not set
+  const effectiveBorderColor = borderColor ?? globalBorderColor;
   const borderStyles = buildBorderStyles({
     style: borderStyle,
-    color: borderColor,
+    color: effectiveBorderColor ?? undefined,
     colorResponsive: borderColorResponsive,
     radiusResponsive: borderRadiusResponsive,
     widthResponsive: borderWidthResponsive,
@@ -449,22 +450,27 @@ export const Container: React.FC<ContainerProps> = (props) => {
   const contentWrapperClassName = needsContentWrapper ? `container-content-${id}` : "";
 
   // Hover CSS for editor mode (uses resolver for current breakpoint)
-  const hoverBackgroundCss = enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover
-    ? buildBackgroundHoverCss({
-        type: backgroundType,
-        colorHover: backgroundColorHover,
-        colorHoverResponsive: backgroundColorHoverResponsive,
-        gradientHover: backgroundGradientHover,
+  const hoverBackgroundCss =
+    enableBackgroundColorHover && backgroundType === "color" && backgroundColorHover
+      ? buildBackgroundHoverCss({
+          type: backgroundType,
+          colorHover: backgroundColorHover,
+          colorHoverResponsive: backgroundColorHoverResponsive,
+          gradientHover: backgroundGradientHover,
+          resolver: responsiveResolver,
+        })
+      : "";
+
+  // Use global defaults if not set, but only if hover is enabled
+  const effectiveBorderColorHover = enableBorderColorHover ? borderColorHover ?? globalBorderColorHover : undefined;
+  const hoverBorderCss = enableBorderColorHover
+    ? buildBorderHoverCss({
+        style: borderStyle,
+        colorHover: effectiveBorderColorHover ?? undefined,
+        colorHoverResponsive: borderColorHoverResponsive,
         resolver: responsiveResolver,
       })
     : "";
-
-  const hoverBorderCss = buildBorderHoverCss({
-    style: borderStyle,
-    colorHover: borderColorHover,
-    colorHoverResponsive: borderColorHoverResponsive,
-    resolver: responsiveResolver,
-  });
 
   const hoverBoxShadowCss = buildBoxShadowHoverCss({
     enableHover: enableBoxShadowHover,
@@ -487,11 +493,16 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
   // Link color CSS for editor mode (non-responsive, uses static values)
   // In export mode, responsive link color CSS is generated in responsiveCss
-  const linkCss = isEditMode ? buildLinkColorCss({
-    baseSelector: `.${componentClassName}`,
-    linkColor,
-    linkColorHover,
-  }) : "";
+  // Use global defaults if not set
+  const effectiveLinkColor = linkColor ?? globalLinkColor;
+  const effectiveLinkColorHover = linkColorHover ?? globalLinkColorHover;
+  const linkCss = isEditMode
+    ? buildLinkColorCss({
+        baseSelector: `.${componentClassName}`,
+        linkColor: effectiveLinkColor ?? undefined,
+        linkColorHover: effectiveLinkColorHover ?? undefined,
+      })
+    : "";
 
   const responsiveVisibilityCss = buildVisibilityCss({
     componentClassName,
@@ -508,7 +519,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // because CSS media queries respond to browser viewport, not canvas width
   // Only generate CSS media queries for exported HTML (when not in edit mode)
   let responsiveCss = "";
-  
+
   // Skip CSS media queries in editor mode - use inline styles from responsiveResolver instead
   const shouldGenerateMediaQueries = !isEditMode;
 
@@ -521,8 +532,17 @@ export const Container: React.FC<ContainerProps> = (props) => {
     }
 
     // Hover border color responsive CSS
-    if (borderStyle && borderStyle !== "none" && borderColorHover && borderColorHoverResponsive) {
-      responsiveHoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, borderColorHover);
+    // Use global defaults if not set, but only if hover is enabled
+    if (enableBorderColorHover) {
+      const effectiveBorderColorHover = borderColorHover ?? globalBorderColorHover;
+      if (borderStyle && borderStyle !== "none" && effectiveBorderColorHover) {
+        if (borderColorHoverResponsive) {
+          responsiveHoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, effectiveBorderColorHover);
+        } else {
+          // Generate base CSS for non-responsive hover border color
+          responsiveHoverCss += `.${componentClassName}:hover { border-color: ${effectiveBorderColorHover} !important; }\n`;
+        }
+      }
     }
   }
 
@@ -531,13 +551,18 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Padding responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
     // Apply to wrapper div
     if (paddingResponsive) {
-      responsiveCss += generatePaddingCss(componentClassName, paddingResponsive, {
-        top: paddingTop,
-        right: paddingRight,
-        bottom: paddingBottom,
-        left: paddingLeft,
-        defaultValue: padding,
-      }, paddingUnit);
+      responsiveCss += generatePaddingCss(
+        componentClassName,
+        paddingResponsive,
+        {
+          top: paddingTop,
+          right: paddingRight,
+          bottom: paddingBottom,
+          left: paddingLeft,
+          defaultValue: padding,
+        },
+        paddingUnit,
+      );
     } else if (padding !== null && padding !== undefined) {
       // Generate base CSS for non-responsive padding only if explicitly set (including 0)
       const top = paddingTop ?? padding;
@@ -551,13 +576,18 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Margin responsive CSS - follows pattern: base value applies to all breakpoints, media queries only for overrides
     // Apply to wrapper div
     if (marginResponsive) {
-      responsiveCss += generateMarginCss(componentClassName, marginResponsive, {
-        top: marginTop,
-        right: marginRight,
-        bottom: marginBottom,
-        left: marginLeft,
-        defaultValue: margin,
-      }, marginUnit);
+      responsiveCss += generateMarginCss(
+        componentClassName,
+        marginResponsive,
+        {
+          top: marginTop,
+          right: marginRight,
+          bottom: marginBottom,
+          left: marginLeft,
+          defaultValue: margin,
+        },
+        marginUnit,
+      );
     } else if (margin !== null && margin !== undefined) {
       // Generate base CSS for non-responsive margin if explicitly set
       const top = marginTop ?? margin ?? 0;
@@ -576,7 +606,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (rowGap !== null && rowGap !== undefined) {
         responsiveCss += `.${componentClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
       }
-      
+
       // Generate CSS for column-gap (with or without responsive)
       if (columnGapResponsive) {
         responsiveCss += generateResponsiveCss(componentClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
@@ -594,7 +624,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (flexDirFallback) {
         responsiveCss += `.${componentClassName} { flex-direction: ${flexDirFallback}; }\n`;
       }
-      
+
       // Generate CSS for justify-content (with or without responsive)
       const justifyContentFallback = justifyContent ?? (isChildContainer ? "center" : "flex-start");
       if (justifyContentResponsive) {
@@ -602,7 +632,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (justifyContentFallback) {
         responsiveCss += `.${componentClassName} { justify-content: ${justifyContentFallback}; }\n`;
       }
-      
+
       // Generate CSS for align-items (with or without responsive)
       const alignItemsFallback = alignItems ?? (isChildContainer ? "center" : "stretch");
       if (alignItemsResponsive) {
@@ -610,7 +640,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (alignItemsFallback) {
         responsiveCss += `.${componentClassName} { align-items: ${alignItemsFallback}; }\n`;
       }
-      
+
       // Generate CSS for flex-wrap (with or without responsive)
       const flexWrapFallback = flexWrap ?? "nowrap";
       if (flexWrapResponsive) {
@@ -629,7 +659,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (flexDirFallback) {
         responsiveCss += `.${contentWrapperClassName} { flex-direction: ${flexDirFallback}; }\n`;
       }
-      
+
       // Generate CSS for justify-content (with or without responsive)
       const justifyContentFallback = justifyContent ?? (isChildContainer ? "center" : "flex-start");
       if (justifyContentResponsive) {
@@ -637,7 +667,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (justifyContentFallback) {
         responsiveCss += `.${contentWrapperClassName} { justify-content: ${justifyContentFallback}; }\n`;
       }
-      
+
       // Generate CSS for align-items (with or without responsive)
       const alignItemsFallback = alignItems ?? (isChildContainer ? "center" : "stretch");
       if (alignItemsResponsive) {
@@ -645,7 +675,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (alignItemsFallback) {
         responsiveCss += `.${contentWrapperClassName} { align-items: ${alignItemsFallback}; }\n`;
       }
-      
+
       // Generate CSS for flex-wrap (with or without responsive)
       const flexWrapFallback = flexWrap ?? "nowrap";
       if (flexWrapResponsive) {
@@ -659,7 +689,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
       } else if (rowGap !== null && rowGap !== undefined) {
         responsiveCss += `.${contentWrapperClassName} { row-gap: ${rowGap}${rowGapUnit}; }\n`;
       }
-      
+
       if (columnGapResponsive) {
         responsiveCss += generateResponsiveCss(contentWrapperClassName, "column-gap", columnGapResponsive, columnGap, columnGapUnit);
       } else if (columnGap !== null && columnGap !== undefined) {
@@ -670,7 +700,11 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Background color responsive CSS - apply to wrapper div
     if (backgroundType === "color") {
       if (backgroundColorResponsive) {
-        responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? undefined);
+        // Extract fallback from backgroundColor or backgroundColorResponsive.desktop
+        const fallbackColor = backgroundColor ?? (typeof backgroundColorResponsive.desktop === "string" ? backgroundColorResponsive.desktop : undefined);
+        if (fallbackColor) {
+          responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, fallbackColor);
+        }
       } else if (backgroundColor) {
         // Generate base CSS for non-responsive background color
         responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
@@ -684,12 +718,14 @@ export const Container: React.FC<ContainerProps> = (props) => {
     }
 
     // Border color responsive CSS - apply to wrapper div
+    // Use global defaults if not set
+    const effectiveBorderColor = borderColor ?? globalBorderColor;
     if (borderStyle && borderStyle !== "none") {
       if (borderColorResponsive) {
-        responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? undefined);
-      } else if (borderColor) {
+        responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, effectiveBorderColor ?? undefined);
+      } else if (effectiveBorderColor) {
         // Generate base CSS for non-responsive border color
-        responsiveCss += `.${componentClassName} { border-color: ${borderColor}; }\n`;
+        responsiveCss += `.${componentClassName} { border-color: ${effectiveBorderColor}; }\n`;
       }
       // Generate base CSS for border style
       responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; }\n`;
@@ -697,13 +733,19 @@ export const Container: React.FC<ContainerProps> = (props) => {
 
     // Border radius responsive CSS - apply to wrapper div
     if (borderRadiusResponsive) {
-      responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-radius", borderRadiusResponsive, {
-        top: borderTopLeftRadius,
-        right: borderTopRightRadius,
-        bottom: borderBottomRightRadius,
-        left: borderBottomLeftRadius,
-        defaultValue: borderRadius,
-      }, borderRadiusUnit);
+      responsiveCss += generateResponsiveFourSideCss(
+        componentClassName,
+        "border-radius",
+        borderRadiusResponsive,
+        {
+          top: borderTopLeftRadius,
+          right: borderTopRightRadius,
+          bottom: borderBottomRightRadius,
+          left: borderBottomLeftRadius,
+          defaultValue: borderRadius,
+        },
+        borderRadiusUnit,
+      );
     } else if (borderRadius !== null && borderRadius !== undefined && borderRadius !== 0) {
       // Generate base CSS for non-responsive border radius
       const topLeft = borderTopLeftRadius ?? borderRadius;
@@ -717,13 +759,19 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Border width responsive CSS - apply to wrapper div
     if (borderStyle && borderStyle !== "none") {
       if (borderWidthResponsive) {
-        responsiveCss += generateResponsiveFourSideCss(componentClassName, "border-width", borderWidthResponsive, {
-          top: borderTopWidth,
-          right: borderRightWidth,
-          bottom: borderBottomWidth,
-          left: borderLeftWidth,
-          defaultValue: borderWidth,
-        }, "px");
+        responsiveCss += generateResponsiveFourSideCss(
+          componentClassName,
+          "border-width",
+          borderWidthResponsive,
+          {
+            top: borderTopWidth,
+            right: borderRightWidth,
+            bottom: borderBottomWidth,
+            left: borderLeftWidth,
+            defaultValue: borderWidth,
+          },
+          "px",
+        );
       } else if (borderWidth !== null && borderWidth !== undefined) {
         // Generate base CSS for non-responsive border width
         const top = borderTopWidth ?? borderWidth;
@@ -778,19 +826,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Box shadow responsive CSS - apply to wrapper div
     if (enableBoxShadow) {
       if (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive) {
-        responsiveCss += generateBoxShadowCss(
-          componentClassName,
-          boxShadowHorizontalResponsive,
-          boxShadowVerticalResponsive,
-          boxShadowBlurResponsive,
-          boxShadowSpreadResponsive,
-          boxShadowHorizontal ?? 0,
-          boxShadowVertical ?? 0,
-          boxShadowBlur ?? 0,
-          boxShadowSpread ?? 0,
-          boxShadowColor ?? "rgba(0, 0, 0, 0.1)",
-          boxShadowPosition ?? "outset"
-        );
+        responsiveCss += generateBoxShadowCss(componentClassName, boxShadowHorizontalResponsive, boxShadowVerticalResponsive, boxShadowBlurResponsive, boxShadowSpreadResponsive, boxShadowHorizontal ?? 0, boxShadowVertical ?? 0, boxShadowBlur ?? 0, boxShadowSpread ?? 0, boxShadowColor ?? "rgba(0, 0, 0, 0.1)", boxShadowPosition ?? "outset");
       } else {
         // Generate base CSS for non-responsive box shadow
         const shadowValue = `${boxShadowHorizontal ?? 0}px ${boxShadowVertical ?? 0}px ${boxShadowBlur ?? 0}px ${boxShadowSpread ?? 0}px ${boxShadowColor ?? "rgba(0, 0, 0, 0.1)"}`;
@@ -813,42 +849,25 @@ export const Container: React.FC<ContainerProps> = (props) => {
     }
 
     // Link color responsive CSS - target content class
-    if ((linkColor || linkColorHover) && (linkColorResponsive || linkColorHoverResponsive)) {
-      responsiveCss += generateLinkColorCss(
-        `${componentClassName} .container-content`,
-        linkColorResponsive,
-        linkColor ?? undefined,
-        linkColorHoverResponsive,
-        linkColorHover ?? undefined
-      );
-    } else if (linkColor || linkColorHover) {
+    // Use global defaults if not set
+    const effectiveLinkColor = linkColor ?? globalLinkColor;
+    const effectiveLinkColorHover = linkColorHover ?? globalLinkColorHover;
+    if ((effectiveLinkColor || effectiveLinkColorHover) && (linkColorResponsive || linkColorHoverResponsive)) {
+      responsiveCss += generateLinkColorCss(`${componentClassName} .container-content`, linkColorResponsive, effectiveLinkColor ?? undefined, linkColorHoverResponsive, effectiveLinkColorHover ?? undefined);
+    } else if (effectiveLinkColor || effectiveLinkColorHover) {
       // Non-responsive link colors
-      if (linkColor) {
-        responsiveCss += `.${componentClassName} .container-content a { color: ${linkColor}; }\n`;
+      if (effectiveLinkColor) {
+        responsiveCss += `.${componentClassName} .container-content a { color: ${effectiveLinkColor}; }\n`;
       }
-      if (linkColorHover) {
-        responsiveCss += `.${componentClassName} .container-content a:hover { color: ${linkColorHover}; }\n`;
+      if (effectiveLinkColorHover) {
+        responsiveCss += `.${componentClassName} .container-content a:hover { color: ${effectiveLinkColorHover}; }\n`;
       }
     }
 
     // Position responsive CSS (only when position is set and not default/static) - apply to wrapper div
     if (position && position !== "default" && position !== "static") {
       if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
-        responsiveCss += generatePositionCss(
-          componentClassName,
-          positionTopResponsive,
-          positionRightResponsive,
-          positionBottomResponsive,
-          positionLeftResponsive,
-          positionTop,
-          positionRight,
-          positionBottom,
-          positionLeft,
-          positionTopUnit,
-          positionRightUnit,
-          positionBottomUnit,
-          positionLeftUnit
-        );
+        responsiveCss += generatePositionCss(componentClassName, positionTopResponsive, positionRightResponsive, positionBottomResponsive, positionLeftResponsive, positionTop, positionRight, positionBottom, positionLeft, positionTopUnit, positionRightUnit, positionBottomUnit, positionLeftUnit);
       } else {
         // Generate base CSS for non-responsive position
         responsiveCss += `.${componentClassName} { position: ${position}; }\n`;
@@ -884,7 +903,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
     isEditMode ? buildHoverRule(componentClassName, hoverRules) : responsiveHoverCss,
     linkCss,
     responsiveVisibilityCss,
-    responsiveCss
+    responsiveCss,
   );
 
   // --- Final Style and Prop Aggregation ---
@@ -933,10 +952,8 @@ export const Container: React.FC<ContainerProps> = (props) => {
     // Sizing properties
     // In edit mode, use inline styles for child container width (responsive via responsiveResolver)
     // In preview/export mode, use CSS classes (responsive via media queries)
-    flexBasis: isEditMode ? flexBasisValue : (isChildContainer ? undefined : undefined),
-    width: isEditMode 
-      ? (isChildContainer && flexBasisValue ? flexBasisValue : "100%")
-      : (isChildContainer ? undefined : "100%"),
+    flexBasis: isEditMode ? flexBasisValue : isChildContainer ? undefined : undefined,
+    width: isEditMode ? (isChildContainer && flexBasisValue ? flexBasisValue : "100%") : isChildContainer ? undefined : "100%",
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? customWidthValue : containerWidth === "boxed" ? `${containerDefaults.maxWidth?.boxed ?? 1200}px` : undefined,
     marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
@@ -1017,7 +1034,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
             // Build overlay styles for editor preview (visual feedback)
             const overlayOpacityDecimal = (overlayOpacity ?? 50) / 100;
             let overlayBackgroundStyle: React.CSSProperties = {};
-            
+
             if (enableBackgroundOverlay && overlayType) {
               if (overlayType === "color" && overlayColor) {
                 const resolvedOverlayColor = resolveResponsiveValue<string>({
@@ -1057,13 +1074,13 @@ export const Container: React.FC<ContainerProps> = (props) => {
                   backgroundAttachment: resolvedAttachment,
                 };
               }
-              
+
               const resolvedBlendMode = resolveResponsiveValue<string>({
                 resolver: responsiveResolver,
                 responsive: overlayBlendModeResponsive as ResponsiveMap<string>,
                 fallback: overlayBlendMode ?? "normal",
               });
-              
+
               overlayBackgroundStyle = {
                 ...overlayBackgroundStyle,
                 mixBlendMode: resolvedBlendMode as React.CSSProperties["mixBlendMode"],
@@ -1098,10 +1115,7 @@ export const Container: React.FC<ContainerProps> = (props) => {
             if (needsContentWrapper) {
               // Use existing wrapper with both classes
               return (
-                <div 
-                  className={`${contentWrapperClassName} container-content`}
-                  style={contentWrapperStyle}
-                >
+                <div className={`${contentWrapperClassName} container-content`} style={contentWrapperStyle}>
                   {content}
                 </div>
               );

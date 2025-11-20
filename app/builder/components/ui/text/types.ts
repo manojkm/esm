@@ -100,6 +100,7 @@ export interface TextProps {
   borderBottomWidth?: number | null;
   borderLeftWidth?: number | null;
   borderColor?: string;
+  enableBorderColorHover?: boolean;
   borderColorHover?: string;
   borderColorResponsive?: ResponsiveValue;
   borderColorHoverResponsive?: ResponsiveValue;

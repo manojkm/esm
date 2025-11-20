@@ -13,8 +13,8 @@ interface GlobalSettingsPanelProps {
 }
 
 export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen, onClose }) => {
-  const { settings, updateColorPalette, updateTypography, updateSpacingScale, updateContainerDefaults, updateCustomCSS, resetSettings } = useGlobalSettings();
-  const [activeSection, setActiveSection] = useState<"colors" | "typography" | "spacing" | "containers" | "css">("colors");
+  const { settings, updateColorPalette, updateTypography, updateSpacingScale, updateContainerDefaults, updateBorderDefaults, updateCustomCSS, resetSettings } = useGlobalSettings();
+  const [activeSection, setActiveSection] = useState<"colors" | "typography" | "spacing" | "containers" | "borders" | "css">("colors");
   const [fontSizeBreakpoint, setFontSizeBreakpoint] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [showGoogleFontsHeadings, setShowGoogleFontsHeadings] = useState(false);
   const [showGoogleFontsBody, setShowGoogleFontsBody] = useState(false);
@@ -54,6 +54,9 @@ export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen
           </button>
           <button onClick={() => setActiveSection("containers")} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeSection === "containers" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600 hover:text-gray-900"}`}>
             Container Defaults
+          </button>
+          <button onClick={() => setActiveSection("borders")} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeSection === "borders" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600 hover:text-gray-900"}`}>
+            Border Defaults
           </button>
           <button onClick={() => setActiveSection("css")} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeSection === "css" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-600 hover:text-gray-900"}`}>
             Custom CSS
@@ -226,6 +229,32 @@ export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen
                     <ColorPicker
                       color={settings.typography.textColor?.body || undefined}
                       onChange={(color) => updateTypography({ textColor: { body: color || undefined } })}
+                      allowTransparent={false}
+                      size="small"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Link Colors */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-4">Link Colors</h3>
+                <p className="text-xs text-gray-500 mb-4">Default colors for links. All components will use these colors by default.</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Link Color</label>
+                    <ColorPicker
+                      color={settings.typography.linkColor || undefined}
+                      onChange={(color) => updateTypography({ linkColor: color || undefined })}
+                      allowTransparent={false}
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Link Hover Color</label>
+                    <ColorPicker
+                      color={settings.typography.linkColorHover || undefined}
+                      onChange={(color) => updateTypography({ linkColorHover: color || undefined })}
                       allowTransparent={false}
                       size="small"
                     />
@@ -588,6 +617,36 @@ export const GlobalSettingsPanel: React.FC<GlobalSettingsPanelProps> = ({ isOpen
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === "borders" && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Border Defaults</h3>
+                <p className="text-xs text-gray-500 mb-4">Default colors for borders. All components will use these colors by default.</p>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Border Color</label>
+                    <ColorPicker
+                      color={settings.borderDefaults.borderColor || undefined}
+                      onChange={(color) => updateBorderDefaults({ borderColor: color || undefined })}
+                      allowTransparent={false}
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Border Hover Color</label>
+                    <ColorPicker
+                      color={settings.borderDefaults.borderColorHover || undefined}
+                      onChange={(color) => updateBorderDefaults({ borderColorHover: color || undefined })}
+                      allowTransparent={false}
+                      size="small"
+                    />
                   </div>
                 </div>
               </div>

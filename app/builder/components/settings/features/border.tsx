@@ -16,6 +16,7 @@ export interface BorderFeatureProps {
   borderStyle?: string;
   borderWidthResponsive?: ResponsiveValue;
   borderColorResponsive?: ResponsiveValue;
+  enableBorderColorHover?: boolean;
   borderColorHoverResponsive?: ResponsiveValue;
   borderRadiusResponsive?: ResponsiveValue;
 }
@@ -94,17 +95,47 @@ const BorderColorControls = <TProps extends BorderFeatureProps>({ props, actions
         placeholder="#000000"
         responsive
       />
-      <ColorInput
-        label="Hover Border Color"
-        value={props.borderColorHoverResponsive as ResponsiveRecord | undefined}
-        onChange={(value) =>
-          actions.setProp((draft) => {
-            draft.borderColorHoverResponsive = value as ResponsiveValue;
-          })
-        }
-        placeholder="#333333"
-        responsive
-      />
+
+      {/* Hover Color Toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">Hover Border Color</span>
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            id={`${baseId}-hover-toggle`}
+            type="checkbox"
+            checked={props.enableBorderColorHover || false}
+            onChange={(event) =>
+              actions.setProp((draft) => {
+                draft.enableBorderColorHover = event.target.checked;
+                if (!event.target.checked) {
+                  draft.borderColorHover = null;
+                  draft.borderColorHoverResponsive = undefined;
+                }
+                // When enabled, don't initialize with any default value - let user choose or use global default
+              })
+            }
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+      </div>
+
+      {props.enableBorderColorHover && (
+        <ColorInput
+          label="Hover Color"
+          value={props.borderColorHoverResponsive as ResponsiveRecord | undefined}
+          onChange={(value) =>
+            actions.setProp((draft) => {
+              draft.borderColorHoverResponsive = value as ResponsiveValue;
+              const record = value as ResponsiveRecord;
+              const fallback = (record.desktop as string | undefined) ?? (record.tablet as string | undefined) ?? (record.mobile as string | undefined) ?? draft.borderColorHover ?? null;
+              draft.borderColorHover = fallback;
+            })
+          }
+          placeholder="#333333"
+          responsive
+        />
+      )}
     </section>
   );
 };

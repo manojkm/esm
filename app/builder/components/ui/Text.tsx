@@ -16,6 +16,9 @@ export const Text: React.FC<TextProps> = (props) => {
   // Get global settings for defaults (reactive to changes)
   const { settings } = useGlobalSettings();
   const typographyDefaults = settings.typography;
+  const borderDefaults = settings.borderDefaults;
+  const globalBorderColor = borderDefaults.borderColor;
+  const globalBorderColorHover = borderDefaults.borderColorHover;
 
   // Props destructuring with defaults from global typography settings
   const {
@@ -108,8 +111,9 @@ export const Text: React.FC<TextProps> = (props) => {
     borderRightWidth = null,
     borderBottomWidth = null,
     borderLeftWidth = null,
-    borderColor = "#000000",
-    borderColorHover = "#333333",
+    borderColor,
+    enableBorderColorHover = false,
+    borderColorHover,
     borderColorResponsive,
     borderColorHoverResponsive,
     // Box Shadow
@@ -182,6 +186,8 @@ export const Text: React.FC<TextProps> = (props) => {
   const globalTextColor = typographyDefaults.textColor?.[typographyType];
   const globalLineHeight = typographyDefaults.lineHeight?.[typographyType];
   const globalLetterSpacing = typographyDefaults.letterSpacing?.[typographyType];
+  const globalLinkColor = typographyDefaults.linkColor;
+  const globalLinkColorHover = typographyDefaults.linkColorHover;
 
   const {
     connectors: { connect, drag },
@@ -414,25 +420,29 @@ export const Text: React.FC<TextProps> = (props) => {
     }
   }
 
-  // Border hover
-  if (borderColorHover) {
-    if (shouldGenerateMediaQueries) {
-      // Preview mode: Generate responsive hover CSS
-      if (borderColorHoverResponsive) {
-        hoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, borderColorHover);
+  // Border hover - only if enabled and border style is set
+  // Use global defaults if not set, but only if hover is enabled
+  if (enableBorderColorHover && borderStyle && borderStyle !== "none") {
+    const effectiveBorderColorHover = borderColorHover ?? globalBorderColorHover;
+    if (effectiveBorderColorHover) {
+      if (shouldGenerateMediaQueries) {
+        // Preview mode: Generate responsive hover CSS
+        if (borderColorHoverResponsive) {
+          hoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, effectiveBorderColorHover);
+        } else {
+          hoverCss += `.${componentClassName}:hover { border-color: ${effectiveBorderColorHover} !important; } `;
+        }
       } else {
-        hoverCss += `.${componentClassName}:hover { border-color: ${borderColorHover} !important; } `;
-      }
-    } else {
-      // Edit mode: Use resolver to get current breakpoint value
-      const hoverBorderCss = buildBorderHoverCss({
-        style: borderStyle === "none" ? undefined : borderStyle,
-        colorHover: borderColorHover,
-        colorHoverResponsive: borderColorHoverResponsive,
-        resolver: responsiveResolver,
-      });
-      if (hoverBorderCss) {
-        hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+        // Edit mode: Use resolver to get current breakpoint value
+        const hoverBorderCss = buildBorderHoverCss({
+          style: borderStyle,
+          colorHover: effectiveBorderColorHover,
+          colorHoverResponsive: borderColorHoverResponsive,
+          resolver: responsiveResolver,
+        });
+        if (hoverBorderCss) {
+          hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+        }
       }
     }
   }
@@ -622,15 +632,17 @@ export const Text: React.FC<TextProps> = (props) => {
     }
 
     // Link color - follows pattern: base value applies to all breakpoints, media queries only for overrides
+    const effectiveLinkColor = linkColor ?? globalLinkColor;
+    const effectiveLinkColorHover = linkColorHover ?? globalLinkColorHover;
     if (linkColorResponsive || linkColorHoverResponsive) {
-      responsiveCss += generateLinkColorCss(`${componentClassName} .text-content`, linkColorResponsive, linkColor ?? undefined, linkColorHoverResponsive, linkColorHover ?? undefined);
-    } else if (linkColor || linkColorHover) {
+      responsiveCss += generateLinkColorCss(`${componentClassName} .text-content`, linkColorResponsive, effectiveLinkColor ?? undefined, linkColorHoverResponsive, effectiveLinkColorHover ?? undefined);
+    } else if (effectiveLinkColor || effectiveLinkColorHover) {
       // Generate base CSS for non-responsive link colors (applies to all breakpoints)
-      if (linkColor) {
-        responsiveCss += `.${componentClassName} .text-content a { color: ${linkColor}; }\n`;
+      if (effectiveLinkColor) {
+        responsiveCss += `.${componentClassName} .text-content a { color: ${effectiveLinkColor}; }\n`;
       }
-      if (linkColorHover) {
-        responsiveCss += `.${componentClassName} .text-content a:hover { color: ${linkColorHover}; }\n`;
+      if (effectiveLinkColorHover) {
+        responsiveCss += `.${componentClassName} .text-content a:hover { color: ${effectiveLinkColorHover}; }\n`;
       }
     }
 
@@ -652,11 +664,15 @@ export const Text: React.FC<TextProps> = (props) => {
 
     // Border color - follows pattern: base value applies to all breakpoints, media queries only for overrides
     // Apply to wrapper div
-    if (borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, borderColor ?? "#000000");
-    } else if (borderStyle && borderStyle !== "none" && borderColor) {
-      // Generate base CSS for non-responsive border-color (applies to all breakpoints)
-      responsiveCss += `.${componentClassName} { border-color: ${borderColor}; }\n`;
+    // Use global defaults if not set
+    const effectiveBorderColor = borderColor ?? globalBorderColor;
+    if (borderStyle && borderStyle !== "none") {
+      if (borderColorResponsive) {
+        responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, effectiveBorderColor ?? undefined);
+      } else if (effectiveBorderColor) {
+        // Generate base CSS for non-responsive border-color (applies to all breakpoints)
+        responsiveCss += `.${componentClassName} { border-color: ${effectiveBorderColor}; }\n`;
+      }
     }
 
     // Border width - follows pattern: base value applies to all breakpoints, media queries only for overrides
@@ -756,9 +772,11 @@ export const Text: React.FC<TextProps> = (props) => {
   });
 
   // Build border styles
+  // Use global defaults if not set
+  const effectiveBorderColor = borderColor ?? globalBorderColor;
   const borderStyles = buildBorderStyles({
     style: borderStyle === "none" ? undefined : borderStyle,
-    color: borderColor === "#000000" && borderStyle === "none" ? undefined : borderColor,
+    color: effectiveBorderColor ?? undefined,
     colorResponsive: borderColorResponsive,
     radiusResponsive: borderRadiusResponsive,
     widthResponsive: borderWidthResponsive,
@@ -802,11 +820,13 @@ export const Text: React.FC<TextProps> = (props) => {
     color: effectiveTextColor,
   });
 
-  // Build link color CSS
+  // Build link color CSS (use global defaults if not set)
+  const effectiveLinkColor = linkColor ?? globalLinkColor;
+  const effectiveLinkColorHover = linkColorHover ?? globalLinkColorHover;
   const linkColorCss = buildLinkColorCss({
     baseSelector: `.${componentClassName}`,
-    linkColor: linkColor ?? undefined,
-    linkColorHover: linkColorHover ?? undefined,
+    linkColor: effectiveLinkColor ?? undefined,
+    linkColorHover: effectiveLinkColorHover ?? undefined,
   });
 
   // Build overlay styles

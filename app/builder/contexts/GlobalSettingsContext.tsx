@@ -73,6 +73,9 @@ export interface TypographySettings {
     headings?: string;
     body?: string;
   };
+  // Link colors
+  linkColor?: string;
+  linkColorHover?: string;
   // Line height
   lineHeight?: {
     headings?: number;
@@ -109,11 +112,17 @@ export interface ContainerDefaults {
   };
 }
 
+export interface BorderDefaults {
+  borderColor?: string;
+  borderColorHover?: string;
+}
+
 export interface GlobalSettings {
   colorPalette: ColorPalette;
   typography: TypographySettings;
   spacingScale: SpacingScale;
   containerDefaults: ContainerDefaults;
+  borderDefaults: BorderDefaults;
   customCSS: string;
 }
 
@@ -175,6 +184,8 @@ const defaultGlobalSettings: GlobalSettings = {
       headings: "#1f2937",
       body: "#1f2937",
     },
+    linkColor: "#2563eb",
+    linkColorHover: "#1d4ed8",
     lineHeight: {
       headings: 1.2,
       body: 1.6,
@@ -205,6 +216,10 @@ const defaultGlobalSettings: GlobalSettings = {
       default: 0,
     },
   },
+  borderDefaults: {
+    borderColor: "#000000",
+    borderColorHover: "#333333",
+  },
   customCSS: "",
 };
 
@@ -214,12 +229,14 @@ interface GlobalSettingsContextType {
   updateTypography: (typography: Partial<TypographySettings>) => void;
   updateSpacingScale: (scale: Partial<SpacingScale>) => void;
   updateContainerDefaults: (defaults: Partial<ContainerDefaults>) => void;
+  updateBorderDefaults: (defaults: Partial<BorderDefaults>) => void;
   updateCustomCSS: (css: string) => void;
   resetSettings: () => void;
   getColor: (key: string) => string | undefined;
   getTypography: (type: "headings" | "body", property: "fontFamily" | "fontSize" | "lineHeight" | "letterSpacing", breakpoint?: "desktop" | "tablet" | "mobile", element?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "body") => string | number | undefined;
   getSpacingScale: () => SpacingScale;
   getContainerDefaults: () => ContainerDefaults;
+  getBorderDefaults: () => BorderDefaults;
 }
 
 const GlobalSettingsContext = createContext<GlobalSettingsContextType | undefined>(undefined);
@@ -287,6 +304,14 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
         updated.textColor = { ...prev.typography.textColor, ...typography.textColor };
       }
       
+      if (typography.linkColor !== undefined) {
+        updated.linkColor = typography.linkColor;
+      }
+      
+      if (typography.linkColorHover !== undefined) {
+        updated.linkColorHover = typography.linkColorHover;
+      }
+      
       if (typography.lineHeight) {
         updated.lineHeight = { ...prev.typography.lineHeight, ...typography.lineHeight };
       }
@@ -326,6 +351,16 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
     }));
   }, []);
 
+  const updateBorderDefaults = useCallback((defaults: Partial<BorderDefaults>) => {
+    setSettings((prev) => ({
+      ...prev,
+      borderDefaults: {
+        ...prev.borderDefaults,
+        ...defaults,
+      },
+    }));
+  }, []);
+
   const updateCustomCSS = useCallback((css: string) => {
     setSettings((prev) => ({
       ...prev,
@@ -344,6 +379,10 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
   const getContainerDefaults = useCallback((): ContainerDefaults => {
     return settings.containerDefaults;
   }, [settings.containerDefaults]);
+
+  const getBorderDefaults = useCallback((): BorderDefaults => {
+    return settings.borderDefaults;
+  }, [settings.borderDefaults]);
 
   const getColor = useCallback((key: string): string | undefined => {
     return settings.colorPalette[key];
@@ -379,12 +418,14 @@ export const GlobalSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
         updateTypography,
         updateSpacingScale,
         updateContainerDefaults,
+        updateBorderDefaults,
         updateCustomCSS,
         resetSettings,
         getColor,
         getTypography,
         getSpacingScale,
         getContainerDefaults,
+        getBorderDefaults,
       }}
     >
       {children}
