@@ -1,10 +1,11 @@
 import React from "react";
-import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls, LayoutControls, ContainerChildSizingControls, ContainerParentSizingControls, MinHeightControls, EqualHeightToggle, HtmlTagSelect, OverflowSelect, CssControls, AttributesControls, PositionControls, ResponsiveControls, TextGeneralControls, TextTypographyControls } from "../features";
+import { BackgroundControls, BorderControls, BoxShadowControls, ColorControls, SpacingControls, LayoutControls, ContainerChildSizingControls, ContainerParentSizingControls, MinHeightControls, EqualHeightToggle, HtmlTagSelect, OverflowSelect, CssControls, AttributesControls, PositionControls, ResponsiveControls, TextGeneralControls, TextTypographyControls, HeadingContentControls, HeadingSubHeadingControls, HeadingSeparatorControls, HeadingTypographyControls, HeadingBottomSpacingControls, SubHeadingTypographyControls, SubHeadingBottomSpacingControls, HeadingSeparatorStyleControls } from "../features";
 import type { ContainerProps } from "../../ui/container/types";
 import type { TextProps } from "../../ui/text/types";
+import type { HeadingProps } from "../../ui/heading/types";
 import type { ComponentControlActions } from "./types";
 
-export type FeatureKey = "spacing" | "background" | "border" | "boxShadow" | "color" | "layout" | "childSizing" | "parentSizing" | "minHeight" | "equalHeight" | "htmlTag" | "overflow" | "css" | "attributes" | "responsive" | "position" | "textGeneral" | "textTypography";
+export type FeatureKey = "spacing" | "background" | "border" | "boxShadow" | "color" | "layout" | "childSizing" | "parentSizing" | "minHeight" | "equalHeight" | "htmlTag" | "overflow" | "css" | "attributes" | "responsive" | "position" | "textGeneral" | "textTypography" | "headingContent" | "headingSubHeading" | "headingSeparator" | "headingTypography" | "headingBottomSpacing" | "subHeadingTypography" | "subHeadingBottomSpacing" | "headingSeparatorStyle";
 
 export interface FeatureRenderContext<TProps> {
   props: TProps;
@@ -72,6 +73,33 @@ export const textFeatureRegistry: Partial<FeatureRegistry<TextProps>> = createFe
   border: ({ props, actions, controlId }) => <BorderControls props={props} actions={actions} controlId={`${controlId}-border`} />,
   boxShadow: ({ props, actions, controlId }) => <BoxShadowControls props={props} actions={actions} controlId={`${controlId}-box-shadow`} />,
   color: ({ props, actions, controlId }) => <ColorControls props={props} actions={actions} controlId={`${controlId}-color`} />,
+  css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
+  attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
+  responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,
+  position: ({ props, actions, controlId }) => <PositionControls props={props} actions={actions} controlId={`${controlId}-position`} />,
+});
+
+// Heading component feature registry
+export const headingFeatureRegistry: Partial<FeatureRegistry<HeadingProps>> = createFeatureRegistry({
+  headingContent: ({ props, actions, controlId }) => <HeadingContentControls props={props} actions={actions} controlId={`${controlId}-content`} />,
+  headingSubHeading: ({ props, actions, controlId }) => <HeadingSubHeadingControls props={props} actions={actions} controlId={`${controlId}-sub-heading`} />,
+  headingSeparator: ({ props, actions, controlId }) => <HeadingSeparatorControls props={props} actions={actions} controlId={`${controlId}-separator`} />,
+  headingTypography: ({ props, actions, controlId }) => <HeadingTypographyControls props={props} actions={actions} controlId={`${controlId}-typography`} />,
+  headingBottomSpacing: ({ props, actions, controlId }) => <HeadingBottomSpacingControls props={props} actions={actions} controlId={`${controlId}-bottom-spacing`} />,
+  subHeadingTypography: ({ props, actions, controlId }) => <SubHeadingTypographyControls props={props} actions={actions} controlId={`${controlId}-sub-heading-typography`} />,
+  subHeadingBottomSpacing: ({ props, actions, controlId }) => <SubHeadingBottomSpacingControls props={props} actions={actions} controlId={`${controlId}-sub-heading-bottom-spacing`} />,
+  headingSeparatorStyle: ({ props, actions, controlId }) => <HeadingSeparatorStyleControls props={props} actions={actions} controlId={`${controlId}-separator-style`} />,
+  spacing: ({ props, actions, controlId, meta }) => (
+    <SpacingControls
+      props={props}
+      actions={actions}
+      controlId={`${controlId}-spacing`}
+      showGaps={meta?.showGaps !== false}
+      defaultPadding={meta?.defaultPadding as number | null | undefined}
+      defaultMargin={meta?.defaultMargin as number | null | undefined}
+    />
+  ),
+  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
   css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
   attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
   responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,

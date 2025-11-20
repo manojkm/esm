@@ -18,4 +18,12 @@ export * from "./containerParentSizing";
 export * from "./layout";
 export * from "./textGeneral";
 export * from "./textTypography";
+export * from "./headingContent";
+export * from "./headingSubHeading";
+export * from "./headingSeparator";
+export * from "./headingTypography";
+export * from "./headingBottomSpacing";
+export * from "./subHeadingTypography";
+export * from "./subHeadingBottomSpacing";
+export * from "./headingSeparatorStyle";
 

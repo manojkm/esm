@@ -1,5 +1,5 @@
-import { Container, Text } from './ui';
-import { ContainerSettings, TextSettings } from './settings';
+import { Container, Text, Heading } from './ui';
+import { ContainerSettings, TextSettings, HeadingSettings } from './settings';
 
 // Add craft configs
 Container.craft = {
@@ -14,5 +14,13 @@ Text.craft = {
   ...Text.craft,
   related: {
     settings: TextSettings,
+  },
+};
+
+// Merge Heading craft config with settings
+Heading.craft = {
+  ...Heading.craft,
+  related: {
+    settings: HeadingSettings,
   },
 };

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEditor } from "@craftjs/core";
-import { Text, Button, Container } from "../ui";
+import { Text, Button, Container, Heading } from "../ui";
 
 export const Toolbox = () => {
   const { connectors } = useEditor();
@@ -40,6 +40,16 @@ export const Toolbox = () => {
           className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
         >
           <span className="text-gray-700">📦 Container</span>
+        </div>
+        <div
+          ref={(ref) => {
+            if (ref) {
+              connectors.create(ref, <Heading text="New Heading" headingTag="h2" />);
+            }
+          }}
+          className="p-3 bg-white border rounded cursor-grab hover:shadow-md"
+        >
+          <span className="text-gray-700">📰 Heading</span>
         </div>
       </div>
     </div>

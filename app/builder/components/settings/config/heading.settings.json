@@ -1,0 +1,21 @@
+{
+  "general": [
+    { "id": "content", "title": "Content", "features": ["headingContent"] },
+    { "id": "subHeading", "title": "Sub Heading", "features": ["headingSubHeading"] },
+    { "id": "separator", "title": "Separator", "features": ["headingSeparator"] }
+  ],
+  "style": [
+    { "id": "heading", "title": "Heading", "features": ["headingTypography", "headingBottomSpacing"] },
+    { "id": "separator", "title": "Separator", "features": ["headingSeparatorStyle"] },
+    { "id": "subHeading", "title": "Sub Heading", "features": ["subHeadingTypography", "subHeadingBottomSpacing"] },
+    { "id": "background", "title": "Background", "features": ["background"] },
+    { "id": "spacing", "title": "Spacing", "features": [{ "feature": "spacing", "meta": { "showGaps": false, "defaultPadding": null, "defaultMargin": null } }] }
+  ],
+  "advanced": [
+    { "id": "css", "title": "CSS", "features": ["css"] },
+    { "id": "attributes", "title": "Attributes", "features": ["attributes"] },
+    { "id": "responsive", "title": "Responsive", "features": ["responsive"] },
+    { "id": "position", "title": "Position", "features": ["position"] }
+  ]
+}
+
