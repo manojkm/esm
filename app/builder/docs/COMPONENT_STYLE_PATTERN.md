@@ -22,10 +22,21 @@ The pattern ensures:
 ### 1. Generate Unique Component Class Name
 
 ```typescript
-import { generateComponentClassName } from "@/app/builder/lib/component-styles";
+import { generateComponentClassName, classNameToSelector } from "@/app/builder/lib/component-styles";
 
 const componentClassName = generateComponentClassName(nodeId, cssId, "button");
-// Result: "button-abc123" (or "button-custom-id" if cssId is provided)
+// Result: "button button-abc123" (base class + unique instance class)
+// This matches Spectra's pattern: "wp-block-uagb-button uagb-block-abc123"
+
+// For CSS generation, convert to selector
+const cleanedComponentClassName = componentClassName.trim().replace(/^\.+/, '');
+const selector = classNameToSelector(cleanedComponentClassName);
+// Result: ".button.button-abc123" (with leading dot)
+
+// For CSS functions that add their own dot (e.g., generateResponsiveCss)
+const rawClassName = cleanedComponentClassName.replace(/\s+/g, '.');
+const classNameForCssFunctions = rawClassName.startsWith('.') ? rawClassName.substring(1) : rawClassName;
+// Result: "button.button-abc123" (without leading dot)
 ```
 
 ### 2. CSS Generation (Preview Mode Only)
@@ -154,19 +165,25 @@ All functions in `css-responsive.ts` follow the desktop-as-base pattern:
 #### Single Value Properties
 ```typescript
 // Typography, colors, etc.
+// IMPORTANT: Use classNameForCssFunctions (without dot) for functions that add their own dot
 if (fontSizeResponsive) {
   responsiveCss += generateResponsiveCss(
-    `${componentClassName} .button-content`,
+    `${classNameForCssFunctions} .button-content`, // No leading dot - function adds it
     "font-size",
     fontSizeResponsive,
     fontSize ?? 16, // Fallback if desktop not set
     "px"
   );
 } else {
-  // Non-responsive: Generate static CSS
-  responsiveCss += `${componentClassName} .button-content { font-size: ${fontSize ?? 16}px; }\n`;
+  // Non-responsive: Generate static CSS using selector (already has dot)
+  responsiveCss += `${selector} .button-content { font-size: ${fontSize ?? 16}px; }\n`;
 }
 ```
+
+**Critical Pattern**: 
+- ✅ Use `${classNameForCssFunctions}` (without dot) with CSS generation functions that add their own dot
+- ✅ Use `${selector}` (with dot) for direct CSS string concatenation
+- ❌ Never use `.${selector}` - this creates double dots since selector already has a dot
 
 #### Four-Side Properties (Padding, Margin, Border)
 ```typescript
@@ -350,6 +367,11 @@ export const Button: React.FC<ButtonProps> = (props) => {
 
 ### Basic Structure
 - [ ] Generate unique component class name using `generateComponentClassName(nodeId, cssId, "componentName")`
+  - Result: `"componentName componentName-abc123"` (base class + unique instance class)
+- [ ] Convert to CSS selector using `classNameToSelector()` with safeguards (remove leading dots first)
+  - Use `selector` (with dot) for direct CSS string concatenation: `${selector} { ... }`
+  - Use `classNameForCssFunctions` (without dot) for CSS generation functions: `generateResponsiveCss(classNameForCssFunctions, ...)`
+- [ ] **Never use `.${selector}`** - selector already has a dot, this creates double dots
 - [ ] Generate CSS only when `!isEditMode` (`const shouldGenerateMediaQueries = !isEditMode`)
 - [ ] Wrap actual content in `<div className="${componentName}-content">` (e.g., `text-content`, `button-content`)
 - [ ] Wrap content in `<div className={componentClassName}>` in preview mode

@@ -77,6 +77,48 @@ const config: TypographyConfig = {
 };
 ```
 
+#### Component Class Name Pattern
+
+Both Text and Heading components follow a consistent class naming pattern:
+
+**Pattern**: `{componentName} {componentName}-{uniqueId}`
+
+- **Base Class**: `{componentName}` (e.g., `"text"`, `"heading"`) - Identifies component type
+- **Unique Instance Class**: `{componentName}-{uniqueId}` (e.g., `"text-abc123"`, `"heading-xyz789"`) - Unique per instance
+
+**Example**: `"text text-abc123"` or `"heading heading-xyz789"`
+
+This matches Spectra's pattern: `"wp-block-uagb-text uagb-block-abc123"`
+
+**CSS Generation Pattern**:
+```typescript
+import { generateComponentClassName, classNameToSelector } from "@/app/builder/lib/component-styles";
+
+// Generate class name
+const componentClassName = generateComponentClassName(nodeId, cssId, "button");
+// Result: "button button-abc123"
+
+// For CSS generation, convert to selector with safeguards
+const cleanedComponentClassName = componentClassName.trim().replace(/^\.+/, '');
+const selector = classNameToSelector(cleanedComponentClassName);
+// Result: ".button.button-abc123" (with leading dot)
+
+// For CSS functions that add their own dot
+const rawClassName = cleanedComponentClassName.replace(/\s+/g, '.');
+const classNameForCssFunctions = rawClassName.startsWith('.') ? rawClassName.substring(1) : rawClassName;
+// Result: "button.button-abc123" (without leading dot)
+
+// Usage in CSS generation:
+// ✅ Correct: Use selector (with dot) for direct CSS
+responsiveCss += `${selector} { padding: 10px; }\n`;
+
+// ✅ Correct: Use classNameForCssFunctions (without dot) for functions
+responsiveCss += generateResponsiveCss(`${classNameForCssFunctions}`, "font-size", fontSizeResponsive, 16, "px");
+
+// ❌ Wrong: Never use .${selector} - creates double dots
+responsiveCss += `.${selector} { padding: 10px; }\n`; // Results in ..button.button-abc123
+```
+
 ### Advanced
 - **`css`**: Custom CSS editor
 - **`attributes`**: HTML attributes editor

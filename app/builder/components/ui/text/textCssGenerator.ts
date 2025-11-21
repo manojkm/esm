@@ -67,10 +67,14 @@ export function generateTextCss(params: CssGeneratorParams): {
   let hoverCss = "";
 
   // Convert className to CSS selector (e.g., "text text-abc123" -> ".text.text-abc123")
-  const selector = classNameToSelector(componentClassName);
+  // First, ensure componentClassName has no leading dot (safeguard)
+  const cleanedComponentClassName = componentClassName.trim().replace(/^\.+/, '');
+  const selector = classNameToSelector(cleanedComponentClassName);
   // Extract class names without dot for functions that add their own dot (e.g., generatePaddingCss)
   // "text text-abc123" -> "text.text-abc123" (for CSS functions that expect class name)
-  const classNameForCssFunctions = componentClassName.trim().replace(/\s+/g, '.');
+  // Ensure no leading dot (safeguard against double dots) - strip any dots from the start
+  const rawClassName = cleanedComponentClassName.replace(/\s+/g, '.');
+  const classNameForCssFunctions = rawClassName.startsWith('.') ? rawClassName.substring(1) : rawClassName;
 
   if (!shouldGenerateMediaQueries) {
     // In edit mode, we still need to generate hover CSS for the current breakpoint
