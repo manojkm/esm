@@ -17,8 +17,10 @@ import {
   type BreakpointKey,
 } from "@/app/builder/lib/style-system/css-responsive";
 import { buildBackgroundHoverCss, buildBorderHoverCss, buildBoxShadowHoverCss, buildOverlayStyles, buildVisibilityCss, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { classNameToSelector } from "@/app/builder/lib/component-styles";
 import type { TextProps } from "./types";
 import type { ResolvedTextTypography, ResolvedTextSpacing, TypographyDefaults } from "./textStyleHelpers";
+import { getTypographyElement } from "./textStyleHelpers";
 
 interface CssGeneratorParams {
   componentClassName: string;
@@ -64,6 +66,12 @@ export function generateTextCss(params: CssGeneratorParams): {
   let responsiveCss = "";
   let hoverCss = "";
 
+  // Convert className to CSS selector (e.g., "text text-abc123" -> ".text.text-abc123")
+  const selector = classNameToSelector(componentClassName);
+  // Extract class names without dot for functions that add their own dot (e.g., generatePaddingCss)
+  // "text text-abc123" -> "text.text-abc123" (for CSS functions that expect class name)
+  const classNameForCssFunctions = componentClassName.trim().replace(/\s+/g, '.');
+
   if (!shouldGenerateMediaQueries) {
     // In edit mode, we still need to generate hover CSS for the current breakpoint
     // Text color hover - check if hover color is reset
@@ -80,9 +88,9 @@ export function generateTextCss(params: CssGeneratorParams): {
         fallback: props.textColorHover,
       });
       if (resolvedTextColorHover !== null && resolvedTextColorHover !== undefined) {
-        hoverCss += `.${componentClassName}:hover .text-content { color: ${resolvedTextColorHover} !important; }\n`;
-        const uniqueId = componentClassName.replace(/^text-/, "");
-        hoverCss += `.text-wrapper-${uniqueId}:hover .${componentClassName} { color: ${resolvedTextColorHover} !important; }\n`;
+        hoverCss += `.${selector}:hover { color: ${resolvedTextColorHover} !important; }\n`;
+        const uniqueId = componentClassName.split(' ')[1] || "";
+        hoverCss += `.text-wrapper-${uniqueId}:hover .${selector} { color: ${resolvedTextColorHover} !important; }\n`;
       }
     }
 
@@ -95,7 +103,7 @@ export function generateTextCss(params: CssGeneratorParams): {
         resolver: responsiveResolver,
       });
       if (hoverBackgroundCss) {
-        hoverCss += `.${componentClassName}:hover { ${hoverBackgroundCss} } `;
+        hoverCss += `.${selector}:hover { ${hoverBackgroundCss} } `;
       }
     }
 
@@ -110,7 +118,7 @@ export function generateTextCss(params: CssGeneratorParams): {
           resolver: responsiveResolver,
         });
         if (hoverBorderCss) {
-          hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+          hoverCss += `.${selector}:hover { ${hoverBorderCss} } `;
         }
       }
     }
@@ -134,7 +142,7 @@ export function generateTextCss(params: CssGeneratorParams): {
         resolver: responsiveResolver,
       });
       if (hoverBoxShadowCss) {
-        hoverCss += `.${componentClassName}:hover { ${hoverBoxShadowCss} } `;
+        hoverCss += `.${selector}:hover { ${hoverBoxShadowCss} } `;
       }
     }
 
@@ -281,8 +289,8 @@ export function generateTextCss(params: CssGeneratorParams): {
     hideOnMobile,
   } = props;
 
-  // Get typography element for defaults
-  const typographyElement = resolvedTypography.textColor ? "body" : "h1"; // Simplified - actual logic in helpers
+  // Get typography element for defaults based on htmlTag
+  const typographyElement = getTypographyElement(props.htmlTag || "p");
   const isHeading = typographyElement !== "body";
   const typographyType = isHeading ? "headings" : "body";
   const globalFontSize = typographyDefaults.fontSize?.desktop?.[typographyElement];
@@ -301,18 +309,18 @@ export function generateTextCss(params: CssGeneratorParams): {
 
   if (!isTextColorHoverReset && textColorHover) {
     if (textColorHoverResponsive) {
-      hoverCss += generateHoverTextColorCss(`${componentClassName} .text-content`, textColorHoverResponsive, textColorHover);
+      hoverCss += generateHoverTextColorCss(classNameForCssFunctions, textColorHoverResponsive, textColorHover);
     } else {
-      hoverCss += `.${componentClassName}:hover .text-content { color: ${textColorHover} !important; }\n`;
+      hoverCss += `.${selector}:hover { color: ${textColorHover} !important; }\n`;
     }
   }
 
   // Background hover
   if (enableBackgroundColorHover && backgroundColorHover) {
     if (backgroundColorHoverResponsive) {
-      hoverCss += generateHoverBackgroundColorCss(componentClassName, backgroundColorHoverResponsive, backgroundColorHover);
+      hoverCss += generateHoverBackgroundColorCss(classNameForCssFunctions, backgroundColorHoverResponsive, backgroundColorHover);
     } else {
-      hoverCss += `.${componentClassName}:hover { background-color: ${backgroundColorHover} !important; } `;
+      hoverCss += `.${selector}:hover { background-color: ${backgroundColorHover} !important; } `;
     }
   }
 
@@ -321,9 +329,9 @@ export function generateTextCss(params: CssGeneratorParams): {
     const effectiveBorderColorHover = borderColorHover ?? globalBorderColorHover;
     if (effectiveBorderColorHover) {
       if (borderColorHoverResponsive) {
-        hoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, effectiveBorderColorHover);
+        hoverCss += generateHoverBorderColorCss(classNameForCssFunctions, borderColorHoverResponsive, effectiveBorderColorHover);
       } else {
-        hoverCss += `.${componentClassName}:hover { border-color: ${effectiveBorderColorHover} !important; } `;
+        hoverCss += `.${selector}:hover { border-color: ${effectiveBorderColorHover} !important; } `;
       }
     }
   }
@@ -332,7 +340,7 @@ export function generateTextCss(params: CssGeneratorParams): {
   if (enableBoxShadowHover) {
     if (boxShadowHorizontalHoverResponsive || boxShadowVerticalHoverResponsive || boxShadowBlurHoverResponsive || boxShadowSpreadHoverResponsive) {
       hoverCss += generateBoxShadowCss(
-        componentClassName,
+        classNameForCssFunctions,
         boxShadowHorizontalHoverResponsive,
         boxShadowVerticalHoverResponsive,
         boxShadowBlurHoverResponsive,
@@ -346,14 +354,14 @@ export function generateTextCss(params: CssGeneratorParams): {
       hoverCss = hoverCss.replace(/\./g, ".:hover");
     } else {
       const shadowValue = `${boxShadowHorizontalHover ?? 0}px ${boxShadowVerticalHover ?? 0}px ${boxShadowBlurHover ?? 0}px ${boxShadowSpreadHover ?? 0}px ${boxShadowColorHover}`;
-      hoverCss += `.${componentClassName}:hover { box-shadow: ${shadowValue} !important; } `;
+      hoverCss += `.${selector}:hover { box-shadow: ${shadowValue} !important; } `;
     }
   }
 
   // Padding CSS
   if (paddingResponsive) {
     responsiveCss += generatePaddingCss(
-      componentClassName,
+      classNameForCssFunctions,
       paddingResponsive,
       {
         top: paddingTop,
@@ -370,7 +378,7 @@ export function generateTextCss(params: CssGeneratorParams): {
     const bottom = paddingBottom ?? padding;
     const left = paddingLeft ?? padding;
     const paddingValue = `${top}${paddingUnit || "px"} ${right}${paddingUnit || "px"} ${bottom}${paddingUnit || "px"} ${left}${paddingUnit || "px"}`;
-    responsiveCss += `.${componentClassName} { padding: ${paddingValue}; }\n`;
+    responsiveCss += `${selector} { padding: ${paddingValue}; }\n`;
   }
 
   // Margin CSS
@@ -379,7 +387,7 @@ export function generateTextCss(params: CssGeneratorParams): {
 
   if (marginResponsive) {
     responsiveCss += generateMarginCss(
-      componentClassName,
+      classNameForCssFunctions,
       marginResponsive,
       {
         top: marginTop,
@@ -396,60 +404,60 @@ export function generateTextCss(params: CssGeneratorParams): {
     const bottom = marginBottom ?? margin ?? 0;
     const left = marginLeft ?? margin ?? 0;
     const marginValue = `${top}${marginUnit || "px"} ${right}${marginUnit || "px"} ${bottom}${marginUnit || "px"} ${left}${marginUnit || "px"}`;
-    responsiveCss += `.${componentClassName} { margin: ${marginValue}; }\n`;
+    responsiveCss += `${selector} { margin: ${marginValue}; }\n`;
   }
 
   // Typography CSS
   if (textAlignResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-align", textAlignResponsive, textAlign || "left", "", true);
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "text-align", textAlignResponsive, textAlign || "left", "", true);
   } else {
     const alignValue = textAlign || "left";
-    responsiveCss += `.${componentClassName} .text-content { text-align: ${alignValue} !important; }\n`;
+    responsiveCss += `${selector} { text-align: ${alignValue} !important; }\n`;
   }
 
   if (fontSizeResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-size", fontSizeResponsive, fontSize ?? globalFontSize ?? 16, fontSizeUnit || "px");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "font-size", fontSizeResponsive, fontSize ?? globalFontSize ?? 16, fontSizeUnit || "px");
   } else {
     const sizeValue = fontSize ?? globalFontSize ?? 16;
-    responsiveCss += `.${componentClassName} .text-content { font-size: ${sizeValue}${fontSizeUnit || "px"}; }\n`;
+    responsiveCss += `${selector} { font-size: ${sizeValue}${fontSizeUnit || "px"}; }\n`;
   }
 
   if (fontWeightResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-weight", fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400, "");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "font-weight", fontWeightResponsive, fontWeight ?? globalFontWeight ?? 400, "");
   } else {
     const weightValue = fontWeight ?? globalFontWeight ?? 400;
-    responsiveCss += `.${componentClassName} .text-content { font-weight: ${weightValue}; }\n`;
+    responsiveCss += `${selector} { font-weight: ${weightValue}; }\n`;
   }
 
   if (fontStyleResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-style", fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal", "");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "font-style", fontStyleResponsive, fontStyle ?? globalFontStyle ?? "normal", "");
   } else {
     const styleValue = fontStyle ?? globalFontStyle ?? "normal";
-    responsiveCss += `.${componentClassName} .text-content { font-style: ${styleValue}; }\n`;
+    responsiveCss += `${selector} { font-style: ${styleValue}; }\n`;
   }
 
   if (textTransformResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-transform", textTransformResponsive, textTransform ?? "none", "");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "text-transform", textTransformResponsive, textTransform ?? "none", "");
   } else if (textTransform) {
-    responsiveCss += `.${componentClassName} .text-content { text-transform: ${textTransform}; }\n`;
+    responsiveCss += `${selector} { text-transform: ${textTransform}; }\n`;
   }
 
   if (textDecorationResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "text-decoration", textDecorationResponsive, textDecoration ?? "none", "");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "text-decoration", textDecorationResponsive, textDecoration ?? "none", "");
   } else if (textDecoration) {
-    responsiveCss += `.${componentClassName} .text-content { text-decoration: ${textDecoration}; }\n`;
+    responsiveCss += `${selector} { text-decoration: ${textDecoration}; }\n`;
   }
 
   if (letterSpacingResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "letter-spacing", letterSpacingResponsive, letterSpacing ?? globalLetterSpacing ?? 0, letterSpacingUnit || "px");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "letter-spacing", letterSpacingResponsive, letterSpacing ?? globalLetterSpacing ?? 0, letterSpacingUnit || "px");
   } else {
     const spacingValue = letterSpacing ?? globalLetterSpacing ?? 0;
-    responsiveCss += `.${componentClassName} .text-content { letter-spacing: ${spacingValue}${letterSpacingUnit || "px"}; }\n`;
+    responsiveCss += `${selector} { letter-spacing: ${spacingValue}${letterSpacingUnit || "px"}; }\n`;
   }
 
   if (lineHeightResponsive) {
     responsiveCss += generateResponsiveCss(
-      `${componentClassName} .text-content`,
+      classNameForCssFunctions,
       "line-height",
       lineHeightResponsive,
       lineHeight ?? globalLineHeight ?? 1.6,
@@ -458,13 +466,13 @@ export function generateTextCss(params: CssGeneratorParams): {
   } else {
     const heightValue = lineHeight ?? globalLineHeight ?? 1.6;
     const lineHeightValue = lineHeightUnit === "normal" ? "normal" : `${heightValue}${lineHeightUnit || ""}`;
-    responsiveCss += `.${componentClassName} .text-content { line-height: ${lineHeightValue}; }\n`;
+    responsiveCss += `${selector} { line-height: ${lineHeightValue}; }\n`;
   }
 
   if (fontFamilyResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .text-content`, "font-family", fontFamilyResponsive, resolvedTypography.fontFamily, "");
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "font-family", fontFamilyResponsive, resolvedTypography.fontFamily, "");
   } else if (resolvedTypography.fontFamily) {
-    responsiveCss += `.${componentClassName} .text-content { font-family: ${resolvedTypography.fontFamily}; }\n`;
+    responsiveCss += `${selector} { font-family: ${resolvedTypography.fontFamily}; }\n`;
   }
 
   // Text color CSS
@@ -476,10 +484,10 @@ export function generateTextCss(params: CssGeneratorParams): {
 
   if (!isTextColorReset) {
     if (textColorResponsive) {
-      responsiveCss += generateTextColorCss(`${componentClassName} .text-content`, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
+      responsiveCss += generateTextColorCss(classNameForCssFunctions, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
     } else {
       const colorValue = resolvedTypography.textColor || globalTextColor || "#1f2937";
-      responsiveCss += `.${componentClassName} .text-content { color: ${colorValue}; }\n`;
+      responsiveCss += `${selector} { color: ${colorValue}; }\n`;
     }
   }
 
@@ -487,8 +495,8 @@ export function generateTextCss(params: CssGeneratorParams): {
   const effectiveLinkColor = linkColor ?? globalLinkColor;
   const effectiveLinkColorHover = linkColorHover ?? globalLinkColorHover;
   if (linkColorResponsive || linkColorHoverResponsive) {
-    responsiveCss += generateLinkColorCss(
-      `${componentClassName} .text-content`,
+      responsiveCss += generateLinkColorCss(
+      classNameForCssFunctions,
       linkColorResponsive,
       effectiveLinkColor ?? undefined,
       linkColorHoverResponsive,
@@ -496,38 +504,38 @@ export function generateTextCss(params: CssGeneratorParams): {
     );
   } else if (effectiveLinkColor || effectiveLinkColorHover) {
     if (effectiveLinkColor) {
-      responsiveCss += `.${componentClassName} .text-content a { color: ${effectiveLinkColor}; }\n`;
+      responsiveCss += `${selector} a { color: ${effectiveLinkColor}; }\n`;
     }
     if (effectiveLinkColorHover) {
-      responsiveCss += `.${componentClassName} .text-content a:hover { color: ${effectiveLinkColorHover}; }\n`;
+      responsiveCss += `${selector} a:hover { color: ${effectiveLinkColorHover}; }\n`;
     }
   }
 
   // Background CSS
   if (backgroundColorResponsive) {
-    responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, backgroundColor ?? "#ffffff");
+      responsiveCss += generateBackgroundColorCss(classNameForCssFunctions, backgroundColorResponsive, backgroundColor ?? "#ffffff");
   } else if (backgroundColor && backgroundType === "color") {
-    responsiveCss += `.${componentClassName} { background-color: ${backgroundColor}; }\n`;
+    responsiveCss += `${selector} { background-color: ${backgroundColor}; }\n`;
   }
 
   if (backgroundType === "image" && backgroundImage) {
-    responsiveCss += `.${componentClassName} { background-image: url("${backgroundImage}"); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
+    responsiveCss += `${selector} { background-image: url("${backgroundImage}"); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
   } else if (backgroundType === "gradient" && backgroundGradient) {
-    responsiveCss += `.${componentClassName} { background: ${backgroundGradient}; }\n`;
+    responsiveCss += `${selector} { background: ${backgroundGradient}; }\n`;
   }
 
   // Border CSS
   const effectiveBorderColor = borderColor ?? globalBorderColor;
   if (borderStyle && borderStyle !== "none") {
     if (borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, effectiveBorderColor ?? undefined);
+      responsiveCss += generateBorderColorCss(classNameForCssFunctions, borderColorResponsive, effectiveBorderColor ?? undefined);
     } else if (effectiveBorderColor) {
-      responsiveCss += `.${componentClassName} { border-color: ${effectiveBorderColor}; }\n`;
+      responsiveCss += `${selector} { border-color: ${effectiveBorderColor}; }\n`;
     }
 
     if (borderWidthResponsive) {
       responsiveCss += generateResponsiveFourSideCss(
-        componentClassName,
+        classNameForCssFunctions,
         "border-width",
         borderWidthResponsive,
         {
@@ -539,7 +547,7 @@ export function generateTextCss(params: CssGeneratorParams): {
         },
         "px"
       );
-      responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; }\n`;
+      responsiveCss += `${selector} { border-style: ${borderStyle}; }\n`;
     } else {
       const borderWidthValue = borderWidth ?? 1;
       if (borderTopWidth !== null || borderRightWidth !== null || borderBottomWidth !== null || borderLeftWidth !== null) {
@@ -547,9 +555,9 @@ export function generateTextCss(params: CssGeneratorParams): {
         const right = borderRightWidth ?? borderWidthValue;
         const bottom = borderBottomWidth ?? borderWidthValue;
         const left = borderLeftWidth ?? borderWidthValue;
-        responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; border-width: ${top}px ${right}px ${bottom}px ${left}px; }\n`;
+        responsiveCss += `${selector} { border-style: ${borderStyle}; border-width: ${top}px ${right}px ${bottom}px ${left}px; }\n`;
       } else {
-        responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; border-width: ${borderWidthValue}px; }\n`;
+        responsiveCss += `${selector} { border-style: ${borderStyle}; border-width: ${borderWidthValue}px; }\n`;
       }
     }
   }
@@ -575,16 +583,16 @@ export function generateTextCss(params: CssGeneratorParams): {
       const topRight = borderTopRightRadius ?? borderRadius;
       const bottomRight = borderBottomRightRadius ?? borderRadius;
       const bottomLeft = borderBottomLeftRadius ?? borderRadius;
-      responsiveCss += `.${componentClassName} { border-radius: ${topLeft}${borderRadiusUnit || "px"} ${topRight}${borderRadiusUnit || "px"} ${bottomRight}${borderRadiusUnit || "px"} ${bottomLeft}${borderRadiusUnit || "px"}; }\n`;
+      responsiveCss += `${selector} { border-radius: ${topLeft}${borderRadiusUnit || "px"} ${topRight}${borderRadiusUnit || "px"} ${bottomRight}${borderRadiusUnit || "px"} ${bottomLeft}${borderRadiusUnit || "px"}; }\n`;
     } else {
-      responsiveCss += `.${componentClassName} { border-radius: ${borderRadius}${borderRadiusUnit || "px"}; }\n`;
+      responsiveCss += `${selector} { border-radius: ${borderRadius}${borderRadiusUnit || "px"}; }\n`;
     }
   }
 
   // Box shadow CSS
   if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
     responsiveCss += generateBoxShadowCss(
-      componentClassName,
+      classNameForCssFunctions,
       boxShadowHorizontalResponsive,
       boxShadowVerticalResponsive,
       boxShadowBlurResponsive,
@@ -607,13 +615,13 @@ export function generateTextCss(params: CssGeneratorParams): {
     boxShadowSpread !== undefined
   ) {
     const shadowValue = `${boxShadowHorizontal ?? 0}px ${boxShadowVertical ?? 0}px ${boxShadowBlur ?? 0}px ${boxShadowSpread ?? 0}px ${boxShadowColor}`;
-    responsiveCss += `.${componentClassName} { box-shadow: ${shadowValue}; }\n`;
+    responsiveCss += `${selector} { box-shadow: ${shadowValue}; }\n`;
   }
 
   // Position CSS
   if (positionTopResponsive || positionRightResponsive || positionBottomResponsive || positionLeftResponsive) {
     responsiveCss += generatePositionCss(
-      componentClassName,
+      classNameForCssFunctions,
       positionTopResponsive,
       positionRightResponsive,
       positionBottomResponsive,
@@ -631,32 +639,32 @@ export function generateTextCss(params: CssGeneratorParams): {
 
   // Z-index CSS
   if (zIndexResponsive) {
-    responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex ?? 0);
+    responsiveCss += generateZIndexCss(classNameForCssFunctions, zIndexResponsive, zIndex ?? 0);
   } else if (zIndex !== null && zIndex !== undefined) {
-    responsiveCss += `.${componentClassName} { z-index: ${zIndex}; }\n`;
+    responsiveCss += `${selector} { z-index: ${zIndex}; }\n`;
   }
 
   // List styles
   const listStyles = `
-    .${componentClassName} .text-content ul {
+    ${selector} ul {
       list-style-type: disc;
       padding-left: 1.5em;
       margin: 0.5em 0;
     }
-    .${componentClassName} .text-content ol {
+    ${selector} ol {
       list-style-type: decimal;
       padding-left: 1.5em;
       margin: 0.5em 0;
     }
-    .${componentClassName} .text-content li {
+    ${selector} li {
       margin: 0.25em 0;
     }
   `;
 
   // Toolbar reset styles
   const toolbarResetStyles = `
-    .${componentClassName} .text-content .lexical-floating-toolbar,
-    .${componentClassName} .text-content .lexical-floating-toolbar * {
+    ${selector} .lexical-floating-toolbar,
+    ${selector} .lexical-floating-toolbar * {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
       font-size: 14px !important;
       font-weight: 400 !important;
@@ -696,7 +704,11 @@ export function generateTextCss(params: CssGeneratorParams): {
   });
 
   // Visibility CSS
+  // buildVisibilityCss expects className without dot, and it adds the dot itself
+  // So we pass the CSS selector format (text.text-abc123) without the leading dot
   const visibilityCss = buildVisibilityCss({
+    hoverClassName: selector.replace(/^\./, ''),
+    isEditMode,
     hideOnDesktop,
     hideOnTablet,
     hideOnLandscapeMobile,

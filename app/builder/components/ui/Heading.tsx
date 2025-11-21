@@ -135,8 +135,10 @@ export const Heading: React.FC<HeadingProps> = (props) => {
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Generate unique class name
+  // Generate unique class name (e.g., "heading heading-abc123")
   const componentClassName = generateComponentClassName(id, cssId, "heading");
+  // Extract selector for CSS (e.g., ".heading.heading-abc123")
+  const cssSelector = componentClassName.trim().replace(/\s+/g, '.');
 
   // Resolve responsive values using helpers
   const effectiveTextAlign = textAlignResponsive ? responsiveResolver(textAlignResponsive, textAlign || "left") : textAlign || "left";
@@ -235,7 +237,7 @@ export const Heading: React.FC<HeadingProps> = (props) => {
       const resolvedHoverColor = headingTextColorHoverResponsive ? responsiveResolver(headingTextColorHoverResponsive, headingTextColorHover) : headingTextColorHover;
       // Only apply if resolved color is not null (null means reset)
       if (resolvedHoverColor !== null && resolvedHoverColor !== undefined) {
-        hoverCss += `.${componentClassName} .heading-text:hover { color: ${resolvedHoverColor} !important; } `;
+        hoverCss += `.${cssSelector} .heading-text:hover { color: ${resolvedHoverColor} !important; } `;
       }
     }
 
@@ -243,7 +245,7 @@ export const Heading: React.FC<HeadingProps> = (props) => {
       const resolvedSubHoverColor = subHeadingTextColorHoverResponsive ? responsiveResolver(subHeadingTextColorHoverResponsive, subHeadingTextColorHover) : subHeadingTextColorHover;
       // Only apply if resolved color is not null (null means reset)
       if (resolvedSubHoverColor !== null && resolvedSubHoverColor !== undefined) {
-        hoverCss += `.${componentClassName} .sub-heading-text:hover { color: ${resolvedSubHoverColor} !important; } `;
+        hoverCss += `.${cssSelector} .sub-heading-text:hover { color: ${resolvedSubHoverColor} !important; } `;
       }
     }
   }
@@ -252,9 +254,9 @@ export const Heading: React.FC<HeadingProps> = (props) => {
   if (enableBackgroundColorHover && backgroundColorHover) {
     if (!isEditMode) {
       if (backgroundColorHoverResponsive) {
-        hoverCss += generateHoverBackgroundColorCss(componentClassName, backgroundColorHoverResponsive, backgroundColorHover);
+        hoverCss += generateHoverBackgroundColorCss(cssSelector, backgroundColorHoverResponsive, backgroundColorHover);
       } else {
-        hoverCss += `.${componentClassName}:hover { background-color: ${backgroundColorHover} !important; } `;
+        hoverCss += `.${cssSelector}:hover { background-color: ${backgroundColorHover} !important; } `;
       }
     } else {
       if (backgroundType === "color") {
@@ -265,7 +267,7 @@ export const Heading: React.FC<HeadingProps> = (props) => {
           resolver: responsiveResolver,
         });
         if (hoverBackgroundCss) {
-          hoverCss += `.${componentClassName}:hover { ${hoverBackgroundCss} } `;
+          hoverCss += `.${cssSelector}:hover { ${hoverBackgroundCss} } `;
         }
       }
     }
@@ -277,9 +279,9 @@ export const Heading: React.FC<HeadingProps> = (props) => {
     if (effectiveBorderColorHover) {
       if (!isEditMode) {
         if (borderColorHoverResponsive) {
-          hoverCss += generateHoverBorderColorCss(componentClassName, borderColorHoverResponsive, effectiveBorderColorHover);
+          hoverCss += generateHoverBorderColorCss(cssSelector, borderColorHoverResponsive, effectiveBorderColorHover);
         } else {
-          hoverCss += `.${componentClassName}:hover { border-color: ${effectiveBorderColorHover} !important; } `;
+          hoverCss += `.${cssSelector}:hover { border-color: ${effectiveBorderColorHover} !important; } `;
         }
       } else {
         const hoverBorderCss = buildBorderHoverCss({
@@ -289,15 +291,17 @@ export const Heading: React.FC<HeadingProps> = (props) => {
           resolver: responsiveResolver,
         });
         if (hoverBorderCss) {
-          hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+          hoverCss += `.${cssSelector}:hover { ${hoverBorderCss} } `;
         }
       }
     }
   }
 
   // Visibility CSS
+  // buildVisibilityCss expects className without dot, and it adds the dot itself
+  // So we pass the CSS selector format (heading.heading-abc123) without the leading dot
   const visibilityCss = buildVisibilityCss({
-    hoverClassName: componentClassName,
+    hoverClassName: cssSelector.replace(/^\./, ''),
     isEditMode,
     hideOnDesktop,
     hideOnTablet,
@@ -313,15 +317,15 @@ export const Heading: React.FC<HeadingProps> = (props) => {
 
   // Add placeholder CSS for ContentEditable
   const placeholderCss = `
-    .${componentClassName} .heading-text[data-placeholder]:empty::before,
-    .${componentClassName} .sub-heading-text[data-placeholder]:empty::before {
+    .${cssSelector} .heading-text[data-placeholder]:empty::before,
+    .${cssSelector} .sub-heading-text[data-placeholder]:empty::before {
       content: attr(data-placeholder);
       color: #9ca3af;
       pointer-events: none;
       position: absolute;
     }
-    .${componentClassName} .heading-text[data-placeholder]:empty,
-    .${componentClassName} .sub-heading-text[data-placeholder]:empty {
+    .${cssSelector} .heading-text[data-placeholder]:empty,
+    .${cssSelector} .sub-heading-text[data-placeholder]:empty {
       position: relative;
     }
   `;
@@ -422,10 +426,6 @@ export const Heading: React.FC<HeadingProps> = (props) => {
     setEditableSubHeading(false);
   };
 
-  const headingContentStyle: React.CSSProperties = {
-    textAlign: isEditMode ? (effectiveTextAlign as React.CSSProperties["textAlign"]) : undefined,
-  };
-
   const headingContent = (
     <>
       {enableSubHeading && subHeadingPosition === "above" && <SubHeadingContent text={currentSubHeadingText} isEmpty={isEmptySubHeading} isEditMode={isEditMode} isEditing={editableSubHeading} style={subHeadingStyle} onClick={handleSubHeadingClick} onChange={handleSubHeadingChange} onBlur={handleSubHeadingBlur} />}
@@ -446,7 +446,11 @@ export const Heading: React.FC<HeadingProps> = (props) => {
     "aria-label": ariaLabel || undefined,
     ...parseDataAttributes(dataAttributes),
     className: `${componentClassName} ${className}`.trim(),
-    style: wrapperStyle,
+    style: {
+      ...wrapperStyle,
+      // Apply text-align directly to wrapper (no .heading-content wrapper needed)
+      textAlign: isEditMode ? (effectiveTextAlign as React.CSSProperties["textAlign"]) : undefined,
+    },
   };
 
   return (
@@ -460,15 +464,13 @@ export const Heading: React.FC<HeadingProps> = (props) => {
             wrapperRef.current = ref;
             connectors.connect(connectors.drag(ref));
           }}
-          className={`heading-wrapper-${componentClassName.replace(/^heading-/, "")} relative ${selected ? (isEditing ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}
+          className={`heading-wrapper-${componentClassName.split(' ')[1] || id} relative ${selected ? (isEditing ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}
           onClick={handleWrapperClick}
         >
           {React.createElement(
             WrapperTag,
             wrapperProps,
-            <div className="heading-content" style={headingContentStyle}>
-              {headingContent}
-            </div>,
+            headingContent
           )}
         </div>
       ) : (
@@ -486,9 +488,7 @@ export const Heading: React.FC<HeadingProps> = (props) => {
               }
             },
           },
-          <div className="heading-content" style={headingContentStyle}>
-            {headingContent}
-          </div>,
+          headingContent
         )
       )}
     </>

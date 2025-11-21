@@ -6,7 +6,8 @@ import { LexicalEditor } from "./LexicalEditor";
 import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import { useCanvasWidth } from "@/app/builder/contexts/CanvasWidthContext";
 import { useGlobalSettings } from "@/app/builder/contexts/GlobalSettingsContext";
-import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildOverlayStyles, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { buildBackgroundHoverCss, buildBackgroundStyles, buildBorderHoverCss, buildBorderStyles, buildBoxShadowHoverCss, buildBoxShadowStyle, buildLinkColorCss, buildOverlayStyles, buildTextColorStyles, buildVisibilityCss, mergeCssSegments, parseDataAttributes, resolveResponsiveValue, type ResponsiveMap, type ResponsiveResolver } from "@/app/builder/lib/style-system";
+import { generateComponentClassName } from "@/app/builder/lib/component-styles";
 import { sanitizeHTML } from "@/app/builder/lib/html-sanitizer";
 import type { TextProps } from "./text/types";
 import { resolveTextTypography, resolveTextSpacing, getTypographyElement, type TypographyDefaults } from "./text/textStyleHelpers";
@@ -177,8 +178,10 @@ export const Text: React.FC<TextProps> = (props) => {
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Generate unique class name
-  const componentClassName = useMemo(() => `text-${cssId || nodeId}`, [cssId, nodeId]);
+  // Generate unique class name (e.g., "text text-abc123")
+  const componentClassName = useMemo(() => generateComponentClassName(nodeId, cssId, "text"), [cssId, nodeId]);
+  // Extract selector for CSS (e.g., ".text.text-abc123")
+  const cssSelector = componentClassName.trim().replace(/\s+/g, '.');
 
   // Resolve responsive values using helpers
   const resolvedTypography = useMemo(() => resolveTextTypography(props, typographyDefaults, responsiveResolver), [props, typographyDefaults, responsiveResolver]);
@@ -276,9 +279,9 @@ export const Text: React.FC<TextProps> = (props) => {
         fallback: props.textColorHover,
       });
       if (resolvedTextColorHover !== null && resolvedTextColorHover !== undefined) {
-        hoverCss += `.${componentClassName}:hover .text-content { color: ${resolvedTextColorHover} !important; }\n`;
-        const uniqueId = componentClassName.replace(/^text-/, "");
-        hoverCss += `.text-wrapper-${uniqueId}:hover .${componentClassName} { color: ${resolvedTextColorHover} !important; }\n`;
+        hoverCss += `.${cssSelector}:hover { color: ${resolvedTextColorHover} !important; }\n`;
+        const uniqueId = componentClassName.split(' ')[1] || nodeId;
+        hoverCss += `.text-wrapper-${uniqueId}:hover .${cssSelector} { color: ${resolvedTextColorHover} !important; }\n`;
       }
     }
 
@@ -291,7 +294,7 @@ export const Text: React.FC<TextProps> = (props) => {
         resolver: responsiveResolver,
       });
       if (hoverBackgroundCss) {
-        hoverCss += `.${componentClassName}:hover { ${hoverBackgroundCss} } `;
+        hoverCss += `.${cssSelector}:hover { ${hoverBackgroundCss} } `;
       }
     }
 
@@ -306,7 +309,7 @@ export const Text: React.FC<TextProps> = (props) => {
           resolver: responsiveResolver,
         });
         if (hoverBorderCss) {
-          hoverCss += `.${componentClassName}:hover { ${hoverBorderCss} } `;
+          hoverCss += `.${cssSelector}:hover { ${hoverBorderCss} } `;
         }
       }
     }
@@ -330,8 +333,19 @@ export const Text: React.FC<TextProps> = (props) => {
         resolver: responsiveResolver,
       });
       if (hoverBoxShadowCss) {
-        hoverCss += `.${componentClassName}:hover { ${hoverBoxShadowCss} } `;
+        hoverCss += `.${cssSelector}:hover { ${hoverBoxShadowCss} } `;
       }
+    }
+
+    // Link color CSS for edit mode
+    const effectiveLinkColor = props.linkColor ?? globalLinkColor;
+    const effectiveLinkColorHover = props.linkColorHover ?? globalLinkColorHover;
+    if (effectiveLinkColor || effectiveLinkColorHover) {
+      hoverCss += buildLinkColorCss({
+        baseSelector: `.${cssSelector}`,
+        linkColor: effectiveLinkColor ?? undefined,
+        linkColorHover: effectiveLinkColorHover ?? undefined,
+      });
     }
   } else {
     // Preview mode: Use CSS from generator
@@ -409,7 +423,7 @@ export const Text: React.FC<TextProps> = (props) => {
       {styleTagContent && <style>{styleTagContent}</style>}
       {isEditMode ? (
         // Edit mode: Keep wrapper for drag/drop functionality
-        <div ref={wrapperRef} className={`text-wrapper-${componentClassName.replace(/^text-/, "")} relative ${selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}>
+        <div ref={wrapperRef} className={`text-wrapper-${componentClassName.split(' ')[1] || nodeId} relative ${selected ? (editable ? "ring-2 ring-green-500 bg-green-50" : "ring-2 ring-blue-500 cursor-text") : "border border-dashed border-gray-300 hover:border-blue-500 cursor-pointer"}`}>
           {htmlTag === "p" || htmlTag === "span" ? (
             // For p/span tags, wrap in a div when editable (LexicalEditor may output divs, which can't be inside p tags)
             editable ? (
@@ -484,32 +498,30 @@ export const Text: React.FC<TextProps> = (props) => {
           )}
         </div>
       ) : (
-        // Preview mode: Wrap in div with unique class for CSS isolation
+        // Preview mode: Wrap in div with unique class for CSS isolation (no .text-content wrapper needed)
         <div className={componentClassName}>
           <style>{styleTagContent}</style>
-          <div className="text-content">
-            {React.createElement(TextTag, {
-              ref: (ref: HTMLElement | null) => {
-                if (!ref) return;
-                connect(ref);
-              },
-              id: cssId || undefined,
-              "aria-label": ariaLabel || undefined,
-              ...parseDataAttributes(dataAttributes),
-              className: className.trim() || undefined,
-              style: textStyle,
-              onClick: handleClick,
-              ...(isEmpty
-                ? {
-                    children: (
-                      <span className="pointer-events-none select-none" style={{ color: "#9ca3af" }}>
-                        Type your text here
-                      </span>
-                    ),
-                  }
-                : { dangerouslySetInnerHTML: { __html: cleanHTMLForPreview(currentText || "", htmlTag) } }),
-            })}
-          </div>
+          {React.createElement(TextTag, {
+            ref: (ref: HTMLElement | null) => {
+              if (!ref) return;
+              connect(ref);
+            },
+            id: cssId || undefined,
+            "aria-label": ariaLabel || undefined,
+            ...parseDataAttributes(dataAttributes),
+            className: className.trim() || undefined,
+            style: textStyle,
+            onClick: handleClick,
+            ...(isEmpty
+              ? {
+                  children: (
+                    <span className="pointer-events-none select-none" style={{ color: "#9ca3af" }}>
+                      Type your text here
+                    </span>
+                  ),
+                }
+              : { dangerouslySetInnerHTML: { __html: cleanHTMLForPreview(currentText || "", htmlTag) } }),
+          })}
         </div>
       )}
     </>

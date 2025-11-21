@@ -54,10 +54,18 @@ export interface TypographyStyleProps {
 
 /**
  * Generate unique component class name for CSS isolation
- * Format: {componentName}-{cssId || nodeId}
+ * Format: {componentName} {componentName}-{cssId || nodeId}
+ * 
+ * This creates both:
+ * - Base class ({componentName}): Identifies component type, allows targeting all instances
+ * - Unique instance class ({componentName}-{cssId || nodeId}): Unique per instance for custom CSS
+ * 
+ * Example: "heading heading-abc123" or "text text-xyz789"
+ * This matches Spectra's pattern: "wp-block-uagb-advanced-heading uagb-block-71cddf11"
  */
 export const generateComponentClassName = (nodeId: string, cssId: string | undefined, componentName: string): string => {
-  return `${componentName}-${cssId || nodeId}`;
+  const uniqueId = cssId || nodeId;
+  return `${componentName} ${componentName}-${uniqueId}`;
 };
 
 /**
@@ -100,11 +108,23 @@ export const buildEditModeStyles = <T extends Record<string, unknown>>(
 };
 
 /**
+ * Convert className string (with spaces) to CSS selector
+ * "heading heading-abc123" -> ".heading.heading-abc123" (both classes on same element)
+ * This allows targeting specific instances while also supporting base class targeting
+ */
+export const classNameToSelector = (className: string): string => {
+  // Split by spaces and join with dots (no space = both classes on same element)
+  return `.${className.trim().replace(/\s+/g, '.')}`;
+};
+
+/**
  * Build CSS selector for wrapper div (layout styles)
- * Use: `.${componentClassName} { ... }`
+ * Use: `getWrapperSelector(componentClassName) { ... }`
+ * 
+ * Handles both single class and multiple classes (e.g., "heading heading-abc123")
  */
 export const getWrapperSelector = (componentClassName: string): string => {
-  return `.${componentClassName}`;
+  return classNameToSelector(componentClassName);
 };
 
 /**

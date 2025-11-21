@@ -919,10 +919,31 @@ export const Container: React.FC<ContainerProps> = (props) => {
   // Assemble the final style object for the main container element from all the helper functions.
   // In preview mode, layout styles (padding, margin, background, border, boxShadow) are applied via CSS classes.
   // Only keep inline styles for properties that can't be CSS (like overlay position relative for pseudo-element).
+  
+  // Check if we need to set marginLeft/marginRight for centering (boxed/custom containers)
+  const needsCentering = !isChildContainer && (containerWidth === "boxed" || containerWidth === "custom");
+  
+  // Build margin styles - avoid mixing shorthand and non-shorthand properties
+  // If we need centering, use individual margin properties; otherwise use shorthand
+  const marginStyles: React.CSSProperties = isEditMode
+    ? needsCentering
+      ? (() => {
+          // Parse marginValue string (format: "top right bottom left") to extract individual values
+          const marginParts = marginValue ? marginValue.split(" ") : ["0px", "0px", "0px", "0px"];
+          return {
+            marginTop: marginParts[0] || "0px",
+            marginRight: "auto", // Override with auto for centering
+            marginBottom: marginParts[2] || "0px",
+            marginLeft: "auto", // Override with auto for centering
+          };
+        })()
+      : { margin: marginValue }
+    : {};
+  
   const containerStyle: React.CSSProperties = {
     // Padding and margin only in edit mode (in preview mode, applied via CSS to wrapper)
     padding: isEditMode ? paddingValue : undefined,
-    margin: isEditMode ? marginValue : undefined,
+    ...marginStyles,
     // Background styles only in edit mode (in preview mode, backgrounds are applied via CSS to wrapper)
     ...(isEditMode ? backgroundStyles : {}),
     // Overlay position relative is needed for pseudo-element in both modes
@@ -955,8 +976,6 @@ export const Container: React.FC<ContainerProps> = (props) => {
     flexBasis: isEditMode ? flexBasisValue : isChildContainer ? undefined : undefined,
     width: isEditMode ? (isChildContainer && flexBasisValue ? flexBasisValue : "100%") : isChildContainer ? undefined : "100%",
     maxWidth: isChildContainer ? undefined : containerWidth === "custom" ? customWidthValue : containerWidth === "boxed" ? `${containerDefaults.maxWidth?.boxed ?? 1200}px` : undefined,
-    marginLeft: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
-    marginRight: isChildContainer ? undefined : containerWidth === "boxed" || containerWidth === "custom" ? "auto" : undefined,
     overflow: overflow as React.CSSProperties["overflow"],
     // Positioning properties only in edit mode (in preview mode, applied via CSS to wrapper)
     position: isEditMode && hasCustomPosition ? (position as React.CSSProperties["position"]) : undefined,

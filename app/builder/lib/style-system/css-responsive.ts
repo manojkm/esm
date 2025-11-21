@@ -47,12 +47,15 @@ export const generateResponsiveCss = (className: string, property: string, respo
   const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
   const importantSuffix = important ? " !important" : "";
 
+  // Ensure className doesn't start with a dot (safeguard against double dots)
+  const cleanedClassName = className.trim().replace(/^\.+/, '');
+
   // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
   // Desktop values are used as the base since they apply to all breakpoints by default
   const desktopValue = responsive.desktop;
   const desktopUnit = (responsive.unit && responsive.unit.desktop) || fallbackUnit;
   const baseValue = desktopValue !== undefined && desktopValue !== null ? (typeof desktopValue === "number" ? `${desktopValue}${desktopUnit}` : desktopValue) : typeof fallbackValue === "number" ? `${fallbackValue}${desktopUnit}` : fallbackValue;
-  css += `.${className} { ${property}: ${baseValue}${importantSuffix}; }\n`;
+  css += `.${cleanedClassName} { ${property}: ${baseValue}${importantSuffix}; }\n`;
 
   // Generate media queries only for breakpoints that have explicit overrides (different from base)
   for (const bp of breakpoints) {
@@ -63,7 +66,7 @@ export const generateResponsiveCss = (className: string, property: string, respo
 
       // Only generate media query if value differs from base (not just fallback)
       if (cssValue !== baseValue) {
-        css += `${getMediaQuery(bp)} { .${className} { ${property}: ${cssValue}${importantSuffix}; } }\n`;
+        css += `${getMediaQuery(bp)} { .${cleanedClassName} { ${property}: ${cssValue}${importantSuffix}; } }\n`;
       }
     }
   }

@@ -69,10 +69,7 @@ export const textFeatureRegistry: Partial<FeatureRegistry<TextProps>> = createFe
       defaultMargin={meta?.defaultMargin as number | null | undefined}
     />
   ),
-  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
-  border: ({ props, actions, controlId }) => <BorderControls props={props} actions={actions} controlId={`${controlId}-border`} />,
-  boxShadow: ({ props, actions, controlId }) => <BoxShadowControls props={props} actions={actions} controlId={`${controlId}-box-shadow`} />,
-  color: ({ props, actions, controlId }) => <ColorControls props={props} actions={actions} controlId={`${controlId}-color`} />,
+  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} disableImage={true} disableOverlay={true} />,
   css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
   attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
   responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,
@@ -99,7 +96,7 @@ export const headingFeatureRegistry: Partial<FeatureRegistry<HeadingProps>> = cr
       defaultMargin={meta?.defaultMargin as number | null | undefined}
     />
   ),
-  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} />,
+  background: ({ props, actions, controlId }) => <BackgroundControls props={props} actions={actions} controlId={`${controlId}-background`} disableImage={true} disableOverlay={true} />,
   css: ({ props, actions, controlId }) => <CssControls props={props} actions={actions} controlId={`${controlId}-css`} />,
   attributes: ({ props, actions, controlId }) => <AttributesControls props={props} actions={actions} controlId={`${controlId}-attributes`} />,
   responsive: ({ props, actions, controlId }) => <ResponsiveControls props={props} actions={actions} controlId={`${controlId}-responsive`} />,

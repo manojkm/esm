@@ -48,6 +48,35 @@ All feature controls are registered in `app/builder/components/settings/shared/f
 - **`headingTypography`**: Heading-specific typography controls
 - **`subHeadingTypography`**: Sub-heading typography controls
 
+#### TypographyControls Prefix Pattern
+
+The `TypographyControls` component uses a **prefix pattern** to handle different prop naming conventions:
+
+- **No Prefix** (e.g., Text component): Uses camelCase props directly
+  - Props: `fontSize`, `fontWeight`, `textColor`, `fontSizeResponsive`, etc.
+  - Config: `prefix: ""`
+  
+- **With Prefix** (e.g., Heading component): Uses prefixed props
+  - Props: `headingFontSize`, `headingFontWeight`, `headingTextColor`, `headingFontSizeResponsive`, etc.
+  - Config: `prefix: "heading"`
+
+**Important**: When `prefix` is empty, `TypographyControls` automatically converts PascalCase keys (like `"FontSize"`) to camelCase prop names (like `"fontSize"`). This ensures proper prop name mapping for components that don't use prefixes.
+
+**Example Usage**:
+```typescript
+// Text component (no prefix)
+const config: TypographyConfig = {
+  prefix: "", // Empty prefix = camelCase props
+  // ... other config
+};
+
+// Heading component (with prefix)
+const config: TypographyConfig = {
+  prefix: "heading", // Prefix = headingFontSize, headingFontWeight, etc.
+  // ... other config
+};
+```
+
 ### Advanced
 - **`css`**: Custom CSS editor
 - **`attributes`**: HTML attributes editor

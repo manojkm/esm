@@ -9,6 +9,7 @@ import {
   generateBoxShadowCss,
   generateZIndexCss,
 } from "@/app/builder/lib/style-system/css-responsive";
+import { classNameToSelector } from "@/app/builder/lib/component-styles";
 import type { HeadingProps } from "./types";
 import type {
   ResolvedHeadingTypography,
@@ -48,6 +49,16 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     globalBorderColor,
     isEditMode,
   } = params;
+
+  // Convert className to CSS selector (e.g., "heading heading-abc123" -> ".heading.heading-abc123")
+  // First, ensure componentClassName has no leading dot (safeguard)
+  const cleanedComponentClassName = componentClassName.trim().replace(/^\.+/, '');
+  const selector = classNameToSelector(cleanedComponentClassName);
+  // Extract class names without dot for functions that add their own dot (e.g., generatePaddingCss)
+  // "heading heading-abc123" -> "heading.heading-abc123" (for CSS functions that expect class name)
+  // Ensure no leading dot (safeguard against double dots) - strip any dots from the start
+  const rawClassName = cleanedComponentClassName.replace(/\s+/g, '.');
+  const classNameForCssFunctions = rawClassName.startsWith('.') ? rawClassName.substring(1) : rawClassName;
 
   const shouldGenerateMediaQueries = !isEditMode;
   let responsiveCss = "";
@@ -168,7 +179,7 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   // Padding CSS
   if (paddingResponsive) {
     responsiveCss += generatePaddingCss(
-      componentClassName,
+      classNameForCssFunctions,
       paddingResponsive,
       { top: paddingTop, right: paddingRight, bottom: paddingBottom, left: paddingLeft, defaultValue: padding ?? 0 },
       paddingUnit || "px"
@@ -178,7 +189,7 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     const right = paddingRight ?? padding;
     const bottom = paddingBottom ?? padding;
     const left = paddingLeft ?? padding;
-    responsiveCss += `.${componentClassName} { padding: ${top}${paddingUnit || "px"} ${right}${paddingUnit || "px"} ${bottom}${paddingUnit || "px"} ${left}${paddingUnit || "px"}; }\n`;
+    responsiveCss += `${selector} { padding: ${top}${paddingUnit || "px"} ${right}${paddingUnit || "px"} ${bottom}${paddingUnit || "px"} ${left}${paddingUnit || "px"}; }\n`;
   }
 
   // Margin CSS
@@ -186,7 +197,7 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   const hasIndividualMargin = marginTop !== null || marginRight !== null || marginBottom !== null || marginLeft !== null;
   if (marginResponsive) {
     responsiveCss += generateMarginCss(
-      componentClassName,
+      classNameForCssFunctions,
       marginResponsive,
       { top: marginTop, right: marginRight, bottom: marginBottom, left: marginLeft, defaultValue: margin ?? 0 },
       marginUnit || "px"
@@ -196,56 +207,56 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     const right = marginRight ?? margin ?? 0;
     const bottom = marginBottom ?? margin ?? 0;
     const left = marginLeft ?? margin ?? 0;
-    responsiveCss += `.${componentClassName} { margin: ${top}${marginUnit || "px"} ${right}${marginUnit || "px"} ${bottom}${marginUnit || "px"} ${left}${marginUnit || "px"}; }\n`;
+    responsiveCss += `${selector} { margin: ${top}${marginUnit || "px"} ${right}${marginUnit || "px"} ${bottom}${marginUnit || "px"} ${left}${marginUnit || "px"}; }\n`;
   }
 
   // Text align
   if (textAlignResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-content`, "text-align", textAlignResponsive, textAlign || "left", "", true);
+    responsiveCss += generateResponsiveCss(classNameForCssFunctions, "text-align", textAlignResponsive, textAlign || "left", "", true);
   } else {
-    responsiveCss += `.${componentClassName} .heading-content { text-align: ${textAlign || "left"} !important; }\n`;
+    responsiveCss += `${selector} { text-align: ${textAlign || "left"} !important; }\n`;
   }
 
   // Heading Typography CSS
   if (headingFontSizeResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "font-size", headingFontSizeResponsive, headingFontSize ?? globalHeadingFontSize, headingFontSizeUnit || "px");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "font-size", headingFontSizeResponsive, headingFontSize ?? globalHeadingFontSize, headingFontSizeUnit || "px");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { font-size: ${headingFontSize ?? globalHeadingFontSize}${headingFontSizeUnit || "px"}; }\n`;
+    responsiveCss += `${selector} .heading-text { font-size: ${headingFontSize ?? globalHeadingFontSize}${headingFontSizeUnit || "px"}; }\n`;
   }
 
   if (headingFontWeightResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "font-weight", headingFontWeightResponsive, headingFontWeight ?? globalHeadingFontWeight, "");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "font-weight", headingFontWeightResponsive, headingFontWeight ?? globalHeadingFontWeight, "");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { font-weight: ${headingFontWeight ?? globalHeadingFontWeight}; }\n`;
+    responsiveCss += `${selector} .heading-text { font-weight: ${headingFontWeight ?? globalHeadingFontWeight}; }\n`;
   }
 
   if (headingFontStyleResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "font-style", headingFontStyleResponsive, headingFontStyle ?? "normal", "");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "font-style", headingFontStyleResponsive, headingFontStyle ?? "normal", "");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { font-style: ${headingFontStyle ?? "normal"}; }\n`;
+    responsiveCss += `${selector} .heading-text { font-style: ${headingFontStyle ?? "normal"}; }\n`;
   }
 
   if (headingTextTransformResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "text-transform", headingTextTransformResponsive, headingTextTransform ?? "none", "");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "text-transform", headingTextTransformResponsive, headingTextTransform ?? "none", "");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { text-transform: ${headingTextTransform ?? "none"}; }\n`;
+    responsiveCss += `${selector} .heading-text { text-transform: ${headingTextTransform ?? "none"}; }\n`;
   }
 
   if (headingTextDecorationResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "text-decoration", headingTextDecorationResponsive, headingTextDecoration ?? "none", "");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "text-decoration", headingTextDecorationResponsive, headingTextDecoration ?? "none", "");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { text-decoration: ${headingTextDecoration ?? "none"}; }\n`;
+    responsiveCss += `${selector} .heading-text { text-decoration: ${headingTextDecoration ?? "none"}; }\n`;
   }
 
   if (headingLetterSpacingResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "letter-spacing", headingLetterSpacingResponsive, headingLetterSpacing ?? 0, headingLetterSpacingUnit || "px");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "letter-spacing", headingLetterSpacingResponsive, headingLetterSpacing ?? 0, headingLetterSpacingUnit || "px");
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { letter-spacing: ${headingLetterSpacing ?? 0}${headingLetterSpacingUnit || "px"}; }\n`;
+    responsiveCss += `${selector} .heading-text { letter-spacing: ${headingLetterSpacing ?? 0}${headingLetterSpacingUnit || "px"}; }\n`;
   }
 
   if (headingLineHeightResponsive) {
     responsiveCss += generateResponsiveCss(
-      `${componentClassName} .heading-text`,
+      `${classNameForCssFunctions} .heading-text`,
       "line-height",
       headingLineHeightResponsive,
       headingLineHeight ?? 1.2,
@@ -261,13 +272,13 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     } else {
       lineHeightValue = `${heightValue}${headingLineHeightUnit}`;
     }
-    responsiveCss += `.${componentClassName} .heading-text { line-height: ${lineHeightValue}; }\n`;
+    responsiveCss += `${selector} .heading-text { line-height: ${lineHeightValue}; }\n`;
   }
 
   if (headingFontFamilyResponsive) {
-    responsiveCss += generateResponsiveCss(`${componentClassName} .heading-text`, "font-family", headingFontFamilyResponsive, resolvedHeadingTypography.fontFamily, "");
+    responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .heading-text`, "font-family", headingFontFamilyResponsive, resolvedHeadingTypography.fontFamily, "");
   } else if (resolvedHeadingTypography.fontFamily) {
-    responsiveCss += `.${componentClassName} .heading-text { font-family: ${resolvedHeadingTypography.fontFamily}; }\n`;
+    responsiveCss += `${selector} .heading-text { font-family: ${resolvedHeadingTypography.fontFamily}; }\n`;
   }
 
   // Check if text color is reset (all responsive values are null)
@@ -278,9 +289,9 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   
   if (!isTextColorReset) {
     if (headingTextColorResponsive) {
-      responsiveCss += generateTextColorCss(`${componentClassName} .heading-text`, headingTextColorResponsive, headingTextColor ?? globalHeadingTextColor);
+      responsiveCss += generateTextColorCss(`${classNameForCssFunctions} .heading-text`, headingTextColorResponsive, headingTextColor ?? globalHeadingTextColor);
     } else {
-      responsiveCss += `.${componentClassName} .heading-text { color: ${headingTextColor ?? globalHeadingTextColor}; }\n`;
+      responsiveCss += `${selector} .heading-text { color: ${headingTextColor ?? globalHeadingTextColor}; }\n`;
     }
   }
 
@@ -293,78 +304,78 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   
   if (!isHeadingHoverColorReset && headingTextColorHover) {
     if (headingTextColorHoverResponsive) {
-      responsiveHoverCss += generateHoverTextColorCss(`${componentClassName} .heading-text`, headingTextColorHoverResponsive, headingTextColorHover);
+      responsiveHoverCss += generateHoverTextColorCss(`${classNameForCssFunctions} .heading-text`, headingTextColorHoverResponsive, headingTextColorHover);
     } else {
-      responsiveHoverCss += `.${componentClassName} .heading-text:hover { color: ${headingTextColorHover} !important; }\n`;
+      responsiveHoverCss += `${selector} .heading-text:hover { color: ${headingTextColorHover} !important; }\n`;
     }
   }
 
   // Heading bottom spacing
   if (headingBottomSpacingResponsive) {
     responsiveCss += generateResponsiveCss(
-      `${componentClassName} .heading-text`,
+      `${classNameForCssFunctions} .heading-text`,
       "margin-bottom",
       headingBottomSpacingResponsive,
       headingBottomSpacing ?? 16,
       headingBottomSpacingUnit || "px"
     );
   } else {
-    responsiveCss += `.${componentClassName} .heading-text { margin-bottom: ${headingBottomSpacing ?? 16}${headingBottomSpacingUnit || "px"}; }\n`;
+    responsiveCss += `${selector} .heading-text { margin-bottom: ${headingBottomSpacing ?? 16}${headingBottomSpacingUnit || "px"}; }\n`;
   }
 
   // Sub Heading Typography CSS (only if enabled)
   if (enableSubHeading) {
     if (subHeadingFontSizeResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .sub-heading-text`,
+        `${classNameForCssFunctions} .sub-heading-text`,
         "font-size",
         subHeadingFontSizeResponsive,
         subHeadingFontSize ?? globalSubHeadingFontSize,
         subHeadingFontSizeUnit || "px"
       );
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { font-size: ${subHeadingFontSize ?? globalSubHeadingFontSize}${subHeadingFontSizeUnit || "px"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { font-size: ${subHeadingFontSize ?? globalSubHeadingFontSize}${subHeadingFontSizeUnit || "px"}; }\n`;
     }
 
     if (subHeadingFontWeightResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .sub-heading-text`, "font-weight", subHeadingFontWeightResponsive, subHeadingFontWeight ?? globalSubHeadingFontWeight, "");
+      responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .sub-heading-text`, "font-weight", subHeadingFontWeightResponsive, subHeadingFontWeight ?? globalSubHeadingFontWeight, "");
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { font-weight: ${subHeadingFontWeight ?? globalSubHeadingFontWeight}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { font-weight: ${subHeadingFontWeight ?? globalSubHeadingFontWeight}; }\n`;
     }
 
     if (subHeadingFontStyleResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .sub-heading-text`, "font-style", subHeadingFontStyleResponsive, subHeadingFontStyle ?? "normal", "");
+      responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .sub-heading-text`, "font-style", subHeadingFontStyleResponsive, subHeadingFontStyle ?? "normal", "");
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { font-style: ${subHeadingFontStyle ?? "normal"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { font-style: ${subHeadingFontStyle ?? "normal"}; }\n`;
     }
 
     if (subHeadingTextTransformResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .sub-heading-text`, "text-transform", subHeadingTextTransformResponsive, subHeadingTextTransform ?? "none", "");
+      responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .sub-heading-text`, "text-transform", subHeadingTextTransformResponsive, subHeadingTextTransform ?? "none", "");
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { text-transform: ${subHeadingTextTransform ?? "none"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { text-transform: ${subHeadingTextTransform ?? "none"}; }\n`;
     }
 
     if (subHeadingTextDecorationResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .sub-heading-text`, "text-decoration", subHeadingTextDecorationResponsive, subHeadingTextDecoration ?? "none", "");
+      responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .sub-heading-text`, "text-decoration", subHeadingTextDecorationResponsive, subHeadingTextDecoration ?? "none", "");
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { text-decoration: ${subHeadingTextDecoration ?? "none"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { text-decoration: ${subHeadingTextDecoration ?? "none"}; }\n`;
     }
 
     if (subHeadingLetterSpacingResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .sub-heading-text`,
+        `${classNameForCssFunctions} .sub-heading-text`,
         "letter-spacing",
         subHeadingLetterSpacingResponsive,
         subHeadingLetterSpacing ?? 0,
         subHeadingLetterSpacingUnit || "px"
       );
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { letter-spacing: ${subHeadingLetterSpacing ?? 0}${subHeadingLetterSpacingUnit || "px"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { letter-spacing: ${subHeadingLetterSpacing ?? 0}${subHeadingLetterSpacingUnit || "px"}; }\n`;
     }
 
     if (subHeadingLineHeightResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .sub-heading-text`,
+        `${classNameForCssFunctions} .sub-heading-text`,
         "line-height",
         subHeadingLineHeightResponsive,
         subHeadingLineHeight ?? 1.5,
@@ -380,13 +391,13 @@ export function generateHeadingCss(params: CssGeneratorParams): {
       } else {
         lineHeightValue = `${heightValue}${subHeadingLineHeightUnit}`;
       }
-      responsiveCss += `.${componentClassName} .sub-heading-text { line-height: ${lineHeightValue}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { line-height: ${lineHeightValue}; }\n`;
     }
 
     if (subHeadingFontFamilyResponsive) {
-      responsiveCss += generateResponsiveCss(`${componentClassName} .sub-heading-text`, "font-family", subHeadingFontFamilyResponsive, resolvedSubHeadingTypography.fontFamily, "");
+      responsiveCss += generateResponsiveCss(`${classNameForCssFunctions} .sub-heading-text`, "font-family", subHeadingFontFamilyResponsive, resolvedSubHeadingTypography.fontFamily, "");
     } else if (resolvedSubHeadingTypography.fontFamily) {
-      responsiveCss += `.${componentClassName} .sub-heading-text { font-family: ${resolvedSubHeadingTypography.fontFamily}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { font-family: ${resolvedSubHeadingTypography.fontFamily}; }\n`;
     }
 
     // Check if sub-heading text color is reset (all responsive values are null)
@@ -397,9 +408,9 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     
     if (!isSubHeadingTextColorReset) {
       if (subHeadingTextColorResponsive) {
-        responsiveCss += generateTextColorCss(`${componentClassName} .sub-heading-text`, subHeadingTextColorResponsive, subHeadingTextColor ?? globalSubHeadingTextColor);
+        responsiveCss += generateTextColorCss(`${classNameForCssFunctions} .sub-heading-text`, subHeadingTextColorResponsive, subHeadingTextColor ?? globalSubHeadingTextColor);
       } else {
-        responsiveCss += `.${componentClassName} .sub-heading-text { color: ${subHeadingTextColor ?? globalSubHeadingTextColor}; }\n`;
+        responsiveCss += `${selector} .sub-heading-text { color: ${subHeadingTextColor ?? globalSubHeadingTextColor}; }\n`;
       }
     }
 
@@ -412,23 +423,23 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     
     if (!isSubHeadingHoverColorReset && subHeadingTextColorHover) {
       if (subHeadingTextColorHoverResponsive) {
-        responsiveHoverCss += generateHoverTextColorCss(`${componentClassName} .sub-heading-text`, subHeadingTextColorHoverResponsive, subHeadingTextColorHover);
+        responsiveHoverCss += generateHoverTextColorCss(`${classNameForCssFunctions} .sub-heading-text`, subHeadingTextColorHoverResponsive, subHeadingTextColorHover);
       } else {
-        responsiveHoverCss += `.${componentClassName} .sub-heading-text:hover { color: ${subHeadingTextColorHover} !important; }\n`;
+        responsiveHoverCss += `${selector} .sub-heading-text:hover { color: ${subHeadingTextColorHover} !important; }\n`;
       }
     }
 
     // Sub heading bottom spacing
     if (subHeadingBottomSpacingResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .sub-heading-text`,
+        `${classNameForCssFunctions} .sub-heading-text`,
         "margin-bottom",
         subHeadingBottomSpacingResponsive,
         subHeadingBottomSpacing ?? 16,
         subHeadingBottomSpacingUnit || "px"
       );
     } else {
-      responsiveCss += `.${componentClassName} .sub-heading-text { margin-bottom: ${subHeadingBottomSpacing ?? 16}${subHeadingBottomSpacingUnit || "px"}; }\n`;
+      responsiveCss += `${selector} .sub-heading-text { margin-bottom: ${subHeadingBottomSpacing ?? 16}${subHeadingBottomSpacingUnit || "px"}; }\n`;
     }
   }
 
@@ -436,18 +447,18 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   if (separatorStyle && separatorStyle !== "none") {
     if (separatorWidthResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .heading-separator`,
+        `${classNameForCssFunctions} .heading-separator`,
         "width",
         separatorWidthResponsive,
         separatorWidth ?? 12,
         separatorWidthUnit || "%"
       );
     } else {
-      responsiveCss += `.${componentClassName} .heading-separator { width: ${separatorWidth ?? 12}${separatorWidthUnit || "%"}; }\n`;
+      responsiveCss += `${selector} .heading-separator { width: ${separatorWidth ?? 12}${separatorWidthUnit || "%"}; }\n`;
     }
 
     const borderStyle = separatorStyle === "double" ? "double" : separatorStyle === "dashed" ? "dashed" : separatorStyle === "dotted" ? "dotted" : "solid";
-    responsiveCss += `.${componentClassName} .heading-separator { 
+    responsiveCss += `${selector} .heading-separator { 
       border-top-style: ${borderStyle}; 
       border-top-width: ${resolvedSeparator.thickness}px; 
       border-top-color: ${resolvedSeparator.color}; 
@@ -460,14 +471,14 @@ export function generateHeadingCss(params: CssGeneratorParams): {
 
     if (separatorBottomSpacingResponsive) {
       responsiveCss += generateResponsiveCss(
-        `${componentClassName} .heading-separator`,
+        `${classNameForCssFunctions} .heading-separator`,
         "margin-bottom",
         separatorBottomSpacingResponsive,
         separatorBottomSpacing ?? 16,
         separatorBottomSpacingUnit || "px"
       );
     } else {
-      responsiveCss += `.${componentClassName} .heading-separator { margin-bottom: ${separatorBottomSpacing ?? 16}${separatorBottomSpacingUnit || "px"}; }\n`;
+      responsiveCss += `${selector} .heading-separator { margin-bottom: ${separatorBottomSpacing ?? 16}${separatorBottomSpacingUnit || "px"}; }\n`;
     }
   }
 
@@ -476,30 +487,30 @@ export function generateHeadingCss(params: CssGeneratorParams): {
     if (backgroundColorResponsive || backgroundColor) {
       const fallbackColor = backgroundColor ?? (typeof backgroundColorResponsive?.desktop === "string" ? backgroundColorResponsive.desktop : undefined);
       if (fallbackColor) {
-        responsiveCss += generateBackgroundColorCss(componentClassName, backgroundColorResponsive, fallbackColor);
+        responsiveCss += generateBackgroundColorCss(classNameForCssFunctions, backgroundColorResponsive, fallbackColor);
       }
     }
   } else if (backgroundType === "gradient" && backgroundGradient) {
-    responsiveCss += `.${componentClassName} { background-image: ${backgroundGradient}; }\n`;
+    responsiveCss += `${selector} { background-image: ${backgroundGradient}; }\n`;
   } else if (backgroundType === "image" && backgroundImage) {
-    responsiveCss += `.${componentClassName} { background-image: url("${backgroundImage}"); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
+    responsiveCss += `${selector} { background-image: url("${backgroundImage}"); background-size: cover; background-position: center; background-repeat: no-repeat; }\n`;
   }
 
   // Border CSS
   const effectiveBorderColor = borderColor ?? globalBorderColor;
   if (borderStyle && borderStyle !== "none") {
     if (borderColorResponsive) {
-      responsiveCss += generateBorderColorCss(componentClassName, borderColorResponsive, effectiveBorderColor ?? undefined);
+      responsiveCss += generateBorderColorCss(classNameForCssFunctions, borderColorResponsive, effectiveBorderColor ?? undefined);
     } else if (effectiveBorderColor) {
-      responsiveCss += `.${componentClassName} { border-color: ${effectiveBorderColor}; }\n`;
+      responsiveCss += `${selector} { border-color: ${effectiveBorderColor}; }\n`;
     }
-    responsiveCss += `.${componentClassName} { border-style: ${borderStyle}; }\n`;
+    responsiveCss += `${selector} { border-style: ${borderStyle}; }\n`;
   }
 
   // Box Shadow CSS
   if (enableBoxShadow && (boxShadowHorizontalResponsive || boxShadowVerticalResponsive || boxShadowBlurResponsive || boxShadowSpreadResponsive)) {
     responsiveCss += generateBoxShadowCss(
-      componentClassName,
+      classNameForCssFunctions,
       boxShadowHorizontalResponsive,
       boxShadowVerticalResponsive,
       boxShadowBlurResponsive,
@@ -515,15 +526,15 @@ export function generateHeadingCss(params: CssGeneratorParams): {
   // Position CSS
   if (position && position !== "default" && position !== "static") {
     if (position === "relative" || position === "absolute" || position === "fixed" || position === "sticky") {
-      responsiveCss += `.${componentClassName} { position: ${position}; }\n`;
+      responsiveCss += `${selector} { position: ${position}; }\n`;
     }
   }
 
   if (zIndex !== null && zIndex !== undefined) {
     if (zIndexResponsive) {
-      responsiveCss += generateZIndexCss(componentClassName, zIndexResponsive, zIndex);
+      responsiveCss += generateZIndexCss(classNameForCssFunctions, zIndexResponsive, zIndex);
     } else {
-      responsiveCss += `.${componentClassName} { z-index: ${zIndex}; }\n`;
+      responsiveCss += `${selector} { z-index: ${zIndex}; }\n`;
     }
   }
 

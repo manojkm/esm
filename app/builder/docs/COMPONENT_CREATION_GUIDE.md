@@ -451,4 +451,8 @@ const sanitizedHtml = sanitizeHTMLForPaste(clipboardData.getData("text/html"));
 4. **Missing Hover Toggle**: Always add a toggle for hover effects (enableBackgroundColorHover, etc.)
 5. **Not Using Feature Registry**: Don't duplicate feature controls, reuse from registry
 6. **⚠️ Missing HTML Sanitization**: **CRITICAL SECURITY ISSUE** - Never use `dangerouslySetInnerHTML` without sanitization
+7. **TypographyControls Prefix Pattern**: When creating typography controls, ensure the `prefix` config matches your prop naming:
+   - **No prefix** (`prefix: ""`): Use camelCase props (`fontSize`, `fontWeight`, `textColor`)
+   - **With prefix** (`prefix: "heading"`): Use prefixed props (`headingFontSize`, `headingFontWeight`, `headingTextColor`)
+   - The `TypographyControls` component automatically handles camelCase conversion when prefix is empty
 

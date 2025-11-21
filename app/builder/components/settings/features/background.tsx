@@ -46,18 +46,21 @@ export interface BackgroundControlsProps<TProps extends BackgroundFeatureProps> 
   props: TProps;
   actions: ComponentControlActions<TProps>;
   controlId?: string;
+  // Options to disable specific features
+  disableImage?: boolean;
+  disableOverlay?: boolean;
 }
 
-const BackgroundTypeControl = <TProps extends BackgroundFeatureProps>({ props, actions, controlId = "background-type" }: BackgroundControlsProps<TProps>) => {
+const BackgroundTypeControl = <TProps extends BackgroundFeatureProps>({ props, actions, controlId = "background-type", disableImage = false }: BackgroundControlsProps<TProps>) => {
   const baseId = `background-type-${controlId}`;
-  const options = ["color", "gradient", "image"];
+  const options = disableImage ? ["color", "gradient"] : ["color", "gradient", "image"];
 
   return (
     <section id={baseId} data-component-id={baseId}>
       <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={`${baseId}-buttons`}>
         Background Type
       </label>
-      <div id={`${baseId}-buttons`} className="grid grid-cols-3 gap-1">
+      <div id={`${baseId}-buttons`} className={`grid gap-1 ${disableImage ? "grid-cols-2" : "grid-cols-3"}`}>
         {options.map((type) => {
           const isActive = props.backgroundType === type;
           return (
@@ -495,16 +498,16 @@ const BackgroundOverlayControls = <TProps extends BackgroundFeatureProps>({ prop
   );
 };
 
-export const BackgroundControls = <TProps extends BackgroundFeatureProps>({ props, actions, controlId = "background" }: BackgroundControlsProps<TProps>) => {
+export const BackgroundControls = <TProps extends BackgroundFeatureProps>({ props, actions, controlId = "background", disableImage = false, disableOverlay = false }: BackgroundControlsProps<TProps>) => {
   const baseId = `background-controls-${controlId}`;
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
-      <BackgroundTypeControl props={props} actions={actions} controlId={`${controlId}-type`} />
+      <BackgroundTypeControl props={props} actions={actions} controlId={`${controlId}-type`} disableImage={disableImage} />
       <BackgroundColorControls props={props} actions={actions} controlId={`${controlId}-color`} />
       <BackgroundGradientControls props={props} actions={actions} controlId={`${controlId}-gradient`} />
-      <BackgroundImageControls props={props} actions={actions} controlId={`${controlId}-image`} />
-      <BackgroundOverlayControls props={props} actions={actions} controlId={`${controlId}-overlay`} />
+      {!disableImage && <BackgroundImageControls props={props} actions={actions} controlId={`${controlId}-image`} />}
+      {!disableOverlay && <BackgroundOverlayControls props={props} actions={actions} controlId={`${controlId}-overlay`} />}
     </div>
   );
 };
