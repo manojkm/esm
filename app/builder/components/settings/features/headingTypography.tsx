@@ -121,8 +121,24 @@ export const HeadingTypographyControls = <TProps extends HeadingTypographyFeatur
           actions.setProp((draft) => {
             draft.headingTextColorResponsive = value as ResponsiveValue;
             const record = value as ResponsiveRecord;
-            const fallback = (record.desktop as string | undefined) ?? (record.tablet as string | undefined) ?? (record.mobile as string | undefined) ?? draft.headingTextColor ?? globalTextColor ?? "#1f2937";
-            draft.headingTextColor = fallback;
+            // Extract values, treating null as "not set"
+            const desktopValue = record.desktop as string | null | undefined;
+            const tabletValue = record.tablet as string | null | undefined;
+            const mobileValue = record.mobile as string | null | undefined;
+            
+            // Check if there are any actual color values (not null/undefined)
+            const hasAnyValue = (desktopValue != null && desktopValue !== "") || 
+                               (tabletValue != null && tabletValue !== "") || 
+                               (mobileValue != null && mobileValue !== "");
+            
+            if (!hasAnyValue) {
+              // No values set: clear the non-responsive prop so it falls back to global default
+              draft.headingTextColor = undefined;
+            } else {
+              // Set fallback from responsive values (null values are skipped by ??)
+              const fallback = desktopValue ?? tabletValue ?? mobileValue ?? draft.headingTextColor ?? globalTextColor ?? "#1f2937";
+              draft.headingTextColor = fallback;
+            }
           })
         }
         placeholder={globalTextColor || "#1f2937"}
@@ -137,8 +153,24 @@ export const HeadingTypographyControls = <TProps extends HeadingTypographyFeatur
           actions.setProp((draft) => {
             draft.headingTextColorHoverResponsive = value as ResponsiveValue;
             const record = value as ResponsiveRecord;
-            const fallback = (record.desktop as string | undefined) ?? (record.tablet as string | undefined) ?? (record.mobile as string | undefined) ?? draft.headingTextColorHover;
-            draft.headingTextColorHover = fallback;
+            // Extract values, treating null as "not set"
+            const desktopValue = record.desktop as string | null | undefined;
+            const tabletValue = record.tablet as string | null | undefined;
+            const mobileValue = record.mobile as string | null | undefined;
+            
+            // Check if there are any actual color values (not null/undefined)
+            const hasAnyValue = (desktopValue != null && desktopValue !== "") || 
+                               (tabletValue != null && tabletValue !== "") || 
+                               (mobileValue != null && mobileValue !== "");
+            
+            if (!hasAnyValue) {
+              // No values set: clear the non-responsive prop so hover color is removed
+              draft.headingTextColorHover = undefined;
+            } else {
+              // Set fallback from responsive values (null values are skipped by ??)
+              const fallback = desktopValue ?? tabletValue ?? mobileValue ?? draft.headingTextColorHover;
+              draft.headingTextColorHover = fallback;
+            }
           })
         }
         placeholder="Hover color"

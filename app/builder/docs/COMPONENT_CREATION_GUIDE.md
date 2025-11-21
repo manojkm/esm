@@ -12,6 +12,7 @@ When creating a new component, you need to:
 5. Register the component in the feature registry
 6. Add to Toolbox
 7. Register in Craft.js resolver
+8. **Implement consistent editing experience** (see [Component Editing Experience Guide](./COMPONENT_EDITING_EXPERIENCE.md))
 
 ## Step-by-Step Guide
 
@@ -359,13 +360,22 @@ export { [ComponentName] } from "./[ComponentName]";
 - [ ] Content class pattern followed
 - [ ] Responsive support added
 - [ ] Hover toggles implemented (if needed)
+- [ ] **Editing experience implemented** (see [Component Editing Experience Guide](./COMPONENT_EDITING_EXPERIENCE.md))
 
 ## Examples
 
-- **Text Component**: `app/builder/components/ui/Text.tsx`
+- **Text Component**: `app/builder/components/ui/Text.tsx` - Uses LexicalEditor for rich text editing
+- **Heading Component**: `app/builder/components/ui/Heading.tsx` - Uses ContentEditable for simple text editing
 - **Container Component**: `app/builder/components/ui/Container.tsx`
 - **Text Settings**: `app/builder/components/settings/TextSettings.tsx`
 - **Container Settings**: `app/builder/components/settings/ContainerSettings.tsx`
+
+## Related Guides
+
+- **[Component Editing Experience Guide](./COMPONENT_EDITING_EXPERIENCE.md)** - Standard editing experience pattern for all components
+- **[Security Guide](./SECURITY.md)** - HTML sanitization and XSS protection
+- **[Component Style Pattern](./COMPONENT_STYLE_PATTERN.md)** - Styling patterns and CSS generation
+- **[Content Class Pattern](./CONTENT_CLASS_PATTERN.md)** - Content class naming conventions
 
 ## Security Requirements
 

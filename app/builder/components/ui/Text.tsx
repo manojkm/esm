@@ -317,8 +317,16 @@ export const Text: React.FC<TextProps> = (props) => {
 
   const effectiveFontFamily = getEffectiveFontFamily();
 
-  // Text color resolution
-  const effectiveTextColor = textColorResponsive ? responsiveResolver(textColorResponsive, textColor ?? globalTextColor ?? "#1f2937") : textColor ?? globalTextColor ?? "#1f2937";
+  // Text color resolution - handle reset (null) values
+  let effectiveTextColor: string | undefined;
+  if (textColorResponsive) {
+    const resolved = responsiveResolver(textColorResponsive, null);
+    // If resolved is null, it means all responsive values were reset, so use global default
+    // If resolved is a string, use it
+    effectiveTextColor = resolved === null ? (globalTextColor ?? "#1f2937") : (resolved || undefined);
+  } else {
+    effectiveTextColor = textColor ?? globalTextColor ?? "#1f2937";
+  }
 
   // Build styles
   const paddingValue = buildResponsiveFourSideValue({
@@ -358,7 +366,13 @@ export const Text: React.FC<TextProps> = (props) => {
 
   // Generate hover CSS for both edit and preview modes
   // Text color hover - target content class within wrapper div
-  if (textColorHover) {
+  // Check if hover color is reset (all responsive values are null) or if textColorHover prop is cleared
+  const isTextColorHoverReset = textColorHoverResponsive && 
+    textColorHoverResponsive.desktop === null && 
+    textColorHoverResponsive.tablet === null && 
+    textColorHoverResponsive.mobile === null;
+  
+  if (!isTextColorHoverReset && textColorHover) {
     if (shouldGenerateMediaQueries) {
       // Preview mode: Generate responsive hover CSS
       if (textColorHoverResponsive) {
@@ -383,7 +397,8 @@ export const Text: React.FC<TextProps> = (props) => {
         responsive: textColorHoverResponsive as ResponsiveMap<string> | undefined,
         fallback: textColorHover,
       });
-      if (resolvedTextColorHover) {
+      // Only apply if resolved color is not null (null means reset)
+      if (resolvedTextColorHover !== null && resolvedTextColorHover !== undefined) {
         // In edit mode, componentClassName is on the inner div
         // We need to target hover on both the componentClassName element and its parent wrapper
         hoverCss += `.${componentClassName}:hover .text-content { color: ${resolvedTextColorHover} !important; }\n`;
@@ -626,12 +641,20 @@ export const Text: React.FC<TextProps> = (props) => {
     }
 
     // Text color - follows pattern: base value applies to all breakpoints, media queries only for overrides
-    if (textColorResponsive) {
-      responsiveCss += generateTextColorCss(`${componentClassName} .text-content`, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
-    } else {
-      // Always generate base CSS for text-color in preview mode (applies to all breakpoints)
-      const colorValue = effectiveTextColor || globalTextColor || "#1f2937";
-      responsiveCss += `.${componentClassName} .text-content { color: ${colorValue}; }\n`;
+    // Check if text color is reset (all responsive values are null)
+    const isTextColorReset = textColorResponsive && 
+      textColorResponsive.desktop === null && 
+      textColorResponsive.tablet === null && 
+      textColorResponsive.mobile === null;
+    
+    if (!isTextColorReset) {
+      if (textColorResponsive) {
+        responsiveCss += generateTextColorCss(`${componentClassName} .text-content`, textColorResponsive, textColor ?? globalTextColor ?? "#1f2937");
+      } else {
+        // Always generate base CSS for text-color in preview mode (applies to all breakpoints)
+        const colorValue = effectiveTextColor || globalTextColor || "#1f2937";
+        responsiveCss += `.${componentClassName} .text-content { color: ${colorValue}; }\n`;
+      }
     }
 
     // Link color - follows pattern: base value applies to all breakpoints, media queries only for overrides

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import { ResponsiveSelectControl } from "../shared/controls";
 import type { ComponentControlActions } from "../shared/types";
 
@@ -28,6 +29,7 @@ export const HeadingSeparatorControls = <TProps extends HeadingSeparatorFeatureP
   controlId = "heading-separator",
 }: HeadingSeparatorControlsProps<TProps>) => {
   const baseId = `heading-separator-${controlId}`;
+  const { getResponsiveValue } = useResponsive();
 
   return (
     <div id={baseId} data-component-id={baseId}>
@@ -35,14 +37,17 @@ export const HeadingSeparatorControls = <TProps extends HeadingSeparatorFeatureP
         controlId={`${baseId}-style`}
         label="Style"
         value={{ desktop: props.separatorStyle || "none" } as any}
-        onChange={(value) =>
+        onChange={(value) => {
+          // Extract the actual value from the responsive record
+          const styleValue = getResponsiveValue(value as any, "none") as "none" | "solid" | "double" | "dashed" | "dotted";
           actions.setProp((draft) => {
-            draft.separatorStyle = value as "none" | "solid" | "double" | "dashed" | "dotted";
-          })
-        }
+            draft.separatorStyle = styleValue;
+          });
+        }}
         options={SEPARATOR_STYLE_OPTIONS}
         variant="inline"
         layout="select"
+        defaultValue="none"
       />
     </div>
   );

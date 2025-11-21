@@ -13,6 +13,7 @@ export interface FeatureSectionConfig {
   title: string;
   features: Array<FeatureKey | FeatureConfigEntry>;
   description?: string;
+  condition?: (props: any) => boolean; // Optional condition to show/hide section
 }
 
 interface FeatureSettingsProps<TProps> {
@@ -47,7 +48,12 @@ export const FeatureSettingsAccordion = <TProps,>({
 
   return (
     <div className="space-y-4">
-      {sections.map((section) => {
+      {sections
+        .filter((section) => {
+          // If condition is provided, check it; otherwise always show
+          return section.condition ? section.condition(props) : true;
+        })
+        .map((section) => {
         const isOpen = openSection === section.id;
         return (
           <div key={section.id} className="border border-gray-200 rounded-md">

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useResponsive } from "@/app/builder/contexts/ResponsiveContext";
 import { ResponsiveSelectControl } from "../shared/controls";
 import type { ComponentControlActions } from "../shared/types";
 
@@ -27,6 +28,7 @@ export const HeadingSubHeadingControls = <TProps extends HeadingSubHeadingFeatur
   controlId = "heading-sub-heading",
 }: HeadingSubHeadingControlsProps<TProps>) => {
   const baseId = `heading-sub-heading-${controlId}`;
+  const { getResponsiveValue } = useResponsive();
 
   return (
     <div id={baseId} data-component-id={baseId} className="space-y-4">
@@ -58,11 +60,13 @@ export const HeadingSubHeadingControls = <TProps extends HeadingSubHeadingFeatur
           controlId={`${baseId}-position`}
           label="Position"
           value={{ desktop: props.subHeadingPosition || "below" } as any}
-          onChange={(value) =>
+          onChange={(value) => {
+            // Extract the actual value from the responsive record
+            const positionValue = getResponsiveValue(value as any, "below") as "above" | "below";
             actions.setProp((draft) => {
-              draft.subHeadingPosition = value as "above" | "below";
-            })
-          }
+              draft.subHeadingPosition = positionValue;
+            });
+          }}
           options={POSITION_OPTIONS}
           variant="inline"
           layout="select"

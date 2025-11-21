@@ -429,6 +429,38 @@ export const generateTextColorCss = (className: string, responsive?: ResponsiveV
 };
 
 /**
+ * Generates CSS for responsive hover text color
+ * Pattern: Base value applies to all breakpoints, media queries only for overrides
+ * This generates CSS for :hover pseudo-class
+ */
+export const generateHoverTextColorCss = (className: string, responsive?: ResponsiveValue, fallback?: string): string => {
+  if (!responsive || !fallback) {
+    return "";
+  }
+
+  let css = "";
+  const breakpoints: BreakpointKey[] = ["mobile", "tablet", "desktop"];
+
+  // Generate base CSS rule with desktop value from responsive (if exists), otherwise use fallback
+  // Desktop values are used as the base since they apply to all breakpoints by default
+  const desktopValue = responsive.desktop;
+  const baseValue = desktopValue !== undefined && desktopValue !== null && typeof desktopValue === "string" ? desktopValue : fallback;
+  css += `.${className}:hover { color: ${baseValue} !important; }\n`;
+
+  // Generate media queries only for breakpoints that have explicit overrides (different from base)
+  for (const bp of breakpoints) {
+    if (responsive[bp] !== undefined && responsive[bp] !== null) {
+      const value = responsive[bp];
+      if (typeof value === "string" && value !== baseValue) {
+        css += `${getMediaQuery(bp)} { .${className}:hover { color: ${value} !important; } }\n`;
+      }
+    }
+  }
+
+  return css;
+};
+
+/**
  * Generates CSS for responsive link color
  * Pattern: Base value applies to all breakpoints, media queries only for overrides
  * This generates CSS for anchor tags within the component
