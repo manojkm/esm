@@ -362,16 +362,47 @@ export { [ComponentName] } from "./[ComponentName]";
 - [ ] Hover toggles implemented (if needed)
 - [ ] **Editing experience implemented** (see [Component Editing Experience Guide](./COMPONENT_EDITING_EXPERIENCE.md))
 
+### Refactoring (For Large Components)
+If your component exceeds ~600 lines, consider refactoring following the pattern used in Heading and Text components:
+
+- [ ] Extract style helpers (`yourComponentStyleHelpers.ts`)
+- [ ] Extract CSS generator (`yourComponentCssGenerator.ts`)
+- [ ] Extract editing hooks (`useYourComponentEditing.ts`)
+- [ ] Extract HTML utilities (`yourComponentHtmlUtils.ts` - if needed)
+- [ ] Extract sub-components (if rendering logic is complex)
+- [ ] Keep main component under 500-600 lines
+
+**Reference Examples:**
+- **Heading Component**: `app/builder/components/ui/heading/` - Uses sub-components for rendering
+- **Text Component**: `app/builder/components/ui/text/` - Keeps rendering in main component (uses LexicalEditor)
+
 ## Examples
 
-- **Text Component**: `app/builder/components/ui/Text.tsx` - Uses LexicalEditor for rich text editing
-- **Heading Component**: `app/builder/components/ui/Heading.tsx` - Uses ContentEditable for simple text editing
+### Refactored Components (Reference Implementations)
+- **Text Component**: 
+  - Main: `app/builder/components/ui/Text.tsx` (526 lines)
+  - Helpers: `app/builder/components/ui/text/textStyleHelpers.ts`
+  - CSS: `app/builder/components/ui/text/textCssGenerator.ts`
+  - Editing: `app/builder/components/ui/text/useTextEditing.ts`
+  - Utils: `app/builder/components/ui/text/textHtmlUtils.ts`
+  - Uses LexicalEditor for rich text editing
+
+- **Heading Component**: 
+  - Main: `app/builder/components/ui/Heading.tsx` (521 lines)
+  - Helpers: `app/builder/components/ui/heading/headingStyleHelpers.ts`
+  - CSS: `app/builder/components/ui/heading/headingCssGenerator.ts`
+  - Editing: `app/builder/components/ui/heading/useHeadingEditing.ts`
+  - Sub-components: `HeadingContent.tsx`, `SubHeadingContent.tsx`, `Separator.tsx`
+  - Uses ContentEditable for simple text editing
+
+### Other Components
 - **Container Component**: `app/builder/components/ui/Container.tsx`
 - **Text Settings**: `app/builder/components/settings/TextSettings.tsx`
 - **Container Settings**: `app/builder/components/settings/ContainerSettings.tsx`
 
 ## Related Guides
 
+- **[Codebase Readiness Guide](./CODEBASE_READINESS.md)** - Comprehensive overview of reusable features, global defaults, and patterns
 - **[Component Editing Experience Guide](./COMPONENT_EDITING_EXPERIENCE.md)** - Standard editing experience pattern for all components
 - **[Security Guide](./SECURITY.md)** - HTML sanitization and XSS protection
 - **[Component Style Pattern](./COMPONENT_STYLE_PATTERN.md)** - Styling patterns and CSS generation
